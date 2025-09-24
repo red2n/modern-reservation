@@ -1850,7 +1850,7 @@ const retentionPolicies: RetentionPolicy[] = [
 **Cleanup Process Flow:**
 ```mermaid
 graph TB
-    subgraph "Daily Cleanup Job (2:00 AM UTC)"
+    subgraph "Daily Cleanup Job - 2:00 AM UTC"
         ST[Cleanup Start]
         BC[Backup Check]
         RP[Retention Policy Evaluation]
@@ -1865,7 +1865,7 @@ graph TB
     end
 
     subgraph "Batch Processing"
-        BP[Batch Processing (10K records)]
+        BP[Batch Processing - 10K records]
         BU2[Pre-Delete Backup]
         HD2[Hard Delete Execution]
         KN[Kafka Notification]
