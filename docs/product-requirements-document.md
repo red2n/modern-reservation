@@ -41,6 +41,15 @@ For ultra-scale performance handling 10,000 reservations per minute with 100,000
   - Event Processing and Streaming
 
 - **Java Services** (CPU Intensive, Complex Business Logic):
+
+  **Core Infrastructure Services (Spring Cloud):**
+  - Configuration Service (Spring Cloud Config Server)
+  - Service Discovery (Eureka Server / Consul)
+  - API Gateway Service (Spring Cloud Gateway)
+  - Circuit Breaker Service (Resilience4j)
+  - Distributed Tracing (Spring Cloud Sleuth + Zipkin)
+
+  **Business Logic Services:**
   - Core Reservation Processing Engine
   - Availability Calculation and Optimization
   - Dynamic Pricing and Rate Management
@@ -1551,13 +1560,23 @@ graph TB
         N6[File Upload Service<br/>Media handling]
     end
 
-    subgraph "Java Services - CPU Intensive"
-        J1[Reservation Engine<br/>Core business logic]
-        J2[Availability Calculator<br/>Complex algorithms]
-        J3[Rate Management<br/>Dynamic pricing]
-        J4[Payment Processor<br/>Security critical]
-        J5[Analytics Engine<br/>Heavy computation]
-        J6[Batch Processor<br/>Large datasets]
+    subgraph "Java Microservices Infrastructure"
+        subgraph "Core Infrastructure Services"
+            JI1[Config Server<br/>Spring Cloud Config]
+            JI2[Service Discovery<br/>Eureka Server]
+            JI3[API Gateway<br/>Spring Cloud Gateway]
+            JI4[Circuit Breaker<br/>Resilience4j]
+            JI5[Tracing Service<br/>Zipkin Server]
+        end
+
+        subgraph "Business Logic Services"
+            J1[Reservation Engine<br/>Core business logic]
+            J2[Availability Calculator<br/>Complex algorithms]
+            J3[Rate Management<br/>Dynamic pricing]
+            J4[Payment Processor<br/>Security critical]
+            J5[Analytics Engine<br/>Heavy computation]
+            J6[Batch Processor<br/>Large datasets]
+        end
     end
 
     subgraph "Data Layer - Multi-Master"
@@ -1616,10 +1635,11 @@ graph TB
     B3 --> B4
     B4 --> B5
 
-    B5 --> N1
-    B5 --> N2
-    B5 --> J1
-    B5 --> J2
+    B5 --> JI3
+    JI3 --> N1
+    JI3 --> N2
+    JI3 --> J1
+    JI3 --> J2
 
     N1 --> R2
     N2 --> K4
@@ -1634,6 +1654,22 @@ graph TB
     J4 --> E1
     J5 --> D3
     J6 --> D4
+
+    JI1 --> JI2
+    JI2 --> J1
+    JI2 --> J2
+    JI2 --> J3
+    JI2 --> J4
+    JI2 --> J5
+    JI2 --> J6
+    JI4 --> J1
+    JI4 --> J2
+    JI4 --> J3
+    JI4 --> J4
+    JI5 --> J1
+    JI5 --> J2
+    JI5 --> J3
+    JI5 --> J4
 
     J1 --> K1
     J2 --> K3
@@ -1956,13 +1992,23 @@ graph TB
                 N6[audit-service/<br/>Event log processing<br/>Compliance tracking]
             end
 
-            subgraph "Backend Services - Java"
-                J1[reservation-engine/<br/>Spring Boot Core<br/>Complex business logic]
-                J2[availability-calculator/<br/>Multi-threaded processor<br/>Optimization algorithms]
-                J3[rate-management/<br/>Dynamic pricing engine<br/>Revenue optimization]
-                J4[payment-processor/<br/>Security-critical service<br/>PCI-DSS compliance]
-                J5[analytics-engine/<br/>Heavy data processing<br/>Business intelligence]
-                J6[batch-processor/<br/>Large dataset operations<br/>ETL processes]
+            subgraph "Java Microservices Infrastructure"
+                subgraph "Spring Cloud Infrastructure"
+                    JI1[config-server/<br/>Spring Cloud Config<br/>Centralized configuration]
+                    JI2[service-discovery/<br/>Eureka Server<br/>Service registration]
+                    JI3[api-gateway/<br/>Spring Cloud Gateway<br/>Traffic routing & filtering]
+                    JI4[circuit-breaker/<br/>Resilience4j<br/>Fault tolerance]
+                    JI5[tracing-service/<br/>Zipkin Server<br/>Distributed tracing]
+                end
+
+                subgraph "Business Logic Services"
+                    J1[reservation-engine/<br/>Spring Boot Core<br/>Complex business logic]
+                    J2[availability-calculator/<br/>Multi-threaded processor<br/>Optimization algorithms]
+                    J3[rate-management/<br/>Dynamic pricing engine<br/>Revenue optimization]
+                    J4[payment-processor/<br/>Security-critical service<br/>PCI-DSS compliance]
+                    J5[analytics-engine/<br/>Heavy data processing<br/>Business intelligence]
+                    J6[batch-processor/<br/>Large dataset operations<br/>ETL processes]
+                end
             end
 
             subgraph "Worker Processes"
