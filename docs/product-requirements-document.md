@@ -18,15 +18,60 @@ The Modern Reservation Management System is a comprehensive, cloud-native hospit
 ### 1.2 Vision Statement
 To create a unified, scalable, and user-friendly reservation management system that empowers hospitality businesses to efficiently manage their operations, optimize revenue, and enhance guest experiences through real-time data processing and intelligent automation.
 
-### 1.3 Technology Stack
-- **Frontend:** Angular LTS (v17+) with Angular Material
-- **Backend:** Node.js LTS (v20+) with Express.js/NestJS
-- **Database:** PostgreSQL 15+ (Primary), Redis 7+ (Cache)
-- **Schema Validation:** Zod for TypeScript-first schema validation
-- **Message Broker:** Apache Kafka (Real-time notifications)
-- **Observability:** OpenTelemetry for distributed tracing and logging
-- **Containerization:** Docker & Kubernetes
-- **UI/UX:** Dark/Light theme support, Responsive design
+### 1.3 Technology Stack - Hybrid Architecture Approach
+
+**Strategic Decision: Hybrid Node.js + Java Architecture**
+
+For ultra-scale performance handling 10,000 reservations per minute with 100,000+ concurrent users, this system implements a strategic hybrid approach combining the strengths of both Node.js and Java ecosystems.
+
+**Frontend Technologies:**
+- **Angular LTS (v17+)** with Angular Material Design System
+- **Progressive Web App (PWA)** capabilities for mobile experience
+- **TypeScript** for type safety and development productivity
+- **NgRx** for state management across complex applications
+- **Angular Universal** for server-side rendering and SEO
+
+**Backend Architecture - Service Distribution:**
+- **Node.js Services** (I/O Intensive, Real-time Operations):
+  - API Gateway and Load Balancing
+  - WebSocket Services for Real-time Updates
+  - Notification and Communication Services
+  - Channel Manager Integrations (Multiple OTA APIs)
+  - Housekeeping and Simple CRUD Operations
+  - Event Processing and Streaming
+
+- **Java Services** (CPU Intensive, Complex Business Logic):
+  - Core Reservation Processing Engine
+  - Availability Calculation and Optimization
+  - Dynamic Pricing and Rate Management
+  - Payment Processing and Financial Operations
+  - Advanced Analytics and Reporting
+  - Batch Processing and Data Transformation
+
+**Data Layer:**
+- **PostgreSQL 15+** (Multi-master with 4+ instances for ultra-scale)
+- **Redis 7+** (21-node cluster with specialized roles)
+- **Apache Kafka 3.x** (15-broker cluster for event streaming)
+- **Elasticsearch** (Log aggregation and full-text search)
+
+**Development Framework:**
+- **Nx Monorepo** for unified codebase management
+- **Zod Schemas** for TypeScript-first validation across services
+- **Protocol Buffers** for efficient service-to-service communication
+- **OpenAPI/Swagger** for API documentation and contract testing
+
+**Infrastructure & DevOps:**
+- **Docker & Kubernetes** with advanced orchestration
+- **Istio Service Mesh** for traffic management and security
+- **OpenTelemetry** for distributed tracing and observability
+- **Prometheus & Grafana** for monitoring and alerting
+- **ArgoCD** for GitOps-based deployment
+
+**Quality & Testing:**
+- **Jest & Cypress** for comprehensive testing
+- **SonarQube** for code quality and security scanning
+- **Lighthouse CI** for performance monitoring
+- **Chaos Engineering** tools for reliability testing
 
 ---
 
@@ -49,9 +94,231 @@ To create a unified, scalable, and user-friendly reservation management system t
 
 ---
 
-## 3. Target Users & Personas
+## 3. Hybrid Architecture Strategy
 
-### 3.1 Guest User
+### 3.1 Architectural Decision Framework
+
+**Performance Requirements Analysis:**
+
+```mermaid
+graph TB
+    subgraph "Ultra-Scale Load Requirements"
+        L1[10,000 reservations/minute<br/>167 transactions/second]
+        L2[100,000+ concurrent users<br/>WebSocket connections]
+        L3[500,000+ Kafka messages/second<br/>Real-time event streaming]
+        L4[1,000+ database writes/second<br/>Multi-master PostgreSQL]
+        L5[10,000+ properties<br/>Global distribution]
+    end
+
+    subgraph "Node.js Optimal Use Cases"
+        N1[High I/O Throughput<br/>API Gateway: 50,000+ req/sec]
+        N2[WebSocket Connections<br/>100,000+ concurrent connections]
+        N3[Event-Driven Architecture<br/>Real-time notifications]
+        N4[Rapid Development<br/>TypeScript ecosystem]
+        N5[Memory Efficiency<br/>60% less RAM for I/O operations]
+    end
+
+    subgraph "Java Optimal Use Cases"
+        J1[CPU-Intensive Processing<br/>Complex availability calculations]
+        J2[Multi-Threading Excellence<br/>Parallel reservation processing]
+        J3[Enterprise Integration<br/>Payment gateway connections]
+        J4[Long-Running Processes<br/>Superior garbage collection]
+        J5[Mathematical Operations<br/>Dynamic pricing algorithms]
+    end
+
+    subgraph "Hybrid Architecture Benefits"
+        H1[Best-of-Both Performance<br/>Optimal resource utilization]
+        H2[Specialized Service Placement<br/>Right tool for right job]
+        H3[Scalability Optimization<br/>Independent scaling strategies]
+        H4[Risk Mitigation<br/>Technology diversification]
+        H5[Team Expertise<br/>Leverage existing skills]
+    end
+
+    L1 --> N1
+    L2 --> N2
+    L1 --> J1
+    L4 --> J2
+
+    N1 --> H1
+    J1 --> H1
+    N2 --> H2
+    J2 --> H2
+```
+
+### 3.2 Service Distribution Strategy
+
+**Technology Assignment by Service Characteristics:**
+
+```mermaid
+graph LR
+    subgraph "Node.js Services - I/O Intensive"
+        direction TB
+        N1[API Gateway<br/>High throughput routing]
+        N2[WebSocket Service<br/>Real-time connections]
+        N3[Notification Service<br/>Multiple channel delivery]
+        N4[Channel Manager<br/>OTA API integrations]
+        N5[Housekeeping Service<br/>Simple CRUD operations]
+        N6[Audit Service<br/>Event log processing]
+
+        N1 -.->|50,000+ req/sec| N2
+        N3 -.->|Event-driven| N6
+        N4 -.->|External APIs| N5
+    end
+
+    subgraph "Java Services - CPU Intensive"
+        direction TB
+        J1[Reservation Engine<br/>Complex business logic]
+        J2[Availability Calculator<br/>Multi-dimensional algorithms]
+        J3[Rate Management<br/>Dynamic pricing calculations]
+        J4[Payment Processor<br/>Security-critical operations]
+        J5[Analytics Engine<br/>Heavy data processing]
+        J6[Batch Processor<br/>Large dataset operations]
+
+        J1 -.->|Business rules| J2
+        J2 -.->|Optimization| J3
+        J4 -.->|Security| J5
+    end
+
+    subgraph "Shared Infrastructure"
+        direction TB
+        S1[PostgreSQL Cluster<br/>Multi-master setup]
+        S2[Redis Cluster<br/>21-node architecture]
+        S3[Kafka Cluster<br/>15-broker setup]
+        S4[Service Mesh<br/>Istio communication]
+    end
+
+    N1 --> S4
+    N2 --> S2
+    N3 --> S3
+    N4 --> S1
+    N5 --> S2
+    N6 --> S3
+
+    J1 --> S4
+    J2 --> S1
+    J3 --> S2
+    J4 --> S1
+    J5 --> S1
+    J6 --> S3
+```
+
+### 3.3 Performance Benchmarking Analysis
+
+**Comparative Performance Metrics:**
+
+| Operation Type | Pure Node.js | Pure Java | Hybrid Approach | Improvement |
+|----------------|-------------|-----------|-----------------|-------------|
+| **API Gateway Latency** | 5ms (optimal) | 15ms (overhead) | **5ms** (Node.js) | **Best of class** |
+| **Reservation Processing** | 50ms (single-threaded) | 10ms (optimized) | **10ms** (Java) | **5x faster** |
+| **Availability Calculation** | 100ms (limited CPU) | 20ms (multi-threaded) | **20ms** (Java) | **5x improvement** |
+| **WebSocket Connections** | 100K/instance (native) | 20K/instance (limited) | **100K** (Node.js) | **5x capacity** |
+| **Memory Usage (1K req/s)** | 2GB (efficient) | 4GB (overhead) | **3GB** (balanced) | **25% optimized** |
+| **Cold Start Time** | 200ms (fast) | 2s (JVM warmup) | **Mixed** (service-specific) | **Context-aware** |
+| **Development Velocity** | Fast (single language) | Moderate (enterprise) | **Fast** (shared tooling) | **Maintained speed** |
+
+### 3.4 Monorepo Architecture Benefits
+
+**Unified Development Environment:**
+
+```mermaid
+graph TB
+    subgraph "Nx Monorepo Structure"
+        direction TB
+
+        subgraph "Applications Layer"
+            A1[Frontend Apps<br/>Angular 17+ PWA]
+            A2[Backend Services<br/>Node.js + Java hybrid]
+            A3[Worker Processes<br/>Scheduled jobs & batch]
+        end
+
+        subgraph "Shared Libraries"
+            L1[Schemas & Types<br/>Zod validation across services]
+            L2[UI Components<br/>Angular Material system]
+            L3[Backend Utils<br/>Database, cache, messaging]
+            L4[Testing Tools<br/>Mocks, fixtures, utilities]
+        end
+
+        subgraph "Infrastructure as Code"
+            I1[Docker Configs<br/>Multi-language containers]
+            I2[Kubernetes Manifests<br/>Service orchestration]
+            I3[Terraform Modules<br/>Cloud infrastructure]
+            I4[CI/CD Pipelines<br/>Automated deployment]
+        end
+
+        subgraph "Development Tools"
+            T1[Nx Generators<br/>Consistent project setup]
+            T2[Code Sharing<br/>Cross-service libraries]
+            T3[Dependency Graph<br/>Impact analysis]
+            T4[Atomic Commits<br/>Multi-service changes]
+        end
+    end
+
+    A1 --> L1
+    A2 --> L1
+    A3 --> L3
+
+    L1 --> T2
+    L2 --> T2
+    L3 --> T2
+
+    I1 --> T1
+    I2 --> T1
+    I3 --> T4
+
+    T1 --> T3
+    T2 --> T3
+    T4 --> T3
+```
+
+### 3.5 Technology Ecosystem Integration
+
+**Inter-Service Communication Patterns:**
+
+```mermaid
+sequenceDiagram
+    participant UI as Angular Frontend
+    participant GW as Node.js API Gateway
+    participant RS as Java Reservation Service
+    participant AS as Java Availability Service
+    participant NS as Node.js Notification Service
+    participant K as Kafka Cluster
+    participant DB as PostgreSQL Cluster
+    participant R as Redis Cluster
+
+    UI->>GW: Create Reservation Request
+    Note over GW: Fast I/O handling<br/>Authentication & routing
+
+    GW->>RS: Forward to Java Service
+    Note over RS: CPU-intensive processing<br/>Business logic validation
+
+    RS->>AS: Check Availability
+    Note over AS: Complex algorithms<br/>Multi-threaded calculation
+
+    AS->>R: Cache Lookup
+    R-->>AS: Availability Data
+    AS-->>RS: Availability Confirmed
+
+    RS->>DB: Persist Reservation
+    Note over DB: ACID transaction<br/>Multi-master write
+
+    RS->>K: Publish Success Event
+    Note over K: Event streaming<br/>Guaranteed delivery
+
+    K->>NS: Consume Event
+    Note over NS: I/O efficient processing<br/>Multiple channel delivery
+
+    NS->>NS: Send Notifications
+    RS-->>GW: Success Response
+    GW-->>UI: Confirmation
+
+    Note over UI,R: End-to-end latency: <50ms<br/>Hybrid optimization achieved
+```
+
+---
+
+## 4. Target Users & Personas
+
+### 4.1 Guest User
 - **Goals:** Quick and easy booking, transparent pricing, instant confirmation
 - **Pain Points:** Complex booking processes, hidden fees, lack of real-time availability
 - **Access:** Web portal, mobile responsive interface
@@ -593,18 +860,69 @@ The system shall provide complete audit trail capabilities:
 
 ## 5. Non-Functional Requirements
 
-### 5.1 Performance Requirements
+### 5.1 Hybrid Architecture Performance Requirements
+
 **Ultra-High Performance Targets (10,000 Reservations per Minute Scale):**
-- **Response Time:** < 50ms for 95% of API calls, < 100ms for 99% of transactions
-- **Concurrent Users:** Support 100,000+ simultaneous users across all properties
-- **Transaction Throughput:** 10,000+ reservations per minute (600,000+ per hour)
-- **Search Performance:** < 10ms for availability searches (cached), < 50ms for complex searches
-- **Report Generation:** < 2 seconds for real-time reports, < 15 seconds for complex analytics
-- **Real-time Sync:** < 25ms for critical updates across all channels
-- **Database Performance:** < 5ms for 95% of read queries, < 10ms for 95% of write operations
-- **Cache Performance:** < 1ms for Redis operations, 99.9%+ cache hit ratio for availability data
-- **Write Throughput:** 1,000+ database writes per second sustained
-- **Event Processing:** 500+ Kafka messages per second per partition
+
+**Node.js Service Performance Targets:**
+- **API Gateway Latency:** < 5ms for 99% of requests (I/O optimized)
+- **WebSocket Connections:** Support 100,000+ concurrent connections per instance
+- **Notification Processing:** < 10ms per notification across multiple channels
+- **Event Stream Processing:** 1,000+ Kafka messages per second per consumer
+- **Memory Efficiency:** 60% less RAM usage compared to Java for I/O operations
+- **Cold Start Performance:** < 200ms container startup time
+
+**Java Service Performance Targets:**
+- **Reservation Processing:** < 10ms for complex business logic (CPU optimized)
+- **Availability Calculations:** < 20ms for multi-room, multi-date queries
+- **Payment Processing:** < 50ms for secure financial transactions
+- **Analytics Queries:** < 100ms for complex data aggregations
+- **Batch Processing:** 10,000+ records per minute processing capability
+- **Multi-Threading:** 10x parallel processing improvement over Node.js
+
+**Combined System Performance:**
+- **End-to-End Response Time:** < 50ms for 95% of complete transactions
+- **Transaction Throughput:** 10,000+ reservations per minute (167/second sustained)
+- **Concurrent User Support:** 100,000+ simultaneous users across all properties
+- **Search Performance:** < 5ms for cached availability, < 25ms for complex searches
+- **Real-time Sync:** < 15ms for critical updates across all channels
+- **Database Performance:** < 5ms for reads, < 10ms for writes (95th percentile)
+- **Cache Performance:** < 1ms for Redis operations, 99.9%+ availability cache hit ratio
+
+**Hybrid Performance Benefits:**
+
+```mermaid
+graph TB
+    subgraph "Performance Comparison Analysis"
+        subgraph "Node.js Strengths (I/O Operations)"
+            N1[API Gateway: 5ms<br/>vs Java: 15ms]
+            N2[WebSocket: 100K connections<br/>vs Java: 20K connections]
+            N3[Memory Usage: 2GB<br/>vs Java: 4GB]
+            N4[Cold Start: 200ms<br/>vs Java: 2000ms]
+        end
+
+        subgraph "Java Strengths (CPU Operations)"
+            J1[Business Logic: 10ms<br/>vs Node.js: 50ms]
+            J2[Calculations: 20ms<br/>vs Node.js: 100ms]
+            J3[Parallel Processing: 10x<br/>vs Node.js: 1x]
+            J4[Security: Enterprise-grade<br/>vs Node.js: Standard]
+        end
+
+        subgraph "Hybrid Benefits"
+            H1[Optimal Resource Utilization<br/>Right tool for right job]
+            H2[5x Performance Gain<br/>Service-specific optimization]
+            H3[Cost Efficiency<br/>25% reduction in compute costs]
+            H4[Scalability<br/>Independent scaling strategies]
+        end
+    end
+
+    N1 --> H1
+    N2 --> H2
+    J1 --> H1
+    J2 --> H2
+    N3 --> H3
+    J3 --> H4
+```
 
 ### 5.2 Scalability Requirements
 **Ultra-Scale Architecture for 10,000+ Properties:**
@@ -1128,141 +1446,210 @@ graph TB
 
 ---
 
-## 6. System Architecture
+## 6. Hybrid System Architecture
 
-### 6.1 High-Level Architecture
+### 6.1 Ultra-Scale Hybrid Architecture Overview
 
 ```mermaid
 graph TB
-    subgraph "Client Layer"
-        A1[Web Browser]
-        A2[Mobile App]
-        A3[Kiosk]
-        A4[POS Terminal]
+    subgraph "Client Layer - Multi-Channel Access"
+        A1[Angular PWA<br/>Guest Portal]
+        A2[Angular PWA<br/>Staff Portal]
+        A3[Angular PWA<br/>Admin Portal]
+        A4[Mobile Apps<br/>iOS/Android]
+        A5[POS Terminals<br/>Kiosk Integration]
     end
 
-    subgraph "API Gateway"
-        B[Kong/NGINX Gateway]
-        B1[Authentication]
-        B2[Rate Limiting]
-        B3[Load Balancing]
+    subgraph "API Gateway Layer - Node.js"
+        B1[Primary Gateway<br/>Kong/Express]
+        B2[Authentication Service<br/>JWT/OAuth2]
+        B3[Rate Limiter<br/>Redis-based]
+        B4[Load Balancer<br/>50,000+ req/sec]
+        B5[Circuit Breaker<br/>Fault tolerance]
     end
 
-    subgraph "Application Services"
-        C1[Reservation Service]
-        C2[Availability Service]
-        C3[Rate Service]
-        C4[Payment Service]
-        C5[Housekeeping Service]
-        C6[Channel Manager Service]
-        C7[Notification Service]
-        C8[Report Service]
+    subgraph "Node.js Services - I/O Intensive"
+        N1[WebSocket Service<br/>100K+ connections]
+        N2[Notification Service<br/>Multi-channel delivery]
+        N3[Channel Manager<br/>OTA integrations]
+        N4[Housekeeping Service<br/>Simple CRUD ops]
+        N5[Audit Service<br/>Event processing]
+        N6[File Upload Service<br/>Media handling]
     end
 
-    subgraph "Data Layer"
-        D1[(PostgreSQL Primary)]
-        D2[(PostgreSQL Replica)]
-        D3[Redis Cache]
-        D4[Document Store]
+    subgraph "Java Services - CPU Intensive"
+        J1[Reservation Engine<br/>Core business logic]
+        J2[Availability Calculator<br/>Complex algorithms]
+        J3[Rate Management<br/>Dynamic pricing]
+        J4[Payment Processor<br/>Security critical]
+        J5[Analytics Engine<br/>Heavy computation]
+        J6[Batch Processor<br/>Large datasets]
     end
 
-    subgraph "Message Layer"
-        E[Apache Kafka]
-        E1[Events Topic]
-        E2[Notifications Topic]
-        E3[Audit Topic]
+    subgraph "Data Layer - Multi-Master"
+        D1[(PostgreSQL Master 1<br/>Properties 1-2500)]
+        D2[(PostgreSQL Master 2<br/>Properties 2501-5000)]
+        D3[(PostgreSQL Master 3<br/>Properties 5001-7500)]
+        D4[(PostgreSQL Master 4<br/>Properties 7501-10000)]
+        D5[(Read Replicas<br/>20 instances)]
     end
 
-    subgraph "Observability"
-        F1[OpenTelemetry Collector]
-        F2[Prometheus]
-        F3[Grafana]
-        F4[Elasticsearch]
+    subgraph "Cache Layer - Redis Cluster"
+        R1[Availability Cache<br/>12 master-slave pairs]
+        R2[Session Cache<br/>6-node cluster]
+        R3[Lock Manager<br/>3 dedicated nodes]
+        R4[Rate Limiter Cache<br/>High-speed access]
     end
 
-    subgraph "External Systems"
-        G1[Payment Gateways]
-        G2[OTA Systems]
-        G3[Email Service]
-        G4[SMS Gateway]
+    subgraph "Event Streaming - Kafka Cluster"
+        K1[Reservation Events<br/>100 partitions]
+        K2[Payment Events<br/>50 partitions]
+        K3[Availability Updates<br/>200 partitions]
+        K4[Notification Queue<br/>20 partitions]
+        K5[Audit Logs<br/>30 partitions]
     end
 
-    A1 --> B
-    A2 --> B
-    A3 --> B
-    A4 --> B
+    subgraph "Service Mesh - Istio"
+        I1[Traffic Management<br/>Load balancing]
+        I2[Security Policies<br/>mTLS encryption]
+        I3[Observability<br/>Distributed tracing]
+        I4[Circuit Breaking<br/>Fault injection]
+    end
 
-    B --> C1
-    B --> C2
-    B --> C3
-    B --> C4
-    B --> C5
-    B --> C6
-    B --> C7
-    B --> C8
+    subgraph "Observability Stack"
+        O1[OpenTelemetry<br/>Distributed tracing]
+        O2[Prometheus<br/>Metrics collection]
+        O3[Grafana<br/>Dashboards]
+        O4[Jaeger<br/>Trace analysis]
+        O5[ELK Stack<br/>Log aggregation]
+    end
 
-    C1 --> D1
-    C1 --> D3
-    C1 --> E1
+    subgraph "External Integrations"
+        E1[Payment Gateways<br/>Stripe, PayPal, etc.]
+        E2[OTA Platforms<br/>Booking.com, Expedia]
+        E3[Communication<br/>Email, SMS, Push]
+        E4[Third-party APIs<br/>Maps, Weather, etc.]
+    end
 
-    C2 --> D1
-    C2 --> D3
-    C2 --> E1
+    A1 --> B1
+    A2 --> B1
+    A3 --> B1
+    A4 --> B4
+    A5 --> B4
 
-    C3 --> D1
-    C3 --> D3
+    B1 --> B2
+    B2 --> B3
+    B3 --> B4
+    B4 --> B5
 
-    C4 --> G1
-    C4 --> E1
+    B5 --> N1
+    B5 --> N2
+    B5 --> J1
+    B5 --> J2
 
-    C6 --> G2
-    C6 --> E1
+    N1 --> R2
+    N2 --> K4
+    N3 --> E2
+    N4 --> D5
+    N5 --> K5
 
-    C7 --> E2
-    C7 --> G3
-    C7 --> G4
+    J1 --> D1
+    J1 --> D2
+    J2 --> R1
+    J3 --> R1
+    J4 --> E1
+    J5 --> D3
+    J6 --> D4
 
-    E1 --> C7
-    E1 --> C8
-    E1 --> F1
+    J1 --> K1
+    J2 --> K3
+    J3 --> K3
+    J4 --> K2
 
-    F1 --> F2
-    F1 --> F4
-    F2 --> F3
+    K1 --> N2
+    K2 --> N5
+    K3 --> N1
+    K4 --> N2
+
+    I1 --> N1
+    I1 --> J1
+    I2 --> N2
+    I2 --> J4
+    I3 --> O1
+    I4 --> B5
+
+    O1 --> O2
+    O2 --> O3
+    O1 --> O4
+    N5 --> O5
 ```
 
-### 6.2 Microservices Communication
+### 6.2 Hybrid Microservices Communication
 
 ```mermaid
 sequenceDiagram
-    participant UI as Angular UI
-    participant GW as API Gateway
-    participant RS as Reservation Service
-    participant AS as Availability Service
-    participant PS as Payment Service
-    participant K as Kafka
-    participant NS as Notification Service
-    participant DB as PostgreSQL
-    participant R as Redis
+    participant UI as Angular PWA
+    participant GW as Node.js API Gateway
+    participant WS as Node.js WebSocket Service
+    participant RE as Java Reservation Engine
+    participant AC as Java Availability Calculator
+    participant PP as Java Payment Processor
+    participant NS as Node.js Notification Service
+    participant K as Kafka Cluster
+    participant DB as PostgreSQL Multi-Master
+    participant RC as Redis Cluster
+
+    Note over UI,RC: Ultra-Scale Transaction Flow (10,000/min)
 
     UI->>GW: Create Reservation Request
-    GW->>GW: Authenticate & Authorize
-    GW->>RS: Forward Request
-    RS->>AS: Check Availability
-    AS->>R: Check Cache
-    R-->>AS: Cache Miss
-    AS->>DB: Query Availability
-    DB-->>AS: Return Data
-    AS->>R: Update Cache
-    AS-->>RS: Availability Confirmed
-    RS->>PS: Process Payment
-    PS-->>RS: Payment Success
-    RS->>DB: Save Reservation
-    RS->>K: Publish Reservation Event
-    K->>NS: Consume Event
-    NS->>NS: Send Confirmation Email
-    RS-->>GW: Reservation Response
-    GW-->>UI: Success Response
+    Note over GW: Node.js I/O efficiency<br/>Authentication & validation
+
+    GW->>GW: Authenticate & Rate Limit
+    GW->>RE: Forward to Java Engine
+    Note over RE: Java CPU power<br/>Complex business logic
+
+    RE->>AC: Check Multi-Room Availability
+    Note over AC: Java multi-threading<br/>Parallel calculations
+
+    AC->>RC: Cache Lookup (Availability)
+    RC-->>AC: Cache Hit/Miss
+
+    alt Cache Miss
+        AC->>DB: Complex Availability Query
+        Note over DB: Multi-master read<br/>Load distribution
+        DB-->>AC: Availability Data
+        AC->>RC: Update Cache
+    end
+
+    AC-->>RE: Availability Confirmed
+
+    RE->>PP: Process Payment
+    Note over PP: Java security<br/>PCI compliance
+
+    PP->>PP: Validate & Charge
+    PP-->>RE: Payment Success
+
+    RE->>DB: Persist Reservation
+    Note over DB: ACID transaction<br/>Multi-master write
+
+    RE->>K: Publish Success Event
+    Note over K: High-throughput streaming<br/>Guaranteed delivery
+
+    par Real-time Notifications
+        K->>NS: Consume Event
+        Note over NS: Node.js I/O efficiency<br/>Multiple channels
+        NS->>NS: Process Notifications
+        NS->>WS: Real-time Update
+        WS->>UI: WebSocket Push
+    and Audit Trail
+        K->>NS: Audit Event
+        NS->>DB: Log Audit Trail
+    end
+
+    RE-->>GW: Success Response
+    GW-->>UI: Reservation Confirmation
+
+    Note over UI,RC: End-to-end: <50ms<br/>Hybrid optimization achieved
 ```
 
 ### 6.3 Data Flow Architecture
@@ -1313,7 +1700,190 @@ graph LR
     F --> N
 ```
 
-### 6.4 Deployment Architecture
+### 6.4 Nx Monorepo Structure & Organization
+
+**Enterprise-Scale Monorepo Architecture:**
+
+```mermaid
+graph TB
+    subgraph "Nx Monorepo - modern-reservation/"
+        direction TB
+
+        subgraph "Applications Layer"
+            subgraph "Frontend Applications"
+                F1[guest-portal/<br/>Angular 17+ PWA<br/>Guest booking interface]
+                F2[staff-portal/<br/>Angular 17+ PWA<br/>Staff operations]
+                F3[admin-portal/<br/>Angular 17+ PWA<br/>Administrative interface]
+                F4[mobile-pwa/<br/>Progressive Web App<br/>Mobile-first experience]
+            end
+
+            subgraph "Backend Services - Node.js"
+                N1[api-gateway/<br/>Kong/Express Gateway<br/>50K+ req/sec capacity]
+                N2[notification-service/<br/>Multi-channel delivery<br/>Event-driven architecture]
+                N3[websocket-service/<br/>Real-time connections<br/>100K+ concurrent users]
+                N4[channel-manager/<br/>OTA integrations<br/>External API orchestration]
+                N5[housekeeping-service/<br/>Simple CRUD operations<br/>Mobile-optimized APIs]
+                N6[audit-service/<br/>Event log processing<br/>Compliance tracking]
+            end
+
+            subgraph "Backend Services - Java"
+                J1[reservation-engine/<br/>Spring Boot Core<br/>Complex business logic]
+                J2[availability-calculator/<br/>Multi-threaded processor<br/>Optimization algorithms]
+                J3[rate-management/<br/>Dynamic pricing engine<br/>Revenue optimization]
+                J4[payment-processor/<br/>Security-critical service<br/>PCI-DSS compliance]
+                J5[analytics-engine/<br/>Heavy data processing<br/>Business intelligence]
+                J6[batch-processor/<br/>Large dataset operations<br/>ETL processes]
+            end
+
+            subgraph "Worker Processes"
+                W1[cleanup-worker/<br/>Scheduled maintenance<br/>Soft delete processing]
+                W2[kafka-consumer/<br/>High-throughput processing<br/>Event stream handling]
+                W3[batch-worker/<br/>Background jobs<br/>Data synchronization]
+            end
+        end
+
+        subgraph "Shared Libraries"
+            subgraph "Common Schemas & Types"
+                S1[schemas/<br/>Zod validation schemas<br/>Cross-service consistency]
+                S2[types/<br/>TypeScript definitions<br/>Shared type safety]
+                S3[constants/<br/>System-wide constants<br/>Configuration management]
+                S4[proto/<br/>Protocol Buffer definitions<br/>Service communication]
+            end
+
+            subgraph "Frontend Libraries"
+                L1[ui-components/<br/>Angular Material system<br/>Design consistency]
+                L2[state-management/<br/>NgRx stores & effects<br/>Application state]
+                L3[guards/<br/>Authentication guards<br/>Route protection]
+                L4[interceptors/<br/>HTTP interceptors<br/>Cross-cutting concerns]
+                L5[themes/<br/>Dark/Light themes<br/>Accessibility support]
+            end
+
+            subgraph "Backend Libraries"
+                B1[database/<br/>Connection pooling<br/>Query optimization]
+                B2[cache/<br/>Multi-tier caching<br/>Redis cluster management]
+                B3[kafka/<br/>Producer/Consumer patterns<br/>Event streaming]
+                B4[auth/<br/>JWT/OAuth2 handling<br/>RBAC implementation]
+                B5[monitoring/<br/>OpenTelemetry setup<br/>Observability patterns]
+                B6[soft-delete/<br/>Audit trail system<br/>Recovery mechanisms]
+                B7[circuit-breaker/<br/>Resilience patterns<br/>Fault tolerance]
+            end
+        end
+
+        subgraph "Development Tools & Infrastructure"
+            subgraph "Build & Deploy Tools"
+                T1[generators/<br/>Custom Nx generators<br/>Project scaffolding]
+                T2[executors/<br/>Custom build executors<br/>Deployment automation]
+                T3[scripts/<br/>Development scripts<br/>Environment setup]
+            end
+
+            subgraph "Testing Infrastructure"
+                TE1[fixtures/<br/>Test data management<br/>Consistent test scenarios]
+                TE2[mocks/<br/>Service mocks<br/>Isolated testing]
+                TE3[e2e-utils/<br/>End-to-end utilities<br/>Integration testing]
+                TE4[performance/<br/>Load testing tools<br/>Performance validation]
+            end
+
+            subgraph "Infrastructure as Code"
+                I1[docker/<br/>Multi-language containers<br/>Standardized deployment]
+                I2[kubernetes/<br/>Orchestration manifests<br/>Environment management]
+                I3[terraform/<br/>Cloud infrastructure<br/>Resource provisioning]
+                I4[helm/<br/>Package management<br/>Application deployment]
+            end
+        end
+    end
+
+    F1 -.->|Shared Components| L1
+    F2 -.->|State Management| L2
+    F3 -.->|Authentication| L3
+    F4 -.->|Themes| L5
+
+    N1 -.->|Validation| S1
+    N2 -.->|Event Schemas| S4
+    J1 -.->|Business Types| S2
+    J2 -.->|Constants| S3
+
+    N1 -.->|Database Access| B1
+    N3 -.->|Caching| B2
+    J1 -.->|Event Streaming| B3
+    J4 -.->|Authentication| B4
+
+    T1 -.->|Scaffolding| F1
+    T1 -.->|Scaffolding| N1
+    T1 -.->|Scaffolding| J1
+
+    TE1 -.->|Test Data| N1
+    TE2 -.->|Mocking| J1
+    TE3 -.->|E2E Testing| F1
+```
+
+**Monorepo Benefits for Ultra-Scale Development:**
+
+| Aspect | Traditional Multi-Repo | Nx Monorepo | Performance Impact |
+|--------|----------------------|-------------|-------------------|
+| **Code Sharing** | Duplicate implementations | Shared libraries across services | 40% reduction in code duplication |
+| **Dependency Management** | Version conflicts across repos | Unified dependency resolution | 60% faster dependency updates |
+| **Refactoring** | Manual coordination required | Atomic cross-service changes | 5x faster large-scale refactoring |
+| **Testing** | Independent CI/CD per repo | Smart affected testing | 70% reduction in test execution time |
+| **Type Safety** | Interface drift between services | Compile-time validation | 90% reduction in integration errors |
+| **Development Setup** | Multiple clone/setup steps | Single repository setup | 80% faster onboarding |
+| **Build Optimization** | Rebuild everything always | Smart caching & affected builds | 75% faster build times |
+| **Release Coordination** | Manual versioning sync | Coordinated releases | 50% reduction in deployment issues |
+
+**Nx Configuration Highlights:**
+
+- **Project Graph Analysis:** Automatic dependency detection and visualization
+- **Affected Command Support:** Only test/build/lint changed projects and their dependents
+- **Smart Caching:** Distributed computation caching across team and CI
+- **Code Generation:** Consistent project setup with custom generators
+- **Migration Support:** Automated updates across the entire workspace
+- **Plugin Ecosystem:** Angular, Node.js, Java Spring Boot integration
+- **Distributed Task Execution:** Parallel execution across available cores
+
+### 6.5 Development Workflow & Dependency Management
+
+```mermaid
+graph LR
+    subgraph "Developer Experience"
+        D1[Developer<br/>Local Setup]
+        D2[Feature Branch<br/>Creation]
+        D3[Code Changes<br/>Multiple Services]
+        D4[Smart Testing<br/>Affected Only]
+        D5[Build Validation<br/>Incremental]
+        D6[Pull Request<br/>Atomic Changes]
+    end
+
+    subgraph "Nx Intelligence"
+        N1[Project Graph<br/>Dependency Analysis]
+        N2[Affected Detection<br/>Smart Filtering]
+        N3[Computation Cache<br/>Distributed Storage]
+        N4[Parallel Execution<br/>Optimal Scheduling]
+    end
+
+    subgraph "Quality Gates"
+        Q1[Type Checking<br/>Cross-Service Validation]
+        Q2[Unit Tests<br/>Affected Projects Only]
+        Q3[Integration Tests<br/>Contract Validation]
+        Q4[E2E Tests<br/>Critical Path Only]
+        Q5[Performance Tests<br/>Benchmark Validation]
+    end
+
+    D1 --> N1
+    D2 --> D3
+    D3 --> N2
+    N2 --> D4
+    D4 --> N3
+    N3 --> D5
+    D5 --> N4
+    N4 --> D6
+
+    D4 --> Q1
+    Q1 --> Q2
+    Q2 --> Q3
+    Q3 --> Q4
+    Q4 --> Q5
+```
+
+### 6.6 Deployment Architecture
 
 ```mermaid
 graph TB
@@ -1996,7 +2566,285 @@ graph TB
 
 ---
 
-## 12. Development Timeline
+## 12. Hybrid Monorepo Development & Deployment Strategy
+
+### 12.1 Development Workflow for Hybrid Architecture
+
+**Nx-Powered Development Process:**
+
+```mermaid
+graph TB
+    subgraph "Developer Workflow"
+        D1[Feature Request<br/>JIRA/GitHub Issue]
+        D2[Branch Creation<br/>feature/RES-123-payment-integration]
+        D3[Multi-Service Development<br/>Node.js + Java changes]
+        D4[Nx Affected Detection<br/>Smart dependency analysis]
+        D5[Local Testing<br/>Affected projects only]
+        D6[Pre-commit Validation<br/>Type safety + linting]
+        D7[Pull Request<br/>Atomic cross-service changes]
+        D8[Code Review<br/>Architecture compliance]
+        D9[CI/CD Pipeline<br/>Automated deployment]
+    end
+
+    subgraph "Nx Intelligence Layer"
+        N1[Project Graph Analysis<br/>Dependency visualization]
+        N2[Affected Command<br/>nx affected:test/build/lint]
+        N3[Computation Caching<br/>Distributed cache hits]
+        N4[Parallel Execution<br/>Optimal task scheduling]
+        N5[Code Generation<br/>Consistent scaffolding]
+    end
+
+    subgraph "Quality Assurance"
+        Q1[TypeScript Compilation<br/>Cross-service type checking]
+        Q2[Unit Tests<br/>Service-specific validation]
+        Q3[Integration Tests<br/>Contract testing]
+        Q4[E2E Tests<br/>Critical user journeys]
+        Q5[Performance Tests<br/>Load & stress testing]
+        Q6[Security Scans<br/>Vulnerability assessment]
+    end
+
+    D1 --> D2
+    D2 --> D3
+    D3 --> N1
+    N1 --> D4
+    D4 --> N2
+    N2 --> D5
+    D5 --> N3
+    N3 --> D6
+    D6 --> N4
+    D7 --> D8
+    D8 --> D9
+
+    D4 --> Q1
+    D5 --> Q2
+    Q1 --> Q3
+    Q2 --> Q4
+    Q3 --> Q5
+    Q4 --> Q6
+
+    N5 --> D3
+```
+
+### 12.2 CI/CD Pipeline Architecture
+
+**Multi-Language Pipeline for Nx Monorepo:**
+
+```mermaid
+graph TB
+    subgraph "Source Control"
+        SC1[GitHub Repository<br/>Nx Monorepo]
+        SC2[Feature Branches<br/>Atomic changes]
+        SC3[Main Branch<br/>Production ready]
+        SC4[Release Tags<br/>Semantic versioning]
+    end
+
+    subgraph "CI Pipeline - GitHub Actions"
+        CI1[Trigger<br/>Push/PR events]
+        CI2[Checkout & Cache<br/>Node modules + Maven deps]
+        CI3[Nx Affected Analysis<br/>Determine changed projects]
+        CI4[Parallel Matrix Build<br/>Node.js + Java services]
+        CI5[Test Execution<br/>Unit + Integration tests]
+        CI6[Quality Gates<br/>Coverage + Security scans]
+        CI7[Container Build<br/>Multi-arch Docker images]
+        CI8[Registry Push<br/>Versioned artifacts]
+    end
+
+    subgraph "CD Pipeline - ArgoCD"
+        CD1[GitOps Repository<br/>Kubernetes manifests]
+        CD2[Environment Promotion<br/>Dev → Staging → Prod]
+        CD3[Canary Deployment<br/>Traffic splitting]
+        CD4[Health Checks<br/>Readiness probes]
+        CD5[Rollback Capability<br/>Automated failure recovery]
+        CD6[Monitoring<br/>Deployment metrics]
+    end
+
+    subgraph "Testing Strategy"
+        T1[Unit Tests<br/>Jest + JUnit coverage]
+        T2[Contract Tests<br/>Pact consumer/provider]
+        T3[Integration Tests<br/>Testcontainers]
+        T4[E2E Tests<br/>Cypress automation]
+        T5[Performance Tests<br/>K6 load testing]
+        T6[Security Tests<br/>OWASP scanning]
+    end
+
+    subgraph "Deployment Environments"
+        E1[Development<br/>Feature branch deploys]
+        E2[Staging<br/>Integration testing]
+        E3[Production<br/>Blue-Green deployment]
+        E4[DR Environment<br/>Disaster recovery]
+    end
+
+    SC1 --> CI1
+    SC2 --> CI2
+    CI1 --> CI3
+    CI2 --> CI4
+    CI3 --> CI5
+    CI4 --> CI6
+    CI5 --> CI7
+    CI6 --> CI8
+    CI7 --> CD1
+    CI8 --> CD2
+
+    CD1 --> CD3
+    CD2 --> CD4
+    CD3 --> CD5
+    CD4 --> CD6
+    CD5 --> E1
+    CD6 --> E2
+
+    CI5 --> T1
+    T1 --> T2
+    T2 --> T3
+    T3 --> T4
+    T4 --> T5
+    T5 --> T6
+
+    E1 --> E2
+    E2 --> E3
+    E3 --> E4
+```
+
+### 12.3 Testing Strategy for Hybrid Services
+
+**Comprehensive Testing Framework:**
+
+| Test Type | Node.js Services | Java Services | Tools | Coverage Target |
+|-----------|------------------|---------------|-------|-----------------|
+| **Unit Tests** | Jest + Supertest | JUnit 5 + Mockito | Nx test runners | > 80% |
+| **Integration Tests** | Testcontainers + Redis | Spring Boot Test + PostgreSQL | Docker Compose | > 70% |
+| **Contract Tests** | Pact Consumer | Pact Provider | Pact Broker | 100% API contracts |
+| **E2E Tests** | Cypress | Selenium Grid | Nx e2e runner | Critical paths |
+| **Performance Tests** | K6 scenarios | JMeter plans | Grafana dashboards | Load benchmarks |
+| **Security Tests** | npm audit | OWASP dependency check | Snyk scanning | Zero high/critical |
+
+### 12.4 Container Strategy for Multi-Language Services
+
+**Optimized Docker Images:**
+
+```mermaid
+graph TB
+    subgraph "Node.js Container Strategy"
+        N1[Base Image<br/>node:20-alpine]
+        N2[Multi-stage Build<br/>Dependencies + Application]
+        N3[Security Scanning<br/>Trivy vulnerability scan]
+        N4[Size Optimization<br/>~100MB final image]
+        N5[Runtime Optimization<br/>Non-root user + readonly fs]
+    end
+
+    subgraph "Java Container Strategy"
+        J1[Base Image<br/>eclipse-temurin:21-jre-alpine]
+        J2[Multi-stage Build<br/>Maven build + Runtime]
+        J3[Security Scanning<br/>Trivy + OWASP checks]
+        J4[Size Optimization<br/>~200MB final image]
+        J5[Runtime Optimization<br/>JVM tuning + health checks]
+    end
+
+    subgraph "Container Registry"
+        R1[Multi-arch Support<br/>AMD64 + ARM64]
+        R2[Image Scanning<br/>Automated vulnerability detection]
+        R3[Retention Policy<br/>30 latest versions]
+        R4[Distribution<br/>Regional replication]
+    end
+
+    subgraph "Kubernetes Deployment"
+        K1[Resource Limits<br/>Service-specific tuning]
+        K2[Health Checks<br/>Liveness + readiness probes]
+        K3[Auto-scaling<br/>HPA + VPA configuration]
+        K4[Security Context<br/>Pod security standards]
+    end
+
+    N1 --> N2
+    N2 --> N3
+    N3 --> N4
+    N4 --> N5
+
+    J1 --> J2
+    J2 --> J3
+    J3 --> J4
+    J4 --> J5
+
+    N5 --> R1
+    J5 --> R1
+    R1 --> R2
+    R2 --> R3
+    R3 --> R4
+
+    R4 --> K1
+    K1 --> K2
+    K2 --> K3
+    K3 --> K4
+```
+
+### 12.5 Monitoring & Observability Strategy
+
+**Comprehensive Observability for Hybrid Architecture:**
+
+```mermaid
+graph TB
+    subgraph "Application Metrics"
+        A1[Node.js Services<br/>Express metrics + Custom business metrics]
+        A2[Java Services<br/>Micrometer + Spring Actuator]
+        A3[Frontend Apps<br/>Angular performance + User analytics]
+    end
+
+    subgraph "Infrastructure Metrics"
+        I1[Kubernetes Metrics<br/>Pod performance + Resource usage]
+        I2[Database Metrics<br/>PostgreSQL + Redis performance]
+        I3[Message Queue<br/>Kafka throughput + Consumer lag]
+        I4[Network Metrics<br/>Service mesh + Load balancer stats]
+    end
+
+    subgraph "Observability Stack"
+        O1[OpenTelemetry<br/>Distributed tracing across services]
+        O2[Prometheus<br/>Metrics collection + Alerting]
+        O3[Grafana<br/>Dashboards + Visualization]
+        O4[Jaeger<br/>Trace analysis + Performance]
+        O5[ELK Stack<br/>Log aggregation + Search]
+        O6[Alert Manager<br/>Intelligent alerting]
+    end
+
+    subgraph "Business Intelligence"
+        B1[Performance KPIs<br/>Response time + Throughput]
+        B2[Business KPIs<br/>Reservation rate + Revenue]
+        B3[System Health<br/>Uptime + Error rates]
+        B4[Capacity Planning<br/>Resource utilization trends]
+    end
+
+    A1 --> O1
+    A2 --> O1
+    A3 --> O2
+    I1 --> O2
+    I2 --> O3
+    I3 --> O4
+    I4 --> O5
+
+    O1 --> B1
+    O2 --> B2
+    O3 --> B3
+    O4 --> B4
+    O5 --> O6
+    O6 --> B1
+```
+
+### 12.6 Development Environment Setup
+
+**Standardized Development Stack:**
+
+| Component | Node.js Services | Java Services | Shared Tools |
+|-----------|------------------|---------------|--------------|
+| **IDE Setup** | VSCode + Extensions | IntelliJ IDEA Ultimate | Nx Console plugin |
+| **Runtime** | Node.js 20 LTS | OpenJDK 21 | Docker Desktop |
+| **Package Managers** | pnpm (workspace support) | Maven 3.9+ | Nx CLI |
+| **Testing** | Jest + Supertest | JUnit 5 + TestNG | Testcontainers |
+| **Debugging** | Node.js Inspector | Remote JVM debugging | Docker Compose |
+| **Database** | PostgreSQL 15 local | Same shared instance | pgAdmin 4 |
+| **Cache** | Redis 7 local | Same shared instance | RedisInsight |
+| **Message Queue** | Kafka local cluster | Same shared instance | Kafka UI |
+| **Monitoring** | Prometheus + Grafana | Same stack | Local observability |
+
+---
+
+## 13. Development Timeline
 
 ### Phase 1: Foundation (Weeks 1-6)
 - [x] Project setup and architecture design
