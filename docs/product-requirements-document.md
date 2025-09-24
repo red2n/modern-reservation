@@ -22,6 +22,7 @@ To create a unified, scalable, and user-friendly reservation management system t
 - **Frontend:** Angular LTS (v17+) with Angular Material
 - **Backend:** Node.js LTS (v20+) with Express.js/NestJS
 - **Database:** PostgreSQL 15+ (Primary), Redis 7+ (Cache)
+- **Schema Validation:** Zod for TypeScript-first schema validation
 - **Message Broker:** Apache Kafka (Real-time notifications)
 - **Observability:** OpenTelemetry for distributed tracing and logging
 - **Containerization:** Docker & Kubernetes
@@ -756,7 +757,135 @@ graph TB
 
 ---
 
-## 7. Theme Support Implementation
+## 7. Database-Agnostic Schema Implementation with Zod
+
+### 7.1 Schema-First Architecture
+The application implements a database-agnostic approach using Zod for TypeScript-first schema validation, ensuring the system can run with any database or data source that matches our schema definitions.
+
+### 7.2 Zod Schema Benefits
+- **Type Safety:** Compile-time and runtime type checking
+- **Database Independence:** Schema-driven data layer abstraction
+- **Validation:** Input/output validation at API boundaries
+- **Documentation:** Self-documenting schemas with TypeScript inference
+- **Consistency:** Unified data models across frontend and backend
+- **Flexibility:** Easy migration between different databases
+
+### 7.3 Core Data Models
+
+The system will define comprehensive data models for all entities using Zod schema validation:
+
+#### 7.3.1 User Entity
+- **Unique identifier:** UUID-based user ID
+- **Authentication:** Email and password hash
+- **Profile:** First name, last name, phone number
+- **Role-based access:** Guest, Staff, Manager, Admin roles
+- **Preferences:** Theme (light/dark), language, notification settings
+- **Audit fields:** Created and updated timestamps
+
+#### 7.3.2 Reservation Entity
+- **Identification:** UUID and human-readable confirmation number
+- **Guest relationship:** Link to guest user account
+- **Room assignment:** Connection to specific room
+- **Stay details:** Check-in/out dates, number of guests
+- **Status tracking:** Pending, confirmed, checked-in, checked-out, cancelled
+- **Requests:** Special guest requirements and notes
+- **Financial:** Total amount and payment status
+- **Audit trail:** Creation and modification timestamps
+
+#### 7.3.3 Room Entity
+- **Identity:** UUID and room number
+- **Classification:** Room type categorization
+- **Physical details:** Floor number, maximum occupancy
+- **Status management:** Available, occupied, maintenance, cleaning, blocked
+- **Features:** Array of room features and amenities
+- **Pricing:** Base rate configuration
+- **Operations:** Active/inactive status for operations
+- **Tracking:** Creation and update timestamps
+
+#### 7.3.4 Rate Entity
+- **Identification:** UUID and rate plan name
+- **Room association:** Link to specific room type
+- **Pricing structure:** Base rate with multipliers
+- **Seasonal adjustments:** Peak/off-peak rate modifications
+- **Day-of-week pricing:** Different rates for weekdays/weekends
+- **Validity periods:** Start and end dates for rate plans
+- **Status control:** Active/inactive rate management
+
+### 7.4 Database-Agnostic Architecture
+
+#### 7.4.1 Repository Pattern
+The system implements a repository pattern to abstract data access:
+- **Interface definition:** Standard CRUD operations across all entities
+- **Schema validation:** Runtime validation using Zod schemas
+- **Database abstraction:** Support for multiple database backends
+- **Type safety:** Full TypeScript integration with compile-time checking
+- **Error handling:** Consistent error responses across data operations
+
+### 7.5 Supported Data Sources
+The schema-based approach allows easy integration with multiple data sources:
+
+- **Relational Databases:** PostgreSQL, MySQL, SQL Server, SQLite
+- **Document Databases:** MongoDB, CouchDB
+- **In-Memory Stores:** Redis, MemoryDB
+- **Cloud Services:** DynamoDB, Firestore, CosmosDB
+- **File Systems:** JSON files, CSV, Parquet
+- **External APIs:** REST, GraphQL endpoints
+
+### 7.6 Migration Strategy
+
+```mermaid
+graph TB
+    subgraph "Schema Layer"
+        A[Zod Schemas]
+        B[Type Definitions]
+        C[Validation Rules]
+    end
+
+    subgraph "Abstraction Layer"
+        D[Repository Interface]
+        E[Data Source Interface]
+        F[Query Builder]
+    end
+
+    subgraph "Implementation Layer"
+        G[PostgreSQL Adapter]
+        H[MongoDB Adapter]
+        I[Redis Adapter]
+        J[REST API Adapter]
+    end
+
+    subgraph "Migration Tools"
+        K[Schema Migrator]
+        L[Data Transformer]
+        M[Validation Engine]
+    end
+
+    A --> D
+    B --> D
+    C --> E
+    D --> G
+    D --> H
+    D --> I
+    D --> J
+    E --> K
+    F --> L
+    G --> M
+    H --> M
+    I --> M
+    J --> M
+```
+
+### 7.7 Implementation Benefits
+- **Zero Vendor Lock-in:** Easy migration between databases
+- **Development Flexibility:** Use different databases for different environments
+- **Testing Simplified:** In-memory implementations for unit tests
+- **Scalability Options:** Mix multiple data sources as needed
+- **Type Safety:** Full TypeScript support with automatic inference
+- **Runtime Validation:** Prevent invalid data from entering the system
+
+---
+
+## 8. Theme Support Implementation
 
 ### 7.1 Theme Architecture
 - **Theme Service:** Centralized theme management
@@ -772,10 +901,8 @@ graph LR
     B --> C{Theme Selector}
     C -->|Light| D[Light Theme]
     C -->|Dark| E[Dark Theme]
-    C -->|Custom| F[Custom Theme]
     D --> G[Apply CSS Variables]
     E --> G
-    F --> G
     G --> H[Update UI]
     H --> I[Save Preference]
     I --> A
@@ -783,9 +910,9 @@ graph LR
 
 ---
 
-## 8. Kafka Implementation for Real-time Notifications
+## 9. Kafka Implementation for Real-time Notifications
 
-### 8.1 Kafka Topic Structure
+### 9.1 Kafka Topic Structure
 ```mermaid
 graph TB
     subgraph "Kafka Topics"
@@ -827,7 +954,7 @@ graph TB
     G --> C4
 ```
 
-### 8.2 Notification Flow
+### 9.2 Notification Flow
 1. **Event Generation:** Service publishes event to Kafka
 2. **Event Processing:** Notification service consumes event
 3. **Template Selection:** Choose notification template based on event type
@@ -837,9 +964,9 @@ graph TB
 
 ---
 
-## 9. OpenTelemetry Integration
+## 10. OpenTelemetry Integration
 
-### 9.1 Observability Stack
+### 10.1 Observability Stack
 ```mermaid
 graph TB
     subgraph "Application Layer"
@@ -875,7 +1002,7 @@ graph TB
     C3 --> C4
 ```
 
-### 9.2 Logging Strategy
+### 10.2 Logging Strategy
 - **Structured Logging:** JSON format with correlation IDs
 - **Log Levels:** ERROR, WARN, INFO, DEBUG, TRACE
 - **Context Propagation:** Trace IDs across services
@@ -885,16 +1012,16 @@ graph TB
 
 ---
 
-## 10. Docker & Kubernetes Deployment
+## 11. Docker & Kubernetes Deployment
 
-### 10.1 Container Strategy
+### 11.1 Container Strategy
 - **Base Images:** Node.js Alpine for services, NGINX for Angular
 - **Multi-stage Builds:** Optimize image size
 - **Security Scanning:** Vulnerability assessment in CI/CD
 - **Registry:** Private container registry
 - **Versioning:** Semantic versioning for images
 
-### 10.2 Kubernetes Resources
+### 11.2 Kubernetes Resources
 ```mermaid
 graph TB
     subgraph "Kubernetes Objects"
@@ -922,7 +1049,7 @@ graph TB
     end
 ```
 
-### 10.3 Deployment Pipeline
+### 11.3 Deployment Pipeline
 1. **Code Commit:** Push to Git repository
 2. **Build Trigger:** CI/CD pipeline activation
 3. **Test Execution:** Unit, integration, and security tests
@@ -935,7 +1062,7 @@ graph TB
 
 ---
 
-## 11. Development Timeline
+## 12. Development Timeline
 
 ### Phase 1: Foundation (Weeks 1-6)
 - [x] Project setup and architecture design
@@ -985,9 +1112,9 @@ graph TB
 
 ---
 
-## 12. Risk Management
+## 13. Risk Management
 
-### 12.1 Technical Risks
+### 13.1 Technical Risks
 
 | Risk | Impact | Probability | Mitigation Strategy |
 |------|--------|-------------|-------------------|
@@ -998,7 +1125,7 @@ graph TB
 | Security vulnerabilities | High | Medium | Regular audits, OWASP compliance |
 | Scalability bottlenecks | High | Low | Microservices architecture, auto-scaling |
 
-### 12.2 Business Risks
+### 13.2 Business Risks
 
 | Risk | Impact | Probability | Mitigation Strategy |
 |------|--------|-------------|-------------------|
@@ -1010,16 +1137,16 @@ graph TB
 
 ---
 
-## 13. Success Criteria
+## 14. Success Criteria
 
-### 13.1 Technical Success Metrics
+### 14.1 Technical Success Metrics
 - **System Performance:** Meeting all NFR targets
 - **Code Coverage:** > 80% test coverage
 - **Security Score:** A+ rating in security audits
 - **Deployment Frequency:** Daily deployments capability
 - **Mean Time to Recovery:** < 30 minutes
 
-### 13.2 Business Success Metrics
+### 14.2 Business Success Metrics
 - **ROI:** Positive return within 18 months
 - **Operational Efficiency:** 60% reduction in manual tasks
 - **Revenue Impact:** 20% increase in RevPAR
@@ -1028,16 +1155,16 @@ graph TB
 
 ---
 
-## 14. Dependencies & Assumptions
+## 15. Dependencies & Assumptions
 
-### 14.1 Dependencies
+### 15.1 Dependencies
 - **External Systems:** Payment gateways availability
 - **Third-party Services:** OTA API stability
 - **Infrastructure:** Cloud provider SLAs
 - **Licensing:** Software license procurement
 - **Resources:** Team availability and expertise
 
-### 14.2 Assumptions
+### 15.2 Assumptions
 - Stable internet connectivity at properties
 - Staff technical competency for basic operations
 - Existing data in migratable format
@@ -1046,9 +1173,9 @@ graph TB
 
 ---
 
-## 15. Appendix
+## 16. Appendix
 
-### 15.1 Glossary
+### 16.1 Glossary
 - **OTA:** Online Travel Agency
 - **GDS:** Global Distribution System
 - **RevPAR:** Revenue Per Available Room
@@ -1061,7 +1188,7 @@ graph TB
 - **SLA:** Service Level Agreement
 - **NFR:** Non-Functional Requirement
 
-### 15.2 Reference Documents
+### 16.2 Reference Documents
 - OpenTelemetry Documentation
 - Kafka Architecture Guide
 - Angular Material Design Guidelines
@@ -1070,12 +1197,13 @@ graph TB
 - PCI DSS Compliance Requirements
 - GDPR Implementation Guide
 
-### 15.3 Technology Stack Versions
+### 16.3 Technology Stack Versions
 - Node.js: v20.x LTS
 - Angular: v17.x LTS
 - PostgreSQL: 15.x
 - Redis: 7.x
 - Apache Kafka: 3.x
+- Zod: v3.x
 - Docker: 24.x
 - Kubernetes: 1.28.x
 - OpenTelemetry: Latest stable
