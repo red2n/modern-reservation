@@ -488,238 +488,91 @@ stateDiagram-v2
 
 ### 4.3 Soft Delete API Specifications
 
-#### 4.3.1 Core Soft Delete Endpoints
+#### 4.3.1 Core Soft Delete API Requirements
 
-**Universal Soft Delete Endpoints (Available for All Entities):**
+**Universal Soft Delete Capabilities:**
 
-```typescript
-// Soft Delete Single Record
-DELETE /api/v1/{entity}/{id}
-Request Headers:
-  Authorization: Bearer {jwt_token}
-  Content-Type: application/json
-Request Body:
-{
-  "reason": "string",           // Required: Deletion reason
-  "businessJustification": "string" // Optional: Business context
-}
-Response: 200 OK
-{
-  "success": true,
-  "recordId": "uuid",
-  "deletedAt": "2025-09-24T10:30:00Z",
-  "deletedBy": "user_uuid",
-  "auditTrailId": "audit_uuid",
-  "recoveryWindow": "30 days"
-}
+The system shall provide standardized soft delete operations for all entities with the following requirements:
 
-// Soft Delete Bulk Records
-DELETE /api/v1/{entity}/bulk
-Request Body:
-{
-  "recordIds": ["uuid1", "uuid2", "uuid3"],
-  "reason": "string",
-  "businessJustification": "string",
-  "adminApproval": "admin_user_uuid"  // Required for bulk operations
-}
-Response: 200 OK
-{
-  "success": true,
-  "deletedCount": 3,
-  "failed": [],
-  "auditTrailIds": ["audit_uuid1", "audit_uuid2", "audit_uuid3"]
-}
+- **Single Record Deletion:**
+  - DELETE endpoint pattern: `/api/v1/{entity}/{id}`
+  - Required authentication via Bearer token
+  - Mandatory deletion reason and optional business justification
+  - Response includes success status, deletion timestamp, audit trail ID, and recovery window
 
-// Restore Single Record
-POST /api/v1/{entity}/{id}/restore
-Request Body:
-{
-  "reason": "string",
-  "businessJustification": "string"
-}
-Response: 200 OK
-{
-  "success": true,
-  "recordId": "uuid",
-  "restoredAt": "2025-09-24T11:00:00Z",
-  "restoredBy": "user_uuid",
-  "auditTrailId": "audit_uuid"
-}
+- **Bulk Record Operations:**
+  - Bulk DELETE endpoint: `/api/v1/{entity}/bulk`
+  - Support for multiple record IDs in single operation
+  - Admin approval requirement for bulk operations
+  - Detailed response with success count, failed operations, and audit trail IDs
 
-// Get Deleted Records (Admin Only)
-GET /api/v1/{entity}/deleted?page=1&limit=50&since=2025-09-01
-Response: 200 OK
-{
-  "records": [...deleted records with metadata...],
-  "pagination": { "page": 1, "limit": 50, "total": 150 },
-  "metadata": {
-    "deletionSummary": {
-      "totalDeleted": 150,
-      "pendingCleanup": 45,
-      "recoverable": 105
-    }
-  }
-}
-```
+- **Record Restoration:**
+  - POST endpoint pattern: `/api/v1/{entity}/{id}/restore`
+  - Business justification requirement for all restore operations
+  - Complete audit trail with restoration timestamp and user attribution
 
-#### 4.3.2 Entity-Specific Soft Delete APIs
+- **Deleted Record Management:**
+  - Admin-only endpoint to query deleted records: `/api/v1/{entity}/deleted`
+  - Pagination support with configurable limits
+  - Date range filtering and metadata summary including deletion statistics
 
-**Reservation Soft Delete (Enhanced):**
-```typescript
-// Cancel Reservation with Soft Delete
-DELETE /api/v1/reservations/{reservationId}
-Request Body:
-{
-  "reason": "guest_cancellation|no_show|overbooking|system_error",
-  "refundAmount": 150.00,         // Optional: Refund amount
-  "notifyGuest": true,            // Send cancellation notification
-  "blockDates": false,            // Block dates for future bookings
-  "businessJustification": "Guest requested cancellation due to emergency"
-}
+#### 4.3.2 Entity-Specific Soft Delete Requirements
 
-// Restore Cancelled Reservation
-POST /api/v1/reservations/{reservationId}/restore
-Request Body:
-{
-  "reason": "accidental_cancellation|guest_request|system_error",
-  "processPayment": true,         // Re-process payment if needed
-  "updateAvailability": true,     // Update room availability
-  "notifyGuest": true
-}
-```
+**Reservation Management:**
+The system shall provide specialized reservation cancellation capabilities:
+- Cancellation reason categorization (guest cancellation, no-show, overbooking, system error)
+- Optional refund amount specification and processing
+- Guest notification automation for cancellations
+- Date blocking capability to prevent future bookings on cancelled dates
+- Restoration functionality with payment reprocessing and availability updates
 
-**Rate Management Soft Delete:**
-```typescript
-// Archive Rate Plan
-DELETE /api/v1/rates/{rateId}
-Request Body:
-{
-  "reason": "expired|replaced|seasonal_end|restructure",
-  "replacementRateId": "uuid",    // Optional: Link to replacement rate
-  "effectiveDate": "2025-10-01",  // When archival takes effect
-  "preserveBookings": true        // Keep existing bookings with archived rate
-}
+**Rate Management:**
+The system shall support rate plan archival with the following features:
+- Rate plan archival with configurable effective dates
+- Optional linking to replacement rate plans for continuity
+- Preservation of existing bookings using archived rates
+- Bulk archival operations for seasonal rate cleanup
+- Admin approval requirements for bulk rate operations
 
-// Bulk Archive Seasonal Rates
-DELETE /api/v1/rates/seasonal/bulk
-Request Body:
-{
-  "season": "summer_2024",
-  "reason": "seasonal_cleanup",
-  "adminApproval": "admin_uuid"
-}
-```
+#### 4.3.3 Cleanup & Maintenance Requirements
 
-#### 4.3.3 Cleanup & Maintenance APIs
+**Administrative Cleanup Management:**
+The system shall provide comprehensive cleanup management capabilities:
 
-**Administrative Cleanup Endpoints:**
-```typescript
-// Get Cleanup Status
-GET /api/v1/admin/cleanup/status
-Response: 200 OK
-{
-  "nextScheduledCleanup": "2025-09-25T02:00:00Z",
-  "entitiesAwaitingCleanup": {
-    "reservations": 1250,
-    "payments": 890,
-    "guestProfiles": 234,
-    "ratePlans": 45
-  },
-  "estimatedCleanupDuration": "45 minutes",
-  "storageReclaimed": "2.3GB"
-}
+- **Cleanup Status Monitoring:**
+  - Real-time status of next scheduled cleanup operations
+  - Entity-specific counts of records awaiting cleanup (reservations, payments, guest profiles, rate plans)
+  - Estimated cleanup duration and storage reclamation projections
 
-// Manual Trigger Cleanup (Emergency)
-POST /api/v1/admin/cleanup/trigger
-Request Body:
-{
-  "entityTypes": ["reservations", "payments"],
-  "confirmationCode": "EMERGENCY_CLEANUP_2025",
-  "adminApproval": "super_admin_uuid",
-  "reason": "storage_emergency|compliance_requirement|manual_maintenance"
-}
+- **Emergency Cleanup Operations:**
+  - Manual cleanup trigger capability for emergency situations
+  - Entity-type selection for targeted cleanup operations
+  - Security confirmation codes and super-admin approval requirements
+  - Reason categorization (storage emergency, compliance requirement, manual maintenance)
 
-// Generate Cleanup Report
-GET /api/v1/admin/cleanup/report?startDate=2025-09-01&endDate=2025-09-24
-Response: 200 OK
-{
-  "periodSummary": {
-    "totalRecordsDeleted": 15420,
-    "storageReclaimed": "12.8GB",
-    "entitiesProcessed": {
-      "reservations": 8900,
-      "payments": 4320,
-      "guestProfiles": 1800,
-      "ratePlans": 400
-    }
-  },
-  "complianceStatus": "COMPLIANT",
-  "nextActions": ["schedule_backup_verification"]
-}
-```
+- **Cleanup Reporting:**
+  - Comprehensive cleanup reports with configurable date ranges
+  - Detailed statistics including total records processed and storage reclaimed
+  - Entity-specific processing summaries
+  - Compliance status tracking and next action recommendations
 
-#### 4.3.4 Audit & Compliance APIs
+#### 4.3.4 Audit & Compliance Requirements
 
-**Comprehensive Audit Trail:**
-```typescript
-// Get Deletion Audit Trail
-GET /api/v1/audit/deletions/{entityType}?userId={uuid}&dateRange=last30days
-Response: 200 OK
-{
-  "auditRecords": [
-    {
-      "auditId": "uuid",
-      "entityType": "reservation",
-      "entityId": "uuid",
-      "action": "soft_delete",
-      "performedBy": "user_uuid",
-      "performedAt": "2025-09-24T10:30:00Z",
-      "reason": "guest_cancellation",
-      "businessJustification": "Emergency cancellation",
-      "additionalContext": {
-        "guestNotified": true,
-        "refundProcessed": true,
-        "approvalRequired": false
-      }
-    }
-  ],
-  "pagination": {...},
-  "summary": {
-    "totalDeletions": 45,
-    "byReason": {
-      "guest_cancellation": 30,
-      "no_show": 10,
-      "system_error": 5
-    }
-  }
-}
+**Comprehensive Audit Trail Management:**
+The system shall provide complete audit trail capabilities:
 
-// Generate Compliance Report
-POST /api/v1/compliance/soft-delete-report
-Request Body:
-{
-  "reportType": "gdpr|pci_dss|sox|full",
-  "dateRange": {
-    "startDate": "2025-08-01",
-    "endDate": "2025-09-24"
-  },
-  "includeDetails": true
-}
-Response: 200 OK
-{
-  "reportId": "uuid",
-  "generatedAt": "2025-09-24T12:00:00Z",
-  "complianceScore": 99.8,
-  "findings": [
-    {
-      "level": "INFO",
-      "description": "All retention policies properly implemented",
-      "recommendation": "Continue current practices"
-    }
-  ],
-  "downloadUrl": "/api/v1/reports/{reportId}/download"
-}
-```
+- **Deletion Audit Trail:**
+  - Entity-specific audit trail queries with user and date range filtering
+  - Complete audit record details including action type, performer, timestamps, and business justification
+  - Additional context tracking for related operations (notifications, refunds, approvals)
+  - Pagination support and statistical summaries grouped by deletion reasons
+
+- **Compliance Reporting:**
+  - Multi-standard compliance report generation (GDPR, PCI-DSS, SOX, comprehensive reports)
+  - Configurable date range reporting with detailed analysis
+  - Automated compliance scoring and findings identification
+  - Downloadable report generation with secure access controls
+  - Regulatory compliance verification and recommendation tracking
 
 #### 4.3.5 Performance & Security Specifications
 
@@ -1670,43 +1523,26 @@ The system implements a fail-safe soft delete mechanism to ensure data integrity
 
 #### 7.8.2 Enhanced Zod Schema with Soft Delete Fields
 
-All entities now include standardized soft delete and audit fields:
+All entities shall include standardized soft delete and audit fields with the following requirements:
 
-```typescript
-// Base soft delete schema for all entities
-const BaseSoftDeleteSchema = z.object({
-  // Core identification
-  id: z.string().uuid(),
+**Base Soft Delete Schema Requirements:**
+- **Core Identification:** UUID-based unique identifier for all entities
+- **Soft Delete Fields:**
+  - Boolean flag to mark deletion status (default: false)
+  - Nullable deletion timestamp for tracking when record was soft deleted
+  - User identification for deletion attribution
+  - Textual reason for deletion for audit purposes
+- **Audit Fields:**
+  - Creation timestamp with automatic population
+  - Creator user identification for accountability
+  - Update timestamp with automatic maintenance
+  - Last modifier user identification
+- **Data Retention:**
+  - Nullable hard deletion schedule date
+  - Configurable retention period (default: 7 years for compliance)
 
-  // Soft delete fields
-  isDeleted: z.boolean().default(false),
-  deletedAt: z.date().nullable().default(null),
-  deletedBy: z.string().uuid().nullable().default(null),
-  deletionReason: z.string().nullable().default(null),
-
-  // Audit fields
-  createdAt: z.date().default(() => new Date()),
-  createdBy: z.string().uuid(),
-  updatedAt: z.date().default(() => new Date()),
-  updatedBy: z.string().uuid(),
-
-  // Data retention
-  hardDeleteAfter: z.date().nullable().default(null),
-  retentionPeriodDays: z.number().default(2555), // 7 years default
-});
-
-// Extended schema for critical business entities
-const ReservationSchema = BaseSoftDeleteSchema.extend({
-  confirmationNumber: z.string(),
-  guestId: z.string().uuid(),
-  roomId: z.string().uuid(),
-  checkInDate: z.date(),
-  checkOutDate: z.date(),
-  status: z.enum(['pending', 'confirmed', 'checked-in', 'checked-out', 'cancelled']),
-  totalAmount: z.number().positive(),
-  // ... other reservation fields
-});
-```
+**Entity-Specific Schema Extensions:**
+Entities like reservations shall extend the base schema with domain-specific fields while maintaining all soft delete capabilities and audit requirements.
 
 #### 7.8.3 Soft Delete Workflow Architecture
 
@@ -1776,68 +1612,30 @@ graph TB
 - **Atomic Operations:** Ensure consistency across related entities
 - **Event Publishing:** Real-time notifications via Kafka
 
-**Query Performance Optimization:**
-```sql
--- Optimized indexes for soft delete queries
-CREATE INDEX CONCURRENTLY idx_reservations_active
-ON reservations (id, updated_at) WHERE is_deleted = false;
-
-CREATE INDEX CONCURRENTLY idx_reservations_deleted
-ON reservations (deleted_at, retention_period_days) WHERE is_deleted = true;
-
-CREATE INDEX CONCURRENTLY idx_soft_delete_cleanup
-ON reservations (hard_delete_after) WHERE is_deleted = true AND hard_delete_after IS NOT NULL;
-```
+**Query Performance Requirements:**
+- **Active Record Indexes:** Optimized indexes for non-deleted records to maintain query performance
+- **Deleted Record Indexes:** Separate indexes for soft-deleted records to support cleanup operations
+- **Cleanup Query Optimization:** Specialized indexes for automated cleanup processes
+- **Concurrent Index Management:** Non-blocking index operations to maintain system availability
 
 #### 7.8.5 Automated Cleanup & Retention Policy
 
 **Retention Policy Framework:**
-```typescript
-interface RetentionPolicy {
-  entityType: string;
-  defaultRetentionDays: number;
-  minimumRetentionDays: number;
-  maximumRetentionDays: number;
-  legalHoldOverride: boolean;
-  complianceRequirements: string[];
-}
 
-// Entity-specific retention policies
-const retentionPolicies: RetentionPolicy[] = [
-  {
-    entityType: 'reservations',
-    defaultRetentionDays: 2555, // 7 years
-    minimumRetentionDays: 1095, // 3 years (legal minimum)
-    maximumRetentionDays: 3650, // 10 years
-    legalHoldOverride: true,
-    complianceRequirements: ['PCI-DSS', 'GDPR', 'SOX']
-  },
-  {
-    entityType: 'payments',
-    defaultRetentionDays: 2555, // 7 years (financial records)
-    minimumRetentionDays: 2555,
-    maximumRetentionDays: 3650,
-    legalHoldOverride: true,
-    complianceRequirements: ['PCI-DSS', 'SOX', 'IRS']
-  },
-  {
-    entityType: 'guest_data',
-    defaultRetentionDays: 1095, // 3 years
-    minimumRetentionDays: 365,  // 1 year
-    maximumRetentionDays: 2190, // 6 years
-    legalHoldOverride: true,
-    complianceRequirements: ['GDPR', 'CCPA']
-  },
-  {
-    entityType: 'audit_logs',
-    defaultRetentionDays: 3650, // 10 years
-    minimumRetentionDays: 2555,
-    maximumRetentionDays: 7300, // 20 years
-    legalHoldOverride: true,
-    complianceRequirements: ['SOX', 'GDPR']
-  }
-];
-```
+The system shall implement configurable retention policies with the following requirements:
+
+- **Entity-Specific Retention:** Different retention periods based on data type and regulatory requirements
+- **Compliance Integration:** Automatic adherence to GDPR, PCI-DSS, SOX, and other regulatory frameworks
+- **Legal Hold Override:** Ability to suspend deletion for legal proceedings or investigations
+- **Configurable Parameters:**
+  - Default retention periods (7 years for financial records, 3 years for guest data)
+  - Minimum retention periods based on legal requirements
+  - Maximum retention periods to prevent indefinite storage
+- **Retention Policy Specifications:**
+  - **Reservations:** 7-year default retention, 3-year minimum (legal compliance)
+  - **Payments:** 7-year retention for financial record compliance (PCI-DSS, SOX, IRS)
+  - **Guest Data:** 3-year default, 1-year minimum, GDPR/CCPA compliant
+  - **Audit Logs:** 10-year retention for compliance and forensic purposes
 
 #### 7.8.6 Automated Cleanup Jobs
 
@@ -1905,26 +1703,23 @@ graph TB
 - **Authorization:** Manager+ level required for recovery operations
 - **Audit Trail:** Complete audit log of all recovery operations
 
-**Recovery Workflow:**
-```typescript
-interface RecoveryRequest {
-  recordId: string;
-  entityType: string;
-  requestedBy: string;
-  businessJustification: string;
-  approvedBy?: string;
-  recoveryType: 'individual' | 'bulk' | 'point-in-time';
-  targetDate?: Date;
-}
+**Recovery Workflow Requirements:**
 
-interface RecoveryResult {
-  success: boolean;
-  recoveredRecordId?: string;
-  errorMessage?: string;
-  auditTrailId: string;
-  recoveredAt: Date;
-}
-```
+The system shall support comprehensive data recovery with the following capabilities:
+
+- **Recovery Request Management:**
+  - Unique identification for each recovery request
+  - Entity type specification (reservation, payment, guest data, etc.)
+  - Requestor identification and business justification requirements
+  - Optional approval workflow for sensitive data recovery
+  - Recovery type selection (individual record, bulk recovery, point-in-time restoration)
+  - Target date specification for historical data recovery
+
+- **Recovery Result Tracking:**
+  - Success/failure status for each recovery operation
+  - Recovered record identification and audit trail linking
+  - Error message capture for failed recovery attempts
+  - Complete audit logging with timestamps and user attribution
 
 #### 7.8.8 Performance Monitoring & Metrics
 
@@ -1935,19 +1730,21 @@ interface RecoveryResult {
 - **Recovery Success Rate:** 99.95% successful recovery operations
 - **Compliance Score:** 100% retention policy adherence
 
-**Monitoring Dashboard Metrics:**
-```typescript
-interface SoftDeleteMetrics {
-  dailyDeletes: number;
-  weeklyDeletes: number;
-  monthlyDeletes: number;
-  avgDeleteLatency: number;
-  cleanupSuccess: number;
-  storageOverhead: number;
-  pendingRecoveries: number;
-  complianceViolations: number;
-}
-```
+**Monitoring Dashboard Requirements:**
+
+The system shall provide comprehensive monitoring and metrics with the following capabilities:
+
+- **Usage Metrics:**
+  - Daily, weekly, and monthly deletion statistics
+  - Average deletion operation latency tracking
+  - Cleanup operation success rate monitoring
+  - Storage overhead measurement from soft-deleted records
+
+- **Operational Metrics:**
+  - Pending recovery request queue monitoring
+  - Compliance violation detection and alerting
+  - Performance trend analysis and reporting
+  - Real-time dashboard with key performance indicators
 
 ---
 
