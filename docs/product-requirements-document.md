@@ -464,19 +464,306 @@ stateDiagram-v2
 ## 5. Non-Functional Requirements
 
 ### 5.1 Performance Requirements
-- **Response Time:** < 2 seconds for 95% of transactions
-- **Concurrent Users:** Support 500+ simultaneous users
-- **Transaction Throughput:** 100+ bookings per minute
-- **Search Performance:** < 500ms for availability searches
-- **Report Generation:** < 10 seconds for standard reports
-- **Real-time Sync:** < 1 second for critical updates
+**Enterprise-Scale Performance Targets:**
+- **Response Time:** < 200ms for 95% of API calls, < 500ms for 99% of transactions
+- **Concurrent Users:** Support 50,000+ simultaneous users across all properties
+- **Transaction Throughput:** 10,000+ reservations per hour (167+ bookings per minute)
+- **Search Performance:** < 100ms for availability searches (cached), < 300ms for complex searches
+- **Report Generation:** < 5 seconds for real-time reports, < 30 seconds for complex analytics
+- **Real-time Sync:** < 100ms for critical updates across all channels
+- **Database Performance:** < 50ms for 95% of database queries
+- **Cache Performance:** < 10ms for Redis operations, 99%+ cache hit ratio for availability data
 
 ### 5.2 Scalability Requirements
-- **Horizontal Scaling:** Microservices architecture for independent scaling
-- **Database Sharding:** Support for data partitioning
-- **Multi-tenancy:** Support for hotel chains
-- **Load Balancing:** Automatic traffic distribution
-- **Geographic Distribution:** Multi-region deployment capability
+**Hyperscale Architecture:**
+- **Multi-Region Deployment:** Global distribution with regional data centers
+- **Auto-Scaling:** Dynamic scaling based on load (CPU, memory, request volume)
+- **Database Sharding:** Horizontal partitioning by property, geographic region, or tenant
+- **Read Replicas:** Multiple read replicas per region for query distribution
+- **CDN Integration:** Global content delivery network for static assets and cached data
+- **Microservices Independence:** Each service scales independently based on demand
+- **Queue-Based Processing:** Asynchronous processing for non-critical operations
+- **Connection Pooling:** Optimized database connection management
+- **Caching Layers:** Multi-tier caching (Redis, Application-level, CDN)
+
+### 5.2.1 Recommended Architecture for Enterprise Scale
+
+```mermaid
+graph TB
+    subgraph "Global Load Balancer"
+        GLB[Global Load Balancer<br/>Route 53 / CloudFlare]
+    end
+
+    subgraph "Region 1 - US East"
+        subgraph "Load Balancers"
+            ALB1[Application LB]
+            NLB1[Network LB]
+        end
+
+        subgraph "API Gateway Cluster"
+            AG1[API Gateway 1]
+            AG2[API Gateway 2]
+            AG3[API Gateway N]
+        end
+
+        subgraph "Microservices - Auto Scaling"
+            RS1[Reservation Service<br/>Pods: 10-100]
+            AS1[Availability Service<br/>Pods: 20-200]
+            PS1[Payment Service<br/>Pods: 5-50]
+            NS1[Notification Service<br/>Pods: 5-20]
+        end
+
+        subgraph "Data Layer US-East"
+            PG1[(PostgreSQL<br/>Primary + 3 Replicas)]
+            R1[Redis Cluster<br/>6 Nodes]
+            K1[Kafka Cluster<br/>9 Brokers]
+        end
+    end
+
+    subgraph "Region 2 - EU West"
+        subgraph "Load Balancers EU"
+            ALB2[Application LB]
+            NLB2[Network LB]
+        end
+
+        subgraph "API Gateway Cluster EU"
+            AG4[API Gateway 1]
+            AG5[API Gateway 2]
+            AG6[API Gateway N]
+        end
+
+        subgraph "Microservices EU - Auto Scaling"
+            RS2[Reservation Service<br/>Pods: 10-100]
+            AS2[Availability Service<br/>Pods: 20-200]
+            PS2[Payment Service<br/>Pods: 5-50]
+            NS2[Notification Service<br/>Pods: 5-20]
+        end
+
+        subgraph "Data Layer EU-West"
+            PG2[(PostgreSQL<br/>Primary + 3 Replicas)]
+            R2[Redis Cluster<br/>6 Nodes]
+            K2[Kafka Cluster<br/>9 Brokers]
+        end
+    end
+
+    subgraph "Global Services"
+        CDN[CloudFront / CloudFlare CDN]
+        MC[Memcached Global]
+        ES[Elasticsearch Cluster]
+    end
+
+    GLB --> ALB1
+    GLB --> ALB2
+    ALB1 --> AG1
+    ALB1 --> AG2
+    ALB1 --> AG3
+    AG1 --> RS1
+    AG1 --> AS1
+    AG1 --> PS1
+    RS1 --> PG1
+    AS1 --> R1
+    PS1 --> K1
+
+    ALB2 --> AG4
+    ALB2 --> AG5
+    ALB2 --> AG6
+    AG4 --> RS2
+    AG4 --> AS2
+    AG4 --> PS2
+    RS2 --> PG2
+    AS2 --> R2
+    PS2 --> K2
+
+    PG1 <--> PG2
+    R1 <--> R2
+    K1 <--> K2
+
+    CDN --> AG1
+    CDN --> AG4
+```
+
+### 5.2.2 Database Scaling Strategy
+
+**Sharding Approach:**
+- **Shard by Property Group:** 1000 properties per shard
+- **Geographic Sharding:** Regional data distribution
+- **Read/Write Separation:** Master-slave replication with read replicas
+- **Connection pooling:** PgBouncer with 1000+ connections per pool
+
+**Recommended Database Architecture:**
+```mermaid
+graph TB
+    subgraph "Application Layer"
+        A[Application Services]
+        B[Database Router]
+    end
+
+    subgraph "Shard 1 - Properties 1-1000"
+        S1M[(Master DB)]
+        S1R1[(Read Replica 1)]
+        S1R2[(Read Replica 2)]
+        S1R3[(Read Replica 3)]
+    end
+
+    subgraph "Shard 2 - Properties 1001-2000"
+        S2M[(Master DB)]
+        S2R1[(Read Replica 1)]
+        S2R2[(Read Replica 2)]
+        S2R3[(Read Replica 3)]
+    end
+
+    subgraph "Shard N - Properties N*1000"
+        SNM[(Master DB)]
+        SNR1[(Read Replica 1)]
+        SNR2[(Read Replica 2)]
+        SNR3[(Read Replica 3)]
+    end
+
+    subgraph "Cache Layer"
+        RC[Redis Cluster<br/>Availability Cache]
+        MC[Memcached<br/>Session Cache]
+    end
+
+    A --> B
+    B --> S1M
+    B --> S2M
+    B --> SNM
+    B --> S1R1
+    B --> S2R1
+    B --> SNR1
+    A --> RC
+    A --> MC
+```
+
+### 5.2.3 Caching Strategy for High Performance
+
+**Multi-Layer Caching:**
+- **L1 - Application Cache:** In-memory caching within each service
+- **L2 - Redis Distributed Cache:** Shared cache across all service instances
+- **L3 - CDN Cache:** Geographic distribution of static and semi-static data
+- **Database Query Cache:** PostgreSQL query result caching
+
+**Cache Hierarchy:**
+```mermaid
+graph LR
+    subgraph "Request Flow"
+        U[User Request]
+        APP[Application Service]
+        L1[L1: Application Cache<br/>Hit Rate: 40%]
+        L2[L2: Redis Cache<br/>Hit Rate: 45%]
+        L3[L3: Database<br/>Hit Rate: 15%]
+        DB[(Database)]
+    end
+
+    U --> APP
+    APP --> L1
+    L1 -->|Cache Miss| L2
+    L2 -->|Cache Miss| L3
+    L3 -->|Cache Miss| DB
+
+    L1 -->|Cache Hit| APP
+    L2 -->|Cache Hit| APP
+    L3 -->|Cache Hit| APP
+```
+
+### 5.2.4 High-Volume Transaction Processing Strategy
+
+**Handling 10,000+ Reservations per Hour:**
+
+**1. Asynchronous Processing Pipeline**
+```mermaid
+sequenceDiagram
+    participant U as User/OTA
+    participant API as API Gateway
+    participant RQ as Request Queue
+    participant RS as Reservation Service
+    participant AV as Availability Service
+    participant DB as Database
+    participant Cache as Redis Cache
+    participant Notify as Notification Queue
+
+    U->>API: Create Reservation
+    API->>Cache: Check Availability (10ms)
+    Cache-->>API: Available
+    API->>RQ: Queue Reservation Request
+    API-->>U: Request Accepted (HTTP 202)
+
+    RQ->>RS: Process Reservation
+    RS->>AV: Lock Inventory
+    AV->>DB: Atomic Update
+    RS->>DB: Create Reservation
+    RS->>Cache: Update Availability
+    RS->>Notify: Send Confirmation
+    RS-->>U: Confirmation (WebSocket/Polling)
+```
+
+**2. Database Optimization Techniques**
+- **Connection Pooling:** 500+ connections per service with PgBouncer
+- **Batch Operations:** Process multiple reservations in single transactions
+- **Optimized Indexes:** Composite indexes on frequently queried columns
+- **Partitioning:** Date-based partitioning for reservations table
+- **Read Replicas:** 3-5 read replicas per region for search queries
+- **Write Optimization:** Separate write-optimized master databases
+
+**3. Availability Cache Strategy**
+- **Pre-computed Availability:** Daily batch jobs to pre-calculate 90-day availability
+- **Real-time Updates:** Incremental updates via Kafka events
+- **Cache Warming:** Proactive cache population for high-demand properties
+- **Distributed Locking:** Redis-based distributed locks to prevent overbooking
+- **Cache Hierarchy:** Property → Room Type → Date range caching
+
+**4. Queue Management Architecture**
+```mermaid
+graph TB
+    subgraph "Request Processing Queues"
+        PQ[Priority Queue<br/>VIP/Direct Bookings]
+        SQ[Standard Queue<br/>Regular Bookings]
+        BQ[Bulk Queue<br/>OTA/Channel Manager]
+    end
+
+    subgraph "Processing Workers"
+        PW1[Priority Workers<br/>Pool: 10]
+        SW1[Standard Workers<br/>Pool: 50]
+        BW1[Bulk Workers<br/>Pool: 20]
+    end
+
+    subgraph "Database Connections"
+        PC[Priority DB Pool<br/>50 connections]
+        SC[Standard DB Pool<br/>200 connections]
+        BC[Bulk DB Pool<br/>100 connections]
+    end
+
+    PQ --> PW1
+    SQ --> SW1
+    BQ --> BW1
+
+    PW1 --> PC
+    SW1 --> SC
+    BW1 --> BC
+```
+
+**5. Resource Allocation Recommendations**
+
+**Kubernetes Resource Planning:**
+- **API Gateway:** 20-50 pods, 2 CPU, 4GB RAM each
+- **Reservation Service:** 50-100 pods, 4 CPU, 8GB RAM each
+- **Availability Service:** 30-80 pods, 2 CPU, 4GB RAM each
+- **Payment Service:** 10-30 pods, 2 CPU, 4GB RAM each
+- **Notification Service:** 5-15 pods, 1 CPU, 2GB RAM each
+
+**Database Infrastructure:**
+- **Master DB:** 32 vCPU, 128GB RAM, SSD storage
+- **Read Replicas:** 16 vCPU, 64GB RAM each (3-5 replicas)
+- **Redis Cluster:** 6 nodes, 16GB RAM each
+- **Connection Pools:** 1000+ connections per database
+
+**6. Monitoring and Alerting Thresholds**
+- **Queue Depth Alert:** > 1000 pending reservations
+- **Response Time Alert:** > 500ms for 95th percentile
+- **Error Rate Alert:** > 0.1% failure rate
+- **Database Connection Alert:** > 80% connection pool utilization
+- **Cache Hit Rate Alert:** < 95% for availability queries
+- **Throughput Alert:** < 150 reservations per minute during peak
 
 ### 5.3 Reliability & Availability
 - **Uptime SLA:** 99.95% availability
