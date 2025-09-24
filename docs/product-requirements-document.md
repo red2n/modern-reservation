@@ -884,42 +884,6 @@ graph TB
     GS <--> K2
 ```
 
-    subgraph "Global Services"
-        CDN[CloudFront / CloudFlare CDN]
-        MC[Memcached Global]
-        ES[Elasticsearch Cluster]
-    end
-
-    GLB --> ALB1
-    GLB --> ALB2
-    ALB1 --> AG1
-    ALB1 --> AG2
-    ALB1 --> AG3
-    AG1 --> RS1
-    AG1 --> AS1
-    AG1 --> PS1
-    RS1 --> PG1
-    AS1 --> R1
-    PS1 --> K1
-
-    ALB2 --> AG4
-    ALB2 --> AG5
-    ALB2 --> AG6
-    AG4 --> RS2
-    AG4 --> AS2
-    AG4 --> PS2
-    RS2 --> PG2
-    AS2 --> R2
-    PS2 --> K2
-
-    PG1 <--> PG2
-    R1 <--> R2
-    K1 <--> K2
-
-    CDN --> AG1
-    CDN --> AG4
-```
-
 ### 5.2.2 Multi-Master Database Architecture for Ultra-Scale
 
 **Advanced Sharding Strategy:**
@@ -1077,13 +1041,6 @@ graph TB
 - **Distributed Lock Performance:** < 2ms lock acquisition
 - **Cache Throughput:** 100,000+ operations per second
 - **Failover Time:** < 100ms automatic failover between master/slave
-    APP --> L1
-    L1 -->|Cache Miss| L2
-    L2 -->|Cache Miss| L3
-    L3 -->|Cache Miss| DB
-
-    L1 -->|Cache Hit| APP
-    L2 -->|Cache Hit| APP
     L3 -->|Cache Hit| APP
 ```
 
@@ -1117,7 +1074,7 @@ sequenceDiagram
     EVT->>DB: Async DB Write
     EVT->>VIEW: Update Read Model
     EVT->>WS: Real-time Notification
-    RS-->>U: Confirmation (WebSocket/Polling)
+    WS-->>U: Confirmation (WebSocket/Polling)
 ```
 
 **2. Database Optimization Techniques**
