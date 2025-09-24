@@ -1041,8 +1041,6 @@ graph TB
 - **Distributed Lock Performance:** < 2ms lock acquisition
 - **Cache Throughput:** 100,000+ operations per second
 - **Failover Time:** < 100ms automatic failover between master/slave
-    L3 -->|Cache Hit| APP
-```
 
 ### 5.2.4 Ultra-High Volume Transaction Processing (10,000/Minute)
 
