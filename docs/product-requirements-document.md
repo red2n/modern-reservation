@@ -30,11 +30,18 @@ For ultra-scale performance handling 10,000 reservations per minute with 100,000
 - **TypeScript** for type safety and development productivity
 - **NgRx** for state management across complex applications
 - **Angular Universal** for server-side rendering and SEO
+- **Apollo Client** for GraphQL data fetching and caching
+
+**API Layer:**
+- **GraphQL Federation** with Apollo Gateway for unified data graph
+- **GraphQL Subscriptions** for real-time updates and notifications
+- **REST API Fallback** for third-party integrations and legacy systems
+- **Schema Management** with TypeGraphQL and schema-first development
 
 **Backend Architecture - Service Distribution:**
 - **Node.js Services** (I/O Intensive, Real-time Operations):
-  - API Gateway and Load Balancing
-  - WebSocket Services for Real-time Updates
+  - GraphQL Federation Gateway and Query Planning
+  - WebSocket Services for Real-time Subscriptions
   - Notification and Communication Services
   - Channel Manager Integrations (Multiple OTA APIs)
   - Housekeeping and Simple CRUD Operations
@@ -65,9 +72,11 @@ For ultra-scale performance handling 10,000 reservations per minute with 100,000
 
 **Development Framework:**
 - **Nx Monorepo** for unified codebase management
+- **GraphQL Federation** for unified schema across microservices
 - **Zod Schemas** for TypeScript-first validation across services
 - **Protocol Buffers** for efficient service-to-service communication
-- **OpenAPI/Swagger** for API documentation and contract testing
+- **GraphQL Code Generation** for type-safe client-server communication
+- **OpenAPI/Swagger** for REST API documentation and contract testing
 
 **Infrastructure & DevOps:**
 - **Docker & Kubernetes** with advanced orchestration
@@ -215,15 +224,17 @@ graph LR
 
 **Comparative Performance Metrics:**
 
-| Operation Type | Pure Node.js | Pure Java | Hybrid Approach | Improvement |
-|----------------|-------------|-----------|-----------------|-------------|
+| Operation Type | Pure Node.js | Pure Java | Hybrid + GraphQL | Improvement |
+|----------------|-------------|-----------|------------------|-------------|
 | **API Gateway Latency** | 5ms (optimal) | 15ms (overhead) | **5ms** (Node.js) | **Best of class** |
 | **Reservation Processing** | 50ms (single-threaded) | 10ms (optimized) | **10ms** (Java) | **5x faster** |
 | **Availability Calculation** | 100ms (limited CPU) | 20ms (multi-threaded) | **20ms** (Java) | **5x improvement** |
 | **WebSocket Connections** | 100K/instance (native) | 20K/instance (limited) | **100K** (Node.js) | **5x capacity** |
+| **Dashboard Load Time** | 200ms (8 REST calls) | 180ms (6 REST calls) | **50ms** (1 GraphQL query) | **4x faster loading** |
+| **Mobile Data Usage** | 2MB/session (over-fetch) | 1.8MB/session (optimized) | **500KB** (precise queries) | **75% reduction** |
 | **Memory Usage (1K req/s)** | 2GB (efficient) | 4GB (overhead) | **3GB** (balanced) | **25% optimized** |
 | **Cold Start Time** | 200ms (fast) | 2s (JVM warmup) | **Mixed** (service-specific) | **Context-aware** |
-| **Development Velocity** | Fast (single language) | Moderate (enterprise) | **Fast** (shared tooling) | **Maintained speed** |
+| **Development Velocity** | Fast (single language) | Moderate (enterprise) | **Fast** (unified schema) | **Enhanced with GraphQL** |
 
 ### 3.4 Monorepo Architecture Benefits
 
@@ -958,6 +969,17 @@ graph TB
     N3 --> H3
     J3 --> H4
 ```
+
+**GraphQL Performance Targets:**
+- **Query Response Time:** < 50ms for 95% of GraphQL queries
+- **Mutation Response Time:** < 100ms for reservation and payment mutations
+- **Subscription Latency:** < 100ms for real-time updates delivery
+- **Query Complexity Control:** Maximum depth of 10, cost limit of 1000 points
+- **DataLoader Batching:** < 10ms batch window for N+1 problem elimination
+- **Federation Gateway Overhead:** < 5ms for query planning and execution
+- **Cache Hit Rate:** > 80% for frequently accessed GraphQL queries
+- **Bandwidth Optimization:** 60-75% reduction in data transfer vs REST
+- **Request Reduction:** 70-80% fewer API calls for complex dashboard views
 
 **Event-Driven Architecture Performance Gains:**
 
@@ -1966,7 +1988,144 @@ graph LR
     F --> N
 ```
 
-### 6.5 Nx Monorepo Structure & Organization
+### 6.5 GraphQL Federation Architecture
+
+**Unified Data Graph for Ultra-Scale Performance**
+
+The GraphQL Federation layer provides a unified API that dramatically improves frontend performance while maintaining microservices architecture benefits.
+
+```mermaid
+graph TB
+    subgraph "Client Applications"
+        A1[Guest Portal<br/>PWA]
+        A2[Staff Dashboard<br/>Real-time updates]
+        A3[Mobile Apps<br/>Bandwidth optimized]
+        A4[Admin Console<br/>Complex queries]
+    end
+
+    subgraph "GraphQL Federation Gateway"
+        GW[Apollo Gateway<br/>Query planning & composition]
+        GS[GraphQL Subscriptions<br/>WebSocket management]
+        GC[Query Complexity Analyzer<br/>Rate limiting & security]
+        GR[Response Cache<br/>Redis-backed caching]
+    end
+
+    subgraph "GraphQL Subgraphs"
+        SG1[Reservation Subgraph<br/>Node.js service]
+        SG2[Availability Subgraph<br/>Java service]
+        SG3[Guest Profile Subgraph<br/>Node.js service]
+        SG4[Payment Subgraph<br/>Java service]
+        SG5[Analytics Subgraph<br/>Java service]
+        SG6[Property Subgraph<br/>Node.js service]
+    end
+
+    subgraph "Data Sources & Events"
+        DB[(PostgreSQL<br/>Multi-master)]
+        RC[(Redis Cluster<br/>21 nodes)]
+        KF[Kafka Events<br/>Real-time streams]
+    end
+
+    A1 --> GW
+    A2 --> GW
+    A3 --> GW
+    A4 --> GW
+
+    A1 -.-> GS
+    A2 -.-> GS
+
+    GW --> GC
+    GC --> SG1
+    GC --> SG2
+    GC --> SG3
+    GC --> SG4
+    GC --> SG5
+    GC --> SG6
+
+    GW <--> GR
+
+    SG1 --> DB
+    SG1 --> RC
+    SG2 --> DB
+    SG2 --> RC
+    SG3 --> DB
+    SG4 --> DB
+    SG5 --> DB
+    SG6 --> RC
+
+    KF -.-> GS
+```
+
+**GraphQL Query Optimization Pipeline**
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant GW as GraphQL Gateway
+    participant QA as Query Analyzer
+    participant DL as DataLoader
+    participant RC as Redis Cache
+    participant MS as Microservices
+    participant DB as Database
+
+    Note over C,DB: Complex Dashboard Query Example
+    C->>GW: Query { guest, reservations, payments }
+    GW->>QA: Analyze complexity & validate
+    QA->>RC: Check query cache
+    RC-->>QA: Cache miss
+    QA->>DL: Plan data loading strategy
+    DL->>MS: Batch requests per service
+    MS->>DB: Optimized database queries
+    DB-->>MS: Structured result sets
+    MS-->>DL: Service responses
+    DL->>GW: Composed data graph
+    GW->>RC: Cache result (TTL-based)
+    GW-->>C: Single response < 50ms
+
+    Note over C,DB: Subsequent Similar Query
+    C->>GW: Similar query pattern
+    GW->>RC: Cache lookup
+    RC-->>GW: Cache hit
+    GW-->>C: Cached response < 5ms
+```
+
+**Performance Benefits Comparison**
+
+| **Operation** | **REST API Approach** | **GraphQL Approach** | **Performance Gain** |
+|---------------|----------------------|---------------------|---------------------|
+| **Guest Dashboard Load** | 8 API calls, 200ms total | 1 query, 50ms total | **4x faster loading** |
+| **Availability Search** | 500KB response data | 150KB response data | **70% bandwidth reduction** |
+| **Booking Flow** | 12 sequential API calls | 3 optimized mutations | **75% fewer requests** |
+| **Real-time Updates** | Polling every 5 seconds | Push-based subscriptions | **Instant updates** |
+| **Mobile Data Usage** | 2MB per session | 500KB per session | **75% data reduction** |
+| **Complex Reports** | 20+ REST endpoints | 1 federated query | **95% complexity reduction** |
+
+**GraphQL Implementation Features**
+
+**1. Query Optimization:**
+- **Complexity Analysis:** Prevent expensive queries with depth and cost limiting
+- **Query Planning:** Intelligent execution across federated services
+- **DataLoader Batching:** Eliminate N+1 queries with automatic batching
+- **Field-Level Caching:** Granular cache control with smart invalidation
+
+**2. Real-time Capabilities:**
+- **GraphQL Subscriptions:** Live updates for availability and booking changes
+- **Event-Driven Updates:** Kafka event integration for instant notifications
+- **Connection Management:** Efficient WebSocket connection pooling
+- **Selective Subscriptions:** Subscribe to specific data changes only
+
+**3. Federation Benefits:**
+- **Schema Composition:** Unified graph from multiple microservices
+- **Independent Development:** Teams can evolve services independently
+- **Gradual Migration:** Incremental adoption alongside existing REST APIs
+- **Type Safety:** End-to-end type safety with generated client libraries
+
+**4. Performance Monitoring:**
+- **Query Performance Tracking:** Real-time query execution metrics
+- **Cache Hit Rate Monitoring:** Redis cache effectiveness tracking
+- **Federation Gateway Metrics:** Query planning and execution timing
+- **Client-Side Metrics:** Apollo Client cache and network performance
+
+### 6.6 Nx Monorepo Structure & Organization
 
 **Enterprise-Scale Monorepo Architecture:**
 
@@ -2024,6 +2183,7 @@ graph TB
                 S2[types/<br/>TypeScript definitions<br/>Shared type safety]
                 S3[constants/<br/>System-wide constants<br/>Configuration management]
                 S4[proto/<br/>Protocol Buffer definitions<br/>Service communication]
+                S5[graphql/<br/>GraphQL schema definitions<br/>Federation type safety]
             end
 
             subgraph "Frontend Libraries"
@@ -2032,6 +2192,7 @@ graph TB
                 L3[guards/<br/>Authentication guards<br/>Route protection]
                 L4[interceptors/<br/>HTTP interceptors<br/>Cross-cutting concerns]
                 L5[themes/<br/>Dark/Light themes<br/>Accessibility support]
+                L6[graphql-client/<br/>Apollo Client setup<br/>GraphQL utilities]
             end
 
             subgraph "Backend Libraries"
@@ -2041,6 +2202,7 @@ graph TB
                 B4[auth/<br/>JWT/OAuth2 handling<br/>RBAC implementation]
                 B5[monitoring/<br/>OpenTelemetry setup<br/>Observability patterns]
                 B6[soft-delete/<br/>Audit trail system<br/>Recovery mechanisms]
+                B7[graphql-federation/<br/>Schema federation utilities<br/>DataLoader patterns]
                 B7[circuit-breaker/<br/>Resilience patterns<br/>Fault tolerance]
             end
         end
@@ -2115,7 +2277,7 @@ graph TB
 - **Plugin Ecosystem:** Angular, Node.js, Java Spring Boot integration
 - **Distributed Task Execution:** Parallel execution across available cores
 
-### 6.6 Development Workflow & Dependency Management
+### 6.7 Development Workflow & Dependency Management
 
 ```mermaid
 graph LR
@@ -2159,7 +2321,7 @@ graph LR
     Q4 --> Q5
 ```
 
-### 6.7 Deployment Architecture
+### 6.8 Deployment Architecture
 
 ```mermaid
 graph TB
@@ -3134,13 +3296,16 @@ graph TB
 - [ ] Theme support implementation
 
 ### Phase 2: Core Modules (Weeks 7-14)
-- [ ] Reservation & Booking module
-- [ ] Availability management
+- [ ] GraphQL Federation Gateway setup and configuration
+- [ ] GraphQL schema design and federation setup
+- [ ] Apollo Client integration in frontend applications
+- [ ] Reservation & Booking module with GraphQL API
+- [ ] Availability management with real-time subscriptions
 - [ ] Rate management system
 - [ ] Room configuration
 - [ ] Front desk module
 - [ ] Basic payment integration
-- [ ] Real-time notifications via Kafka
+- [ ] Real-time notifications via GraphQL subscriptions and Kafka
 
 ### Phase 3: Advanced Features (Weeks 15-22)
 - [ ] Channel Manager integration
