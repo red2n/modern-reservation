@@ -13,7 +13,7 @@
 ## 1. Executive Summary
 
 ### 1.1 Project Overview
-The Modern Reservation Management System is a comprehensive, cloud-native hospitality management platform designed to streamline all aspects of hotel operations. Built on a microservices architecture using Node.js LTS, Angular LTS with Material Design, PostgreSQL, Redis, and Apache Kafka, this system provides end-to-end management capabilities from reservations to housekeeping, integrated with modern payment systems and channel managers.
+The Modern Reservation Management System is a comprehensive, cloud-native hospitality management platform designed to streamline all aspects of hotel operations. Built on a microservices architecture using Node.js LTS, Next.js with React and Tailwind CSS, PostgreSQL, Redis, and Apache Kafka, this system provides end-to-end management capabilities from reservations to housekeeping, integrated with modern payment systems and channel managers.
 
 ### 1.2 Vision Statement
 To create a unified, scalable, and user-friendly reservation management system that empowers hospitality businesses to efficiently manage their operations, optimize revenue, and enhance guest experiences through real-time data processing and intelligent automation.
@@ -25,12 +25,13 @@ To create a unified, scalable, and user-friendly reservation management system t
 For ultra-scale performance handling 10,000 reservations per minute with 100,000+ concurrent users, this system implements a strategic hybrid approach combining the strengths of both Node.js and Java ecosystems.
 
 **Frontend Technologies:**
-- **Angular LTS (v17+)** with Angular Material Design System
-- **Progressive Web App (PWA)** capabilities for mobile experience
+- **Next.js (v14+)** with App Router for modern React development
+- **React 18+** with Server Components and Suspense
+- **Tailwind CSS** for utility-first styling and design system
 - **TypeScript** for type safety and development productivity
-- **NgRx** for state management across complex applications
-- **Angular Universal** for server-side rendering and SEO
+- **Zustand** for lightweight state management across applications
 - **Apollo Client** for GraphQL data fetching and caching
+- **Progressive Web App (PWA)** capabilities with next-pwa
 
 **API Layer:**
 - **GraphQL Federation** with Apollo Gateway for unified data graph
@@ -246,14 +247,14 @@ graph TB
         direction TB
 
         subgraph "Applications Layer"
-            A1[Frontend Apps<br/>Angular 17+ PWA]
+            A1[Frontend Apps<br/>Next.js 14+ PWA]
             A2[Backend Services<br/>Node.js + Java hybrid]
             A3[Worker Processes<br/>Scheduled jobs & batch]
         end
 
         subgraph "Shared Libraries"
             L1[Schemas & Types<br/>Zod validation across services]
-            L2[UI Components<br/>Angular Material system]
+            L2[UI Components<br/>Tailwind CSS system]
             L3[Backend Utils<br/>Database, cache, messaging]
             L4[Testing Tools<br/>Mocks, fixtures, utilities]
         end
@@ -296,7 +297,7 @@ graph TB
 
 ```mermaid
 sequenceDiagram
-    participant UI as Angular Frontend
+    participant UI as Next.js Frontend
     participant GW as Node.js API Gateway
     participant K as Kafka Event Streaming
     participant AC as Java Availability Calculator
@@ -1558,9 +1559,9 @@ graph TB
 ```mermaid
 graph TB
     subgraph "Client Layer - Multi-Channel Access"
-        A1[Angular PWA<br/>Guest Portal]
-        A2[Angular PWA<br/>Staff Portal]
-        A3[Angular PWA<br/>Admin Portal]
+        A1[Next.js PWA<br/>Guest Portal]
+        A2[Next.js PWA<br/>Staff Portal]
+        A3[Next.js PWA<br/>Admin Portal]
         A4[Mobile Apps<br/>iOS/Android]
         A5[POS Terminals<br/>Kiosk Integration]
     end
@@ -1720,7 +1721,7 @@ graph TB
 
 ```mermaid
 sequenceDiagram
-    participant UI as Angular PWA
+    participant UI as Next.js PWA
     participant GW as Node.js API Gateway
     participant K as Kafka Event Bus
     participant AC as Java Availability Calculator
@@ -2136,9 +2137,9 @@ graph TB
 
         subgraph "Applications Layer"
             subgraph "Frontend Applications"
-                F1[guest-portal/<br/>Angular 17+ PWA<br/>Guest booking interface]
-                F2[staff-portal/<br/>Angular 17+ PWA<br/>Staff operations]
-                F3[admin-portal/<br/>Angular 17+ PWA<br/>Administrative interface]
+                F1[guest-portal/<br/>Next.js 14+ PWA<br/>Guest booking interface]
+                F2[staff-portal/<br/>Next.js 14+ PWA<br/>Staff operations]
+                F3[admin-portal/<br/>Next.js 14+ PWA<br/>Administrative interface]
                 F4[mobile-pwa/<br/>Progressive Web App<br/>Mobile-first experience]
             end
 
@@ -2187,8 +2188,8 @@ graph TB
             end
 
             subgraph "Frontend Libraries"
-                L1[ui-components/<br/>Angular Material system<br/>Design consistency]
-                L2[state-management/<br/>NgRx stores & effects<br/>Application state]
+                L1[ui-components/<br/>Tailwind CSS system<br/>Design consistency]
+                L2[state-management/<br/>Zustand stores<br/>Application state]
                 L3[guards/<br/>Authentication guards<br/>Route protection]
                 L4[interceptors/<br/>HTTP interceptors<br/>Cross-cutting concerns]
                 L5[themes/<br/>Dark/Light themes<br/>Accessibility support]
@@ -2274,7 +2275,7 @@ graph TB
 - **Smart Caching:** Distributed computation caching across team and CI
 - **Code Generation:** Consistent project setup with custom generators
 - **Migration Support:** Automated updates across the entire workspace
-- **Plugin Ecosystem:** Angular, Node.js, Java Spring Boot integration
+- **Plugin Ecosystem:** Next.js, Node.js, Java Spring Boot integration
 - **Distributed Task Execution:** Parallel execution across available cores
 
 ### 6.7 Development Workflow & Dependency Management
@@ -2328,9 +2329,9 @@ graph TB
     subgraph "Kubernetes Cluster"
         subgraph "Namespace: Production"
             subgraph "Frontend Pods"
-                A1[Angular App<br/>Replica 1]
-                A2[Angular App<br/>Replica 2]
-                A3[Angular App<br/>Replica N]
+                A1[Next.js App<br/>Replica 1]
+                A2[Next.js App<br/>Replica 2]
+                A3[Next.js App<br/>Replica N]
             end
 
             subgraph "Service Pods"
@@ -2913,7 +2914,7 @@ graph TB
 graph TB
     subgraph "Application Layer"
         A1[Node.js Services]
-        A2[Angular App]
+        A2[Next.js App]
     end
 
     subgraph "OpenTelemetry"
@@ -2957,7 +2958,7 @@ graph TB
 ## 11. Docker & Kubernetes Deployment
 
 ### 11.1 Container Strategy
-- **Base Images:** Node.js Alpine for services, NGINX for Angular
+- **Base Images:** Node.js Alpine for services, Node.js for Next.js
 - **Multi-stage Builds:** Optimize image size
 - **Security Scanning:** Vulnerability assessment in CI/CD
 - **Registry:** Private container registry
@@ -3222,7 +3223,7 @@ graph TB
     subgraph "Application Metrics"
         A1[Node.js Services<br/>Express metrics + Custom business metrics]
         A2[Java Services<br/>Micrometer + Spring Actuator]
-        A3[Frontend Apps<br/>Angular performance + User analytics]
+        A3[Frontend Apps<br/>Next.js performance + User analytics]
     end
 
     subgraph "Infrastructure Metrics"
@@ -3292,7 +3293,7 @@ graph TB
 - [ ] Database schema design
 - [ ] Kafka cluster setup
 - [ ] OpenTelemetry integration
-- [ ] Angular project scaffolding with Material UI
+- [ ] Next.js project scaffolding with Tailwind CSS
 - [ ] Theme support implementation
 
 ### Phase 2: Core Modules (Weeks 7-14)
@@ -3414,7 +3415,7 @@ graph TB
 ### 16.2 Reference Documents
 - OpenTelemetry Documentation
 - Kafka Architecture Guide
-- Angular Material Design Guidelines
+- Tailwind CSS Design Guidelines
 - PostgreSQL Performance Tuning
 - Kubernetes Best Practices
 - PCI DSS Compliance Requirements
@@ -3422,7 +3423,7 @@ graph TB
 
 ### 16.3 Technology Stack Versions
 - Node.js: v20.x LTS
-- Angular: v17.x LTS
+- Next.js: v14.x LTS
 - PostgreSQL: 15.x
 - Redis: 7.x
 - Apache Kafka: 3.x
