@@ -1,0 +1,61 @@
+server:
+  port: 8761
+  servlet:
+    context-path: /config
+
+spring:
+  application:
+    name: config-server
+  profiles:
+    active: native
+  cloud:
+    config:
+      server:
+        # Native profile - read from local filesystem/classpath
+        native:
+          search-locations: classpath:/config
+        # Git profile - uncomment when using Git repository
+        # git:
+        #   uri: https://github.com/your-org/modern-reservation-config
+        #   default-label: main
+        #   search-paths: config
+        #   clone-on-start: true
+        #   timeout: 10
+  security:
+    user:
+      name: config-admin
+      password: ${CONFIG_SERVER_PASSWORD:admin123}
+      roles: ADMIN
+
+# Management and Monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,refresh,env,configprops
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+# Logging Configuration
+logging:
+  level:
+    com.modernreservation: DEBUG
+    org.springframework.cloud.config: DEBUG
+    org.springframework.security: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%logger{36}] - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%logger{36}] - %msg%n"
+  file:
+    name: logs/config-server.log
+
+# Application Information
+info:
+  app:
+    name: Modern Reservation Config Server
+    description: Centralized configuration management service
+    version: 2.0.0
+    team: Modern Reservation Development Team

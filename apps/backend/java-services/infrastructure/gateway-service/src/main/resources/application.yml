@@ -1,0 +1,169 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway-service
+  config:
+    import: "configserver:http://localhost:8888/config"
+  cloud:
+    config:
+      username: config-admin
+      password: ${CONFIG_SERVER_PASSWORD:admin123}
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        # Reservation Engine Routes
+        - id: reservation-engine
+          uri: lb://reservation-engine
+          predicates:
+            - Path=/api/v1/reservations/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: reservation-circuit-breaker
+                fallbackUri: forward:/fallback/reservation
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenish-rate: 10
+                redis-rate-limiter.burst-capacity: 20
+                redis-rate-limiter.requested-tokens: 1
+
+        # Availability Calculator Routes
+        - id: availability-calculator
+          uri: lb://availability-calculator
+          predicates:
+            - Path=/api/v1/availability/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: availability-circuit-breaker
+                fallbackUri: forward:/fallback/availability
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenish-rate: 20
+                redis-rate-limiter.burst-capacity: 40
+
+        # Payment Processor Routes
+        - id: payment-processor
+          uri: lb://payment-processor
+          predicates:
+            - Path=/api/v1/payments/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: payment-circuit-breaker
+                fallbackUri: forward:/fallback/payment
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenish-rate: 5
+                redis-rate-limiter.burst-capacity: 10
+
+        # Rate Management Routes
+        - id: rate-management
+          uri: lb://rate-management
+          predicates:
+            - Path=/api/v1/rates/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: rate-circuit-breaker
+                fallbackUri: forward:/fallback/rate
+
+        # Analytics Engine Routes
+        - id: analytics-engine
+          uri: lb://analytics-engine
+          predicates:
+            - Path=/api/v1/analytics/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: analytics-circuit-breaker
+                fallbackUri: forward:/fallback/analytics
+
+        # Batch Processor Routes
+        - id: batch-processor
+          uri: lb://batch-processor
+          predicates:
+            - Path=/api/v1/batch/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: batch-circuit-breaker
+                fallbackUri: forward:/fallback/batch
+
+        # Node.js Services Routes
+        - id: api-gateway-node
+          uri: lb://api-gateway-node
+          predicates:
+            - Path=/api/v1/graphql/**
+
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/v1/notifications/**
+
+        - id: websocket-service
+          uri: lb://websocket-service
+          predicates:
+            - Path=/ws/**
+
+  # Redis Configuration for Rate Limiting
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 2000ms
+
+# Circuit Breaker Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      reservation-circuit-breaker:
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10000
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+      availability-circuit-breaker:
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10000
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+      payment-circuit-breaker:
+        failure-rate-threshold: 30
+        wait-duration-in-open-state: 15000
+        sliding-window-size: 10
+        minimum-number-of-calls: 3
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:modernReservationSecretKey2024}
+  expiration: 86400000 # 24 hours
+
+# Management and Monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,gateway,circuitbreakers
+  endpoint:
+    health:
+      show-details: always
+
+# Logging Configuration
+logging:
+  level:
+    com.modernreservation: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.security: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%X{traceId:-},%X{spanId:-}] [%thread] %-5level [%logger{36}] - %msg%n"
+
+# Application Information
+info:
+  app:
+    name: Modern Reservation Gateway Service
+    description: API Gateway with routing, load balancing, and security
+    version: 2.0.0

@@ -1,0 +1,126 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: reservation-engine
+  config:
+    import: "configserver:http://localhost:8888/config"
+  cloud:
+    config:
+      username: config-admin
+      password: ${CONFIG_SERVER_PASSWORD:admin123}
+  profiles:
+    active: dev
+
+# Database Configuration (will be overridden by Config Server)
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/modern_reservation_dev
+    username: ${DB_USERNAME:dev_user}
+    password: ${DB_PASSWORD:dev_password}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        default_schema: reservation
+
+# Redis Configuration
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 3000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 2
+
+# Kafka Configuration
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+    consumer:
+      group-id: reservation-engine
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.modernreservation.*"
+
+# Cache Configuration
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000 # 10 minutes
+
+# API Documentation
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+  info:
+    title: Reservation Engine API
+    description: Core reservation management service
+    version: 2.0.0
+    contact:
+      name: Modern Reservation Team
+
+# External Service URLs (will be resolved via Eureka)
+services:
+  availability-calculator: http://availability-calculator
+  payment-processor: http://payment-processor
+  rate-management: http://rate-management
+
+# Business Configuration
+reservation:
+  default-timeout-minutes: 15
+  max-advance-booking-days: 365
+  cancellation-cutoff-hours: 24
+  overbooking-threshold: 0.05
+
+# Management and Monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,caches
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Logging Configuration
+logging:
+  level:
+    com.modernreservation: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%X{traceId:-},%X{spanId:-}] [%thread] %-5level [%logger{36}] - %msg%n"
+
+# Application Information
+info:
+  app:
+    name: Modern Reservation Engine
+    description: Core reservation management and booking service
+    version: 2.0.0
+    features:
+      - reservation-crud
+      - availability-integration
+      - payment-integration
+      - event-driven-architecture
+      - caching

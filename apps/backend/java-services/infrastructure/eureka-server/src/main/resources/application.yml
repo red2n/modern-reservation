@@ -1,0 +1,71 @@
+server:
+  port: 8761
+
+spring:
+  application:
+    name: eureka-server
+  config:
+    import: "configserver:http://localhost:8888/config"
+  cloud:
+    config:
+      username: config-admin
+      password: ${CONFIG_SERVER_PASSWORD:admin123}
+  security:
+    user:
+      name: eureka-admin
+      password: ${EUREKA_PASSWORD:admin123}
+      roles: ADMIN
+
+# Eureka Server Configuration
+eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: false
+  client:
+    # Don't register itself as a client
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  server:
+    # Disable self-preservation in development
+    enable-self-preservation: false
+    eviction-interval-timer-in-ms: 4000
+    # Renewal threshold
+    renewal-percent-threshold: 0.85
+    # Response cache settings
+    response-cache-update-interval-ms: 5000
+    response-cache-auto-expiration-in-seconds: 180
+
+# Management and Monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env,eureka
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+# Logging Configuration
+logging:
+  level:
+    com.modernreservation: DEBUG
+    com.netflix.eureka: INFO
+    com.netflix.discovery: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%logger{36}] - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%logger{36}] - %msg%n"
+  file:
+    name: logs/eureka-server.log
+
+# Application Information
+info:
+  app:
+    name: Modern Reservation Eureka Server
+    description: Service discovery and registration server
+    version: 2.0.0
+    team: Modern Reservation Development Team
