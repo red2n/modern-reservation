@@ -19,13 +19,13 @@ check_service_health() {
     local service_name=$1
     local port=$2
     local health_url=$3
-    
+
     # Check if port is open
     if ! netstat -tuln 2>/dev/null | grep -q ":$port "; then
         echo -e "${RED}❌ $service_name - Port $port not listening${NC}"
         return 1
     fi
-    
+
     # Check health endpoint
     if curl -f -s --connect-timeout 5 --max-time 10 "$health_url" >/dev/null 2>&1; then
         echo -e "${GREEN}✅ $service_name - Healthy on port $port${NC}"
@@ -41,7 +41,7 @@ get_service_details() {
     local service_name=$1
     local port=$2
     local health_url=$3
-    
+
     if netstat -tuln 2>/dev/null | grep -q ":$port "; then
         local response=$(curl -s --connect-timeout 5 --max-time 10 "$health_url" 2>/dev/null || echo "")
         if [ ! -z "$response" ]; then
@@ -182,7 +182,7 @@ echo -e "${BLUE}═════════════════════�
 
 echo -e "${YELLOW}Management URLs:${NC}"
 echo "• Config Server:    http://localhost:8888/config"
-echo "• Eureka Dashboard: http://localhost:8761"  
+echo "• Eureka Dashboard: http://localhost:8761"
 echo "• Zipkin UI:        http://localhost:9411"
 echo "• API Gateway:      http://localhost:8080"
 

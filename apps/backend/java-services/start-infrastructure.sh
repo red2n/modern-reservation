@@ -76,7 +76,7 @@ start_service() {
     local force_restart=${5:-false}
 
     echo -e "${BLUE}🚀 Starting $service_name...${NC}"
-    
+
     # Check if port is already in use
     if ! check_port_available "$port"; then
         if [ "$force_restart" = true ]; then
@@ -320,7 +320,7 @@ if [ "$SKIP_BUSINESS" = false ]; then
     echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
     echo -e "${BLUE}                   STARTING BUSINESS SERVICES                  ${NC}"
     echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
-    
+
     # Give infrastructure services a moment to fully initialize
     echo -e "${YELLOW}Waiting 10 seconds for infrastructure services to fully initialize...${NC}"
     sleep 10
@@ -392,7 +392,7 @@ if [ "$SKIP_BUSINESS" = false ]; then
     echo "• Payment Processor:      http://localhost:8084/actuator/health"
     echo "• Rate Management:        http://localhost:8085/actuator/health"
     echo "• Analytics Engine:       http://localhost:8086/actuator/health"
-    
+
     echo ""
     echo -e "${BLUE}Gateway Routed Services:${NC}"
     echo "• Reservation Engine:     http://localhost:8080/reservation-engine/actuator/health"

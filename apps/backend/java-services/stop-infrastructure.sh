@@ -23,9 +23,9 @@ stop_service() {
     local port=$3
 
     echo -e "${BLUE}🛑 Stopping $service_name...${NC}"
-    
+
     cd "$JAVA_SERVICES_DIR/$service_dir"
-    
+
     # Check if PID file exists
     if [ -f "$service_name.pid" ]; then
         local pid=$(cat "$service_name.pid" 2>/dev/null || echo "")
@@ -33,20 +33,20 @@ stop_service() {
             if kill -0 "$pid" 2>/dev/null; then
                 echo -e "${YELLOW}Stopping $service_name (PID: $pid)...${NC}"
                 kill -15 "$pid" 2>/dev/null || true
-                
+
                 # Wait for graceful shutdown
                 local attempt=1
                 while [ $attempt -le 10 ] && kill -0 "$pid" 2>/dev/null; do
                     sleep 1
                     ((attempt++))
                 done
-                
+
                 # Force kill if still running
                 if kill -0 "$pid" 2>/dev/null; then
                     echo -e "${YELLOW}Force killing $service_name...${NC}"
                     kill -9 "$pid" 2>/dev/null || true
                 fi
-                
+
                 echo -e "${GREEN}✅ $service_name stopped${NC}"
             else
                 echo -e "${YELLOW}$service_name was not running${NC}"
@@ -56,7 +56,7 @@ stop_service() {
     else
         echo -e "${YELLOW}No PID file found for $service_name${NC}"
     fi
-    
+
     # Also kill any process on the port
     local port_pid=$(lsof -ti:$port 2>/dev/null || true)
     if [ ! -z "$port_pid" ]; then
@@ -155,13 +155,13 @@ echo -e "${BLUE}═════════════════════�
 # Stop business services first (if not infrastructure-only)
 if [ "$INFRASTRUCTURE_ONLY" = false ]; then
     echo -e "${BLUE}Stopping Business Services...${NC}"
-    
+
     stop_service "business-services/analytics-engine" "analytics-engine" "8086"
     stop_service "business-services/rate-management" "rate-management" "8085"
     stop_service "business-services/payment-processor" "payment-processor" "8084"
     stop_service "business-services/availability-calculator" "availability-calculator" "8083"
     stop_service "business-services/reservation-engine" "reservation-engine" "8081"
-    
+
     echo ""
 fi
 
