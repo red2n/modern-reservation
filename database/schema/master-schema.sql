@@ -39,14 +39,14 @@
 -- PHASE 4: Supporting Systems
 -- =============================================================================
 
--- Audit and event tracking system
-\i 02-audit-system.sql
-
--- User management and authentication
+-- User management and authentication (depends on properties for access control)
 \i 06-user-management.sql
 
--- Channel management and integrations
-\i 07-channel-management.sql
+-- Audit trail and event sourcing (depends on all entities for tracking)
+\i 07-audit-and-events.sql
+
+-- Notification system (depends on all entities for messaging)
+\i 08-notifications.sql
 
 -- Housekeeping and operations
 \i 08-housekeeping-operations.sql

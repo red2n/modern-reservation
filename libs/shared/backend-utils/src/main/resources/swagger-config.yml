@@ -1,0 +1,43 @@
+# OpenAPI/Swagger Configuration
+# Add these properties to application.yml in each microservice
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    displayRequestDuration: true
+    showExtensions: true
+    showCommonExtensions: true
+    displayOperationId: true
+  show-actuator: true
+  group-configs:
+    - group: "public-api"
+      displayName: "Public API"
+      pathsToMatch:
+        - "/api/v1/public/**"
+    - group: "admin-api"
+      displayName: "Admin API"
+      pathsToMatch:
+        - "/api/v1/admin/**"
+    - group: "internal-api"
+      displayName: "Internal API"
+      pathsToMatch:
+        - "/api/v1/internal/**"
+
+# Application-specific configuration
+app:
+  version: "2.0.0"
+  description: "Microservice for Modern Reservation System"
+  swagger:
+    contact:
+      name: "Modern Reservation Team"
+      email: "support@modernreservation.com"
+      url: "https://github.com/your-org/modern-reservation"
+    license:
+      name: "MIT License"
+      url: "https://opensource.org/licenses/MIT"

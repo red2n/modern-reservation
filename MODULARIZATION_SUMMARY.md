@@ -14,6 +14,8 @@ Successfully broke down monolithic schema files into focused, maintainable modul
 - ✅ **04-payment-management.sql** - Payments, billing, transactions
 - ✅ **05-availability-rate-management.sql** - Inventory, rates, pricing
 - ✅ **06-user-management.sql** - Users, roles, authentication
+- ✅ **07-audit-and-events.sql** - Audit trail, event sourcing, system config
+- ✅ **08-notifications.sql** - Notification templates, queue, history
 - ✅ **master-schema.sql** - Orchestration file with proper dependency order
 
 ### 🚀 GraphQL Schema (Federation)

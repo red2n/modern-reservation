@@ -1,4 +1,31 @@
--- =============================================
+-- =============-- Execute modular schema files in correct dependency order
+\i ../schema/00-extensions-and-types.sql
+\i ../schema/01-property-management.sql
+\i ../schema/02-guest-management.sql
+\i ../schema/03-reservation-management.sql
+\i ../schema/04-payment-management.sql
+\i ../schema/05-availability-rate-management.sql
+\i ../schema/06-user-management.sql
+\i ../schema/07-audit-and-events.sql
+\i ../schema/08-notifications.sql
+
+-- Create application user
+CREATE USER IF NOT EXISTS modernreservation_app WITH ENCRYPTED PASSWORD 'change_me_in_production';
+GRANT CONNECT ON DATABASE modernreservation TO modernreservation_app;
+GRANT USAGE ON SCHEMA public TO modernreservation_app;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO modernreservation_app;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO modernreservation_app;
+
+-- Record migration
+INSERT INTO schema_migrations (version, description, execution_time_ms, checksum)
+VALUES (
+    'V001',
+    'Initial modular schema setup with all domain tables',
+    EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - CURRENT_TIMESTAMP)) * 1000,
+    'v001_modular_schema'
+);
+
+COMMIT;=====================
 -- Database Migration V001
 -- Initial Schema Setup
 -- =============================================
