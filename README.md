@@ -33,46 +33,46 @@ The Modern Reservation Management System is a comprehensive, enterprise-grade pl
 ```mermaid
 graph TB
     subgraph "Client Layer"
-        A1[Angular PWA<br/>Guest Portal]
-        A2[Angular PWA<br/>Staff Portal]
-        A3[Angular PWA<br/>Admin Portal]
-        A4[Mobile Apps<br/>iOS/Android]
+        A1["Angular PWA<br/>Guest Portal"]
+        A2["Angular PWA<br/>Staff Portal"]
+        A3["Angular PWA<br/>Admin Portal"]
+        A4["Mobile Apps<br/>iOS/Android"]
     end
 
     subgraph "API Gateway Layer"
-        B1[GraphQL Federation Gateway<br/>Apollo Gateway]
-        B2[Express Gateway<br/>50,000+ req/sec]
-        B3[Authentication<br/>JWT/OAuth2]
-        B4[Rate Limiting<br/>Redis-based]
-        B5[Load Balancing<br/>Intelligent routing]
+        B1["GraphQL Federation Gateway<br/>Apollo Gateway"]
+        B2["Express Gateway<br/>50,000+ req/sec"]
+        B3["Authentication<br/>JWT/OAuth2"]
+        B4["Rate Limiting<br/>Redis-based"]
+        B5["Load Balancing<br/>Intelligent routing"]
     end
 
     subgraph "Node.js Services - I/O Optimized"
-        N1[WebSocket Service<br/>100K+ connections]
-        N2[Notification Service<br/>Multi-channel delivery]
-        N3[Channel Manager<br/>OTA integrations]
-        N4[Audit Service<br/>Event processing]
+        N1["WebSocket Service<br/>100K+ connections"]
+        N2["Notification Service<br/>Multi-channel delivery"]
+        N3["Channel Manager<br/>OTA integrations"]
+        N4["Audit Service<br/>Event processing"]
     end
 
     subgraph "Java Services - CPU Optimized"
-        J1[Reservation Engine<br/>Complex business logic]
-        J2[Availability Calculator<br/>Multi-threaded algorithms]
-        J3[Rate Management<br/>Dynamic pricing]
-        J4[Payment Processor<br/>PCI-DSS compliant]
-        J5[Analytics Engine<br/>Heavy data processing]
+        J1["Reservation Engine<br/>Complex business logic"]
+        J2["Availability Calculator<br/>Multi-threaded algorithms"]
+        J3["Rate Management<br/>Dynamic pricing"]
+        J4["Payment Processor<br/>PCI-DSS compliant"]
+        J5["Analytics Engine<br/>Heavy data processing"]
     end
 
     subgraph "Event Streaming - Apache Kafka"
-        K1[Reservation Events<br/>100 partitions]
-        K2[Payment Events<br/>50 partitions]
-        K3[Availability Updates<br/>200 partitions]
-        K4[Notifications<br/>20 partitions]
+        K1["Reservation Events<br/>100 partitions"]
+        K2["Payment Events<br/>50 partitions"]
+        K3["Availability Updates<br/>200 partitions"]
+        K4["Notifications<br/>20 partitions"]
     end
 
     subgraph "Data Layer"
-        D1[(PostgreSQL<br/>Multi-master cluster)]
-        D2[Redis Cluster<br/>21-node architecture]
-        D3[Elasticsearch<br/>Search & analytics]
+        D1[("PostgreSQL<br/>Multi-master cluster")]
+        D2["Redis Cluster<br/>21-node architecture"]
+        D3["Elasticsearch<br/>Search & analytics"]
     end
 
     A1 --> B1
@@ -358,20 +358,20 @@ kubectl apply -k infrastructure/kubernetes/overlays/development
 ```mermaid
 graph LR
     subgraph "Traditional REST API"
-        R1[8 API Calls] --> R2[200ms Load Time]
-        R3[500KB Data] --> R4[Over-fetching]
-        R5[Polling Updates] --> R6[5s Delay]
+        R1["8 API Calls"] --> R2["200ms Load Time"]
+        R3["500KB Data"] --> R4["Over-fetching"]
+        R5["Polling Updates"] --> R6["5s Delay"]
     end
 
     subgraph "GraphQL Approach"
-        G1[1 GraphQL Query] --> G2[50ms Load Time]
-        G3[150KB Data] --> G4[Precise Fields]
-        G5[Subscriptions] --> G6[Real-time]
+        G1["1 GraphQL Query"] --> G2["50ms Load Time"]
+        G3["150KB Data"] --> G4["Precise Fields"]
+        G5["Subscriptions"] --> G6["Real-time"]
     end
 
-    R2 -.->|4x Improvement| G2
-    R4 -.->|70% Reduction| G4
-    R6 -.->|Instant Updates| G6
+    R2 -.->|"4x Improvement"| G2
+    R4 -.->|"70% Reduction"| G4
+    R6 -.->|"Instant Updates"| G6
 ```
 
 ### **Key GraphQL Capabilities**
@@ -433,18 +433,18 @@ subscription AvailabilityUpdates($propertyId: ID!) {
 ```mermaid
 graph TB
     subgraph "Testing Pyramid"
-        T1[E2E Tests<br/>Cypress automation<br/>Critical user journeys]
-        T2[Integration Tests<br/>Service contracts<br/>API & Event testing]
-        T3[Unit Tests<br/>Jest & JUnit<br/>80%+ coverage target]
+        T1["E2E Tests<br/>Cypress automation<br/>Critical user journeys"]
+        T2["Integration Tests<br/>Service contracts<br/>API & Event testing"]
+        T3["Unit Tests<br/>Jest & JUnit<br/>80%+ coverage target"]
 
         T3 --> T2
         T2 --> T1
     end
 
     subgraph "Quality Gates"
-        Q1[Performance Testing<br/>K6 load testing<br/>10K reservations/min]
-        Q2[Security Testing<br/>OWASP scanning<br/>Vulnerability assessment]
-        Q3[Contract Testing<br/>Pact consumer/provider<br/>API compatibility]
+        Q1["Performance Testing<br/>K6 load testing<br/>10K reservations/min"]
+        Q2["Security Testing<br/>OWASP scanning<br/>Vulnerability assessment"]
+        Q3["Contract Testing<br/>Pact consumer/provider<br/>API compatibility"]
     end
 
     T1 --> Q1
@@ -548,24 +548,24 @@ sequenceDiagram
 ```mermaid
 graph TB
     subgraph "Application Metrics"
-        A1[Node.js Services<br/>Custom business metrics]
-        A2[Java Services<br/>Micrometer + Actuator]
-        A3[Frontend Apps<br/>Performance + UX metrics]
+        A1["Node.js Services<br/>Custom business metrics"]
+        A2["Java Services<br/>Micrometer + Actuator"]
+        A3["Frontend Apps<br/>Performance + UX metrics"]
     end
 
     subgraph "Infrastructure Metrics"
-        I1[Kubernetes<br/>Pod & Node metrics]
-        I2[PostgreSQL<br/>Database performance]
-        I3[Redis<br/>Cache hit ratios]
-        I4[Kafka<br/>Message throughput]
+        I1["Kubernetes<br/>Pod & Node metrics"]
+        I2["PostgreSQL<br/>Database performance"]
+        I3["Redis<br/>Cache hit ratios"]
+        I4["Kafka<br/>Message throughput"]
     end
 
     subgraph "Observability Platform"
-        O1[OpenTelemetry<br/>Distributed tracing]
-        O2[Prometheus<br/>Metrics collection]
-        O3[Grafana<br/>Dashboards & alerting]
-        O4[Jaeger<br/>Trace analysis]
-        O5[ELK Stack<br/>Log aggregation]
+        O1["OpenTelemetry<br/>Distributed tracing"]
+        O2["Prometheus<br/>Metrics collection"]
+        O3["Grafana<br/>Dashboards & alerting"]
+        O4["Jaeger<br/>Trace analysis"]
+        O5["ELK Stack<br/>Log aggregation"]
     end
 
     A1 --> O1
