@@ -152,6 +152,11 @@ management:
     tags:
       service: payment-processor
       environment: ${spring.profiles.active}
+  tracing:
+    sampling:
+      probability: 1.0
+    zipkin:
+      endpoint: ${ZIPKIN_URL:http://localhost:9411/api/v2/spans}
   health:
     redis:
       enabled: true
