@@ -10,6 +10,9 @@ spring:
     config:
       username: config-admin
       password: ${CONFIG_SERVER_PASSWORD:admin123}
+  main:
+    allow-bean-definition-overriding: true
+    web-application-type: reactive
     gateway:
       discovery:
         locator:

@@ -2,7 +2,6 @@ package com.modernreservation.gateway;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 
 /**
  * Gateway Application - API Gateway Service
@@ -24,7 +23,6 @@ import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
  * @version 2.0.0
  */
 @SpringBootApplication
-@EnableEurekaClient
 public class GatewayApplication {
 
     public static void main(String[] args) {

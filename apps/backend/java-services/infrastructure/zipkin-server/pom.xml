@@ -33,12 +33,18 @@
             <groupId>io.zipkin</groupId>
             <artifactId>zipkin-server</artifactId>
             <version>${zipkin.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-log4j2</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Zipkin UI -->
         <dependency>
             <groupId>io.zipkin</groupId>
-            <artifactId>zipkin-autoconfigure-ui</artifactId>
+            <artifactId>zipkin-lens</artifactId>
             <version>${zipkin.version}</version>
         </dependency>
 

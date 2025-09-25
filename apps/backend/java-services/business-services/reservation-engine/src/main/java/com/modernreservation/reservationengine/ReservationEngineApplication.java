@@ -32,7 +32,6 @@ import org.springframework.cache.annotation.EnableCaching;
 @SpringBootApplication
 @EnableDiscoveryClient
 @EnableFeignClients
-@EnableJpaAuditing
 @EnableKafka
 @EnableCaching
 public class ReservationEngineApplication {

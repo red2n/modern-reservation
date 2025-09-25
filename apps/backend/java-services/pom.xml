@@ -33,7 +33,7 @@
         <zipkin.version>2.24.0</zipkin.version>
 
         <!-- Security and validation -->
-        <jwt.version>4.4.0</jwt.version>
+        <jwt.version>0.12.6</jwt.version>
         <validation.version>3.0.2</validation.version>
 
         <!-- Testing -->

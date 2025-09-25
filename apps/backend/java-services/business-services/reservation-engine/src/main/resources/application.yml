@@ -12,9 +12,7 @@ spring:
       password: ${CONFIG_SERVER_PASSWORD:admin123}
   profiles:
     active: dev
-
-# Database Configuration (will be overridden by Config Server)
-spring:
+  # Database Configuration (will be overridden by Config Server)
   datasource:
     url: jdbc:postgresql://localhost:5432/modern_reservation_dev
     username: ${DB_USERNAME:dev_user}
