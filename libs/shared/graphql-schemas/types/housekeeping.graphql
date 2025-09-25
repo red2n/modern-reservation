@@ -1,0 +1,445 @@
+# Housekeeping & Maintenance Types
+# Domain: Room maintenance, cleaning, repairs, work orders
+
+"""
+Housekeeping room status and tasks
+"""
+type HousekeepingRoom {
+  id: ID!
+  room: Room!
+  status: HousekeepingStatus!
+  assignedTo: HousekeepingStaff
+  tasks: [HousekeepingTask!]!
+  priority: TaskPriority!
+  estimatedDuration: Int
+  actualDuration: Int
+  inspectionRequired: Boolean!
+  notes: String
+  lastCleaned: DateTime
+  nextService: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+Housekeeping room status
+"""
+enum HousekeepingStatus {
+  DIRTY
+  CLEAN
+  INSPECTED
+  OUT_OF_ORDER
+  MAINTENANCE_REQUIRED
+  IN_PROGRESS
+  READY
+  PICKUP
+}
+
+"""
+Individual housekeeping task
+"""
+type HousekeepingTask {
+  id: ID!
+  type: HousekeepingTaskType!
+  description: String!
+  status: TaskStatus!
+  assignedTo: HousekeepingStaff
+  priority: TaskPriority!
+  estimatedDuration: Int!
+  actualDuration: Int
+  completedAt: DateTime
+  verifiedBy: HousekeepingStaff
+  notes: String
+  supplies: [HousekeepingSupply!]!
+  photos: [String!]
+  createdAt: DateTime!
+}
+
+"""
+Types of housekeeping tasks
+"""
+enum HousekeepingTaskType {
+  CHECKOUT_CLEANING
+  MAINTENANCE_CLEANING
+  DEEP_CLEANING
+  INVENTORY_CHECK
+  LINEN_CHANGE
+  AMENITY_RESTOCK
+  INSPECTION
+  REPAIR_REQUEST
+  PREVENTIVE_MAINTENANCE
+  EMERGENCY_CLEANING
+}
+
+"""
+Task status
+"""
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  ON_HOLD
+  REQUIRES_ATTENTION
+}
+
+"""
+Task priority levels
+"""
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+  EMERGENCY
+}
+
+"""
+Housekeeping staff member
+"""
+type HousekeepingStaff {
+  id: ID!
+  employee: User!
+  department: HousekeepingDepartment!
+  shift: WorkShift!
+  skills: [HousekeepingSkill!]!
+  assignedRooms: [Room!]!
+  currentTasks: [HousekeepingTask!]!
+  availability: StaffAvailability!
+  performance: StaffPerformance
+}
+
+"""
+Housekeeping departments
+"""
+enum HousekeepingDepartment {
+  ROOM_ATTENDANTS
+  PUBLIC_AREAS
+  LAUNDRY
+  MAINTENANCE
+  INSPECTION
+  MANAGEMENT
+}
+
+"""
+Work shifts
+"""
+enum WorkShift {
+  MORNING
+  AFTERNOON
+  EVENING
+  NIGHT
+  SPLIT
+}
+
+"""
+Housekeeping skills
+"""
+enum HousekeepingSkill {
+  STANDARD_CLEANING
+  DEEP_CLEANING
+  CARPET_CARE
+  WINDOW_CLEANING
+  FLOOR_MAINTENANCE
+  BATHROOM_SANITIZATION
+  LINEN_MANAGEMENT
+  INVENTORY_MANAGEMENT
+  QUALITY_INSPECTION
+  MINOR_REPAIRS
+}
+
+"""
+Staff availability status
+"""
+enum StaffAvailability {
+  AVAILABLE
+  BUSY
+  ON_BREAK
+  OFF_SHIFT
+  UNAVAILABLE
+}
+
+"""
+Staff performance metrics
+"""
+type StaffPerformance {
+  tasksCompleted: Int!
+  averageTaskTime: Float!
+  qualityScore: Float!
+  punctualityScore: Float!
+  guestFeedbackScore: Float
+  lastEvaluation: DateTime
+}
+
+"""
+Housekeeping supplies and inventory
+"""
+type HousekeepingSupply {
+  id: ID!
+  name: String!
+  category: SupplyCategory!
+  currentStock: Int!
+  minimumStock: Int!
+  unit: String!
+  cost: Money!
+  supplier: Supplier
+  lastRestocked: DateTime
+  expiryDate: Date
+  location: String!
+}
+
+"""
+Supply categories
+"""
+enum SupplyCategory {
+  CLEANING_CHEMICALS
+  LINENS
+  TOWELS
+  AMENITIES
+  PAPER_PRODUCTS
+  EQUIPMENT
+  UNIFORMS
+  MAINTENANCE_SUPPLIES
+}
+
+"""
+Supply supplier information
+"""
+type Supplier {
+  id: ID!
+  name: String!
+  contactInfo: ContactInfo!
+  products: [HousekeepingSupply!]!
+  reliability: Float!
+  lastOrder: DateTime
+}
+
+"""
+Maintenance work orders
+"""
+type MaintenanceWorkOrder {
+  id: ID!
+  room: Room
+  area: PublicArea
+  type: MaintenanceType!
+  priority: TaskPriority!
+  description: String!
+  reportedBy: User!
+  assignedTo: MaintenanceTechnician
+  status: WorkOrderStatus!
+  category: MaintenanceCategory!
+  estimatedCost: Money
+  actualCost: Money
+  estimatedDuration: Int
+  actualDuration: Int
+  partsRequired: [MaintenancePart!]!
+  scheduledDate: DateTime
+  completedDate: DateTime
+  inspectionDate: DateTime
+  inspectedBy: MaintenanceTechnician
+  photos: [String!]
+  notes: String
+  followUpRequired: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+Types of maintenance work
+"""
+enum MaintenanceType {
+  PREVENTIVE
+  CORRECTIVE
+  EMERGENCY
+  COSMETIC
+  UPGRADE
+  INSPECTION
+}
+
+"""
+Maintenance categories
+"""
+enum MaintenanceCategory {
+  PLUMBING
+  ELECTRICAL
+  HVAC
+  CARPENTRY
+  PAINTING
+  FLOORING
+  FIXTURES
+  APPLIANCES
+  ELECTRONICS
+  EXTERIOR
+  LANDSCAPING
+}
+
+"""
+Work order status
+"""
+enum WorkOrderStatus {
+  REPORTED
+  ASSIGNED
+  IN_PROGRESS
+  PARTS_ORDERED
+  ON_HOLD
+  COMPLETED
+  INSPECTED
+  CLOSED
+  CANCELLED
+}
+
+"""
+Maintenance technician
+"""
+type MaintenanceTechnician {
+  id: ID!
+  employee: User!
+  specialties: [MaintenanceCategory!]!
+  certifications: [String!]!
+  workOrders: [MaintenanceWorkOrder!]!
+  availability: StaffAvailability!
+  tools: [MaintenanceTool!]!
+  performance: TechnicianPerformance
+}
+
+"""
+Technician performance metrics
+"""
+type TechnicianPerformance {
+  workOrdersCompleted: Int!
+  averageCompletionTime: Float!
+  qualityScore: Float!
+  customerSatisfaction: Float
+  safetyScore: Float!
+  certificationLevel: String!
+}
+
+"""
+Maintenance parts and inventory
+"""
+type MaintenancePart {
+  id: ID!
+  name: String!
+  partNumber: String!
+  category: MaintenanceCategory!
+  currentStock: Int!
+  minimumStock: Int!
+  cost: Money!
+  supplier: Supplier!
+  location: String!
+  lastOrdered: DateTime
+}
+
+"""
+Maintenance tools
+"""
+type MaintenanceTool {
+  id: ID!
+  name: String!
+  category: String!
+  assignedTo: MaintenanceTechnician
+  condition: ToolCondition!
+  lastMaintenance: DateTime
+  nextMaintenance: DateTime
+}
+
+"""
+Tool condition status
+"""
+enum ToolCondition {
+  EXCELLENT
+  GOOD
+  FAIR
+  NEEDS_REPAIR
+  OUT_OF_SERVICE
+}
+
+"""
+Public areas for maintenance
+"""
+type PublicArea {
+  id: ID!
+  name: String!
+  type: PublicAreaType!
+  location: String!
+  maintenanceSchedule: [MaintenanceSchedule!]!
+  currentCondition: AreaCondition!
+  lastInspection: DateTime
+  nextInspection: DateTime
+}
+
+"""
+Public area types
+"""
+enum PublicAreaType {
+  LOBBY
+  RESTAURANT
+  BAR
+  POOL
+  GYM
+  SPA
+  CONFERENCE_ROOM
+  CORRIDOR
+  ELEVATOR
+  PARKING
+  GARDEN
+  TERRACE
+}
+
+"""
+Area condition assessment
+"""
+enum AreaCondition {
+  EXCELLENT
+  GOOD
+  FAIR
+  NEEDS_ATTENTION
+  POOR
+}
+
+"""
+Maintenance schedule for areas
+"""
+type MaintenanceSchedule {
+  id: ID!
+  area: PublicArea!
+  taskType: MaintenanceType!
+  frequency: MaintenanceFrequency!
+  nextDue: DateTime!
+  assignedTo: MaintenanceTechnician
+  estimatedDuration: Int!
+  instructions: String
+}
+
+"""
+Maintenance frequency
+"""
+enum MaintenanceFrequency {
+  DAILY
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  QUARTERLY
+  BIANNUALLY
+  ANNUALLY
+  AS_NEEDED
+}
+
+# Extend existing types for housekeeping
+extend type Room @key(fields: "id") {
+  id: ID! @external
+  housekeepingStatus: HousekeepingStatus!
+  lastCleaned: DateTime
+  nextService: DateTime
+  maintenanceHistory: [MaintenanceWorkOrder!]!
+}
+
+extend type Property @key(fields: "id") {
+  id: ID! @external
+  housekeepingRooms: [HousekeepingRoom!]!
+  maintenanceWorkOrders: [MaintenanceWorkOrder!]!
+  housekeepingStaff: [HousekeepingStaff!]!
+  maintenanceTechnicians: [MaintenanceTechnician!]!
+  publicAreas: [PublicArea!]!
+  supplies: [HousekeepingSupply!]!
+}

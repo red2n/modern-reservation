@@ -1,0 +1,599 @@
+# User Management & Authentication Types
+# Domain: Users, roles, permissions, authentication, authorization
+
+"""
+User account in the system
+"""
+type User @key(fields: "id") {
+  id: ID!
+  email: String!
+  username: String
+  firstName: String!
+  lastName: String!
+  fullName: String!
+  phone: String
+  avatar: String
+  profile: UserProfile!
+  roles: [Role!]!
+  permissions: [Permission!]!
+  status: UserStatus!
+  preferences: UserPreferences!
+  authentication: UserAuthentication!
+  sessions: [UserSession!]!
+  auditLog: [UserAuditEntry!]!
+  lastLoginAt: DateTime
+  emailVerifiedAt: DateTime
+  phoneVerifiedAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+User account status
+"""
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+  LOCKED
+  DELETED
+}
+
+"""
+User profile information
+"""
+type UserProfile {
+  bio: String
+  dateOfBirth: Date
+  gender: Gender
+  nationality: String
+  language: String!
+  timezone: String!
+  address: Address
+  emergencyContact: EmergencyContact
+  employeeId: String
+  department: String
+  position: String
+  hireDate: Date
+  manager: User
+  directReports: [User!]!
+}
+
+"""
+Gender options
+"""
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+"""
+Emergency contact information
+"""
+type EmergencyContact {
+  name: String!
+  relationship: String!
+  phone: String!
+  email: String
+}
+
+"""
+User role in the system
+"""
+type Role {
+  id: ID!
+  name: String!
+  description: String!
+  permissions: [Permission!]!
+  isSystemRole: Boolean!
+  createdBy: User
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+System permission
+"""
+type Permission {
+  id: ID!
+  name: String!
+  description: String!
+  resource: String!
+  action: String!
+  scope: PermissionScope!
+}
+
+"""
+Permission scope levels
+"""
+enum PermissionScope {
+  GLOBAL
+  PROPERTY
+  DEPARTMENT
+  SELF
+  NONE
+}
+
+"""
+User preferences and settings
+"""
+type UserPreferences {
+  language: String!
+  timezone: String!
+  dateFormat: String!
+  timeFormat: String!
+  currency: String!
+  notifications: NotificationPreferences!
+  dashboard: DashboardPreferences!
+  privacy: PrivacyPreferences!
+}
+
+"""
+Notification preferences
+"""
+type NotificationPreferences {
+  email: EmailNotificationSettings!
+  sms: SmsNotificationSettings!
+  push: PushNotificationSettings!
+  inApp: InAppNotificationSettings!
+}
+
+"""
+Email notification settings
+"""
+type EmailNotificationSettings {
+  enabled: Boolean!
+  bookingConfirmations: Boolean!
+  cancellations: Boolean!
+  modifications: Boolean!
+  paymentReceipts: Boolean!
+  promotions: Boolean!
+  systemAlerts: Boolean!
+  reviews: Boolean!
+  frequency: NotificationFrequency!
+}
+
+"""
+SMS notification settings
+"""
+type SmsNotificationSettings {
+  enabled: Boolean!
+  bookingReminders: Boolean!
+  checkinReminders: Boolean!
+  emergencyAlerts: Boolean!
+  verificationCodes: Boolean!
+}
+
+"""
+Push notification settings
+"""
+type PushNotificationSettings {
+  enabled: Boolean!
+  bookingUpdates: Boolean!
+  promotions: Boolean!
+  locationBased: Boolean!
+  quiet: Boolean!
+  quietHours: QuietHours
+}
+
+"""
+In-app notification settings
+"""
+type InAppNotificationSettings {
+  enabled: Boolean!
+  sound: Boolean!
+  badge: Boolean!
+  popup: Boolean!
+}
+
+"""
+Notification frequency options
+"""
+enum NotificationFrequency {
+  IMMEDIATE
+  DAILY_DIGEST
+  WEEKLY_DIGEST
+  MONTHLY_DIGEST
+  NEVER
+}
+
+"""
+Quiet hours for notifications
+"""
+type QuietHours {
+  enabled: Boolean!
+  startTime: String!
+  endTime: String!
+  timezone: String!
+}
+
+"""
+Dashboard customization preferences
+"""
+type DashboardPreferences {
+  layout: DashboardLayout!
+  widgets: [DashboardWidget!]!
+  defaultView: String!
+  refreshInterval: Int!
+}
+
+"""
+Dashboard layout options
+"""
+enum DashboardLayout {
+  GRID
+  LIST
+  CARDS
+  COMPACT
+}
+
+"""
+Dashboard widget configuration
+"""
+type DashboardWidget {
+  id: ID!
+  type: WidgetType!
+  position: WidgetPosition!
+  size: WidgetSize!
+  configuration: JSON
+  isVisible: Boolean!
+}
+
+"""
+Widget types
+"""
+enum WidgetType {
+  BOOKINGS_SUMMARY
+  REVENUE_CHART
+  OCCUPANCY_RATE
+  GUEST_SATISFACTION
+  TASKS_PENDING
+  RECENT_REVIEWS
+  WEATHER
+  CALENDAR
+}
+
+"""
+Widget position on dashboard
+"""
+type WidgetPosition {
+  x: Int!
+  y: Int!
+  row: Int!
+  column: Int!
+}
+
+"""
+Widget size configuration
+"""
+type WidgetSize {
+  width: Int!
+  height: Int!
+  minWidth: Int
+  minHeight: Int
+  maxWidth: Int
+  maxHeight: Int
+}
+
+"""
+Privacy preferences
+"""
+type PrivacyPreferences {
+  profileVisibility: ProfileVisibility!
+  activityTracking: Boolean!
+  analyticsOptOut: Boolean!
+  dataSharing: Boolean!
+  marketingConsent: Boolean!
+}
+
+"""
+Profile visibility options
+"""
+enum ProfileVisibility {
+  PUBLIC
+  COLLEAGUES_ONLY
+  PRIVATE
+}
+
+"""
+User authentication details
+"""
+type UserAuthentication {
+  twoFactorEnabled: Boolean!
+  twoFactorMethod: TwoFactorMethod
+  backupCodes: [String!]
+  passwordLastChanged: DateTime
+  passwordExpiry: DateTime
+  loginAttempts: Int!
+  lockedUntil: DateTime
+  ssoEnabled: Boolean!
+  ssoProvider: SsoProvider
+  apiKeys: [ApiKey!]!
+}
+
+"""
+Two-factor authentication methods
+"""
+enum TwoFactorMethod {
+  SMS
+  EMAIL
+  AUTHENTICATOR_APP
+  HARDWARE_TOKEN
+}
+
+"""
+SSO provider options
+"""
+enum SsoProvider {
+  GOOGLE
+  MICROSOFT
+  OKTA
+  AUTH0
+  SAML
+  LDAP
+}
+
+"""
+API key for programmatic access
+"""
+type ApiKey {
+  id: ID!
+  name: String!
+  key: String! @deprecated(reason: "Use keyHash for security")
+  keyHash: String!
+  permissions: [Permission!]!
+  lastUsed: DateTime
+  expiresAt: DateTime
+  isActive: Boolean!
+  createdAt: DateTime!
+}
+
+"""
+User session information
+"""
+type UserSession {
+  id: ID!
+  user: User!
+  deviceInfo: DeviceInfo!
+  ipAddress: String!
+  location: String
+  isActive: Boolean!
+  lastActivity: DateTime!
+  expiresAt: DateTime!
+  createdAt: DateTime!
+}
+
+"""
+Device information for sessions
+"""
+type DeviceInfo {
+  type: DeviceType!
+  os: String!
+  browser: String
+  version: String
+  userAgent: String!
+}
+
+"""
+Device types
+"""
+enum DeviceType {
+  DESKTOP
+  MOBILE
+  TABLET
+  API_CLIENT
+  BOT
+}
+
+"""
+User audit log entry
+"""
+type UserAuditEntry {
+  id: ID!
+  user: User!
+  action: AuditAction!
+  resource: String
+  resourceId: String
+  details: JSON
+  ipAddress: String!
+  userAgent: String
+  success: Boolean!
+  createdAt: DateTime!
+}
+
+"""
+Audit actions
+"""
+enum AuditAction {
+  LOGIN
+  LOGOUT
+  PASSWORD_CHANGE
+  PROFILE_UPDATE
+  ROLE_ASSIGNMENT
+  PERMISSION_GRANTED
+  PERMISSION_REVOKED
+  DATA_ACCESS
+  DATA_MODIFICATION
+  EXPORT
+  IMPORT
+  DELETE
+}
+
+"""
+User group for organization
+"""
+type UserGroup {
+  id: ID!
+  name: String!
+  description: String!
+  type: GroupType!
+  members: [User!]!
+  roles: [Role!]!
+  permissions: [Permission!]!
+  parent: UserGroup
+  children: [UserGroup!]!
+  isActive: Boolean!
+  createdBy: User!
+  createdAt: DateTime!
+}
+
+"""
+Group types
+"""
+enum GroupType {
+  DEPARTMENT
+  TEAM
+  PROJECT
+  LOCATION
+  CUSTOM
+}
+
+"""
+Authentication token
+"""
+type AuthToken {
+  accessToken: String!
+  refreshToken: String!
+  tokenType: String!
+  expiresIn: Int!
+  expiresAt: DateTime!
+  scope: [String!]!
+}
+
+"""
+Password reset request
+"""
+type PasswordResetRequest {
+  id: ID!
+  user: User!
+  token: String!
+  expiresAt: DateTime!
+  used: Boolean!
+  ipAddress: String!
+  createdAt: DateTime!
+}
+
+"""
+Email verification request
+"""
+type EmailVerificationRequest {
+  id: ID!
+  user: User!
+  email: String!
+  token: String!
+  expiresAt: DateTime!
+  verified: Boolean!
+  verifiedAt: DateTime
+  createdAt: DateTime!
+}
+
+"""
+User invitation for new accounts
+"""
+type UserInvitation {
+  id: ID!
+  email: String!
+  roles: [Role!]!
+  invitedBy: User!
+  status: InvitationStatus!
+  token: String!
+  expiresAt: DateTime!
+  acceptedAt: DateTime
+  properties: [Property!]
+  personalMessage: String
+  createdAt: DateTime!
+}
+
+"""
+Security policy configuration
+"""
+type SecurityPolicy {
+  passwordMinLength: Int!
+  passwordRequireUppercase: Boolean!
+  passwordRequireLowercase: Boolean!
+  passwordRequireNumbers: Boolean!
+  passwordRequireSymbols: Boolean!
+  passwordExpiryDays: Int
+  maxLoginAttempts: Int!
+  lockoutDuration: Int!
+  sessionTimeout: Int!
+  twoFactorRequired: Boolean!
+  allowedIpRanges: [String!]
+  blockedIpRanges: [String!]
+}
+
+# System-level user queries and mutations would be defined here
+# but are kept minimal to focus on the type definitions
+
+"""
+User registration input
+"""
+input UserRegistrationInput {
+  email: String!
+  password: String!
+  firstName: String!
+  lastName: String!
+  phone: String
+  language: String
+  timezone: String
+  acceptTerms: Boolean!
+  marketingConsent: Boolean
+}
+
+"""
+User profile update input
+"""
+input UserProfileUpdateInput {
+  firstName: String
+  lastName: String
+  phone: String
+  avatar: String
+  bio: String
+  dateOfBirth: Date
+  gender: Gender
+  nationality: String
+  language: String
+  timezone: String
+}
+
+"""
+User preferences update input
+"""
+input UserPreferencesUpdateInput {
+  language: String
+  timezone: String
+  dateFormat: String
+  timeFormat: String
+  currency: String
+  notifications: NotificationPreferencesInput
+  dashboard: DashboardPreferencesInput
+  privacy: PrivacyPreferencesInput
+}
+
+"""
+Notification preferences input
+"""
+input NotificationPreferencesInput {
+  email: EmailNotificationSettingsInput
+  sms: SmsNotificationSettingsInput
+  push: PushNotificationSettingsInput
+  inApp: InAppNotificationSettingsInput
+}
+
+"""
+Email notification settings input
+"""
+input EmailNotificationSettingsInput {
+  enabled: Boolean
+  bookingConfirmations: Boolean
+  cancellations: Boolean
+  modifications: Boolean
+  paymentReceipts: Boolean
+  promotions: Boolean
+  systemAlerts: Boolean
+  reviews: Boolean
+  frequency: NotificationFrequency
+}

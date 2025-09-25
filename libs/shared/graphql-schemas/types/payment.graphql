@@ -1,0 +1,132 @@
+# Payment Management Schema
+# Types and operations for payment processing and financial management
+
+enum PaymentMethod {
+  CREDIT_CARD
+  DEBIT_CARD
+  CASH
+  BANK_TRANSFER
+  DIGITAL_WALLET
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+# Payment Type
+type Payment implements Node & Timestamped & Auditable @key(fields: "id") {
+  id: UUID!
+  reservationId: UUID!
+  guestId: UUID!
+  amount: Float!
+  currency: Currency!
+  paymentMethod: PaymentMethod!
+  paymentProvider: String!
+  transactionId: String!
+  status: PaymentStatus!
+  description: String
+  reference: String
+
+  # Payment details (encrypted/tokenized)
+  paymentDetails: PaymentDetails
+
+  # Billing information
+  billingAddress: Address
+
+  # Processing details
+  processedAt: DateTime
+  failureReason: String
+
+  # Refund information
+  refundAmount: Float
+  refundReason: String
+  refundedAt: DateTime
+
+  # Relationships
+  reservation: Reservation! @requires(fields: "reservationId")
+  guest: Guest! @requires(fields: "guestId")
+  refunds: [Refund!]! @requires(fields: "id")
+
+  # Timestamps and audit
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  createdBy: UUID!
+  updatedBy: UUID!
+}
+
+# Payment Details (Tokenized)
+type PaymentDetails {
+  lastFourDigits: String
+  cardType: String
+  expiryMonth: Int
+  expiryYear: Int
+  cardHolderName: String
+}
+
+# Refund Type
+type Refund implements Node & Timestamped & Auditable {
+  id: UUID!
+  paymentId: UUID!
+  amount: Float!
+  reason: String!
+  status: String!
+  processedAt: DateTime
+
+  # Relationships
+  payment: Payment! @requires(fields: "paymentId")
+
+  # Timestamps and audit
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  createdBy: UUID!
+  updatedBy: UUID!
+}
+
+# Input types
+input CreatePaymentInput {
+  reservationId: UUID!
+  amount: Float!
+  currency: Currency!
+  paymentMethod: PaymentMethod!
+  paymentDetails: PaymentDetailsInput
+  description: String
+  reference: String
+}
+
+input PaymentDetailsInput {
+  cardNumber: String
+  expiryMonth: Int
+  expiryYear: Int
+  cvv: String
+  cardHolderName: String
+  billingAddress: AddressInput
+}
+
+input CreateRefundInput {
+  paymentId: UUID!
+  amount: Float!
+  reason: String!
+  refundMethod: String
+}
+
+# Extend root types
+extend type Query {
+  # Payment queries
+  payment(id: UUID!): Payment
+  payments(reservationId: UUID!): [Payment!]!
+}
+
+extend type Mutation {
+  # Payment mutations
+  createPayment(input: CreatePaymentInput!): Payment!
+  refundPayment(paymentId: UUID!, amount: Float!, reason: String!): Refund!
+}
+
+extend type Subscription {
+  # Payment updates
+  paymentProcessed(reservationId: UUID!): Payment!
+}

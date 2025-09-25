@@ -1,0 +1,516 @@
+# Review & Rating Types
+# Domain: Guest reviews, ratings, feedback, reputation management
+
+"""
+Guest review for property or service
+"""
+type Review {
+  id: ID!
+  guest: Guest!
+  reservation: Reservation
+  property: Property!
+  type: ReviewType!
+  rating: ReviewRating!
+  title: String
+  content: String!
+  photos: [String!]
+  videos: [String!]
+  categories: [ReviewCategory!]!
+  isVerified: Boolean!
+  isPublic: Boolean!
+  status: ReviewStatus!
+  source: ReviewSource!
+  language: String!
+  translatedContent: String
+  sentiment: ReviewSentiment!
+  keywords: [String!]
+  helpfulVotes: Int!
+  reportCount: Int!
+  moderationNotes: String
+  response: ReviewResponse
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+Types of reviews
+"""
+enum ReviewType {
+  OVERALL
+  SERVICE
+  CLEANLINESS
+  LOCATION
+  VALUE
+  AMENITIES
+  STAFF
+  FOOD_BEVERAGE
+  WIFI
+  CHECKIN_CHECKOUT
+}
+
+"""
+Review rating with breakdown
+"""
+type ReviewRating {
+  overall: Float!
+  service: Float
+  cleanliness: Float
+  location: Float
+  value: Float
+  amenities: Float
+  staff: Float
+  foodBeverage: Float
+  wifi: Float
+  checkinCheckout: Float
+}
+
+"""
+Review categories for classification
+"""
+type ReviewCategory {
+  name: String!
+  score: Float!
+  sentiment: ReviewSentiment!
+  keywords: [String!]
+}
+
+"""
+Review status for moderation
+"""
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  HIDDEN
+  FLAGGED
+  UNDER_REVIEW
+}
+
+"""
+Review sources/platforms
+"""
+enum ReviewSource {
+  DIRECT
+  BOOKING_COM
+  EXPEDIA
+  TRIPADVISOR
+  GOOGLE
+  AGODA
+  HOTELS_COM
+  AIRBNB
+  VRBO
+  YELP
+  FACEBOOK
+  INSTAGRAM
+}
+
+"""
+Review sentiment analysis
+"""
+enum ReviewSentiment {
+  VERY_POSITIVE
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+  VERY_NEGATIVE
+}
+
+"""
+Property response to review
+"""
+type ReviewResponse {
+  id: ID!
+  review: Review!
+  content: String!
+  respondedBy: User!
+  isPublic: Boolean!
+  language: String!
+  translatedContent: String
+  sentiment: ReviewSentiment!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+Review analytics and insights
+"""
+type ReviewAnalytics {
+  totalReviews: Int!
+  averageRating: Float!
+  ratingDistribution: [RatingDistribution!]!
+  sentimentBreakdown: [SentimentBreakdown!]!
+  categoryScores: [CategoryScore!]!
+  reviewTrends: [ReviewTrend!]!
+  topKeywords: [KeywordAnalysis!]!
+  competitorComparison: [CompetitorReviewComparison!]!
+  responseRate: Float!
+  averageResponseTime: Float
+}
+
+"""
+Rating distribution statistics
+"""
+type RatingDistribution {
+  rating: Int!
+  count: Int!
+  percentage: Float!
+}
+
+"""
+Sentiment breakdown statistics
+"""
+type SentimentBreakdown {
+  sentiment: ReviewSentiment!
+  count: Int!
+  percentage: Float!
+}
+
+"""
+Category score analysis
+"""
+type CategoryScore {
+  category: ReviewType!
+  averageScore: Float!
+  count: Int!
+  trend: Float!
+  topComplaints: [String!]
+  topPraises: [String!]
+}
+
+"""
+Review trend data over time
+"""
+type ReviewTrend {
+  date: Date!
+  reviewCount: Int!
+  averageRating: Float!
+  sentiment: ReviewSentiment!
+}
+
+"""
+Keyword analysis from reviews
+"""
+type KeywordAnalysis {
+  keyword: String!
+  frequency: Int!
+  sentiment: ReviewSentiment!
+  category: ReviewType
+  trend: Float!
+}
+
+"""
+Competitor review comparison
+"""
+type CompetitorReviewComparison {
+  competitor: Property!
+  ourRating: Float!
+  theirRating: Float!
+  ourReviewCount: Int!
+  theirReviewCount: Int!
+  categoryComparison: [CompetitorCategoryComparison!]!
+}
+
+"""
+Category-wise competitor comparison
+"""
+type CompetitorCategoryComparison {
+  category: ReviewType!
+  ourScore: Float!
+  theirScore: Float!
+  difference: Float!
+}
+
+"""
+Review moderation workflow
+"""
+type ReviewModeration {
+  id: ID!
+  review: Review!
+  moderator: User
+  action: ModerationAction!
+  reason: String
+  notes: String
+  automated: Boolean!
+  confidence: Float
+  createdAt: DateTime!
+}
+
+"""
+Moderation actions
+"""
+enum ModerationAction {
+  APPROVED
+  REJECTED
+  HIDDEN
+  FLAGGED
+  REQUIRES_RESPONSE
+  ESCALATED
+  AUTO_APPROVED
+  AUTO_REJECTED
+}
+
+"""
+Review filters for searching and sorting
+"""
+input ReviewFilters {
+  rating: IntRange
+  dateRange: DateRange
+  source: ReviewSource
+  sentiment: ReviewSentiment
+  status: ReviewStatus
+  hasResponse: Boolean
+  language: String
+  keywords: [String!]
+  categories: [ReviewType!]
+}
+
+"""
+Review sorting options
+"""
+enum ReviewSortOption {
+  NEWEST_FIRST
+  OLDEST_FIRST
+  HIGHEST_RATING
+  LOWEST_RATING
+  MOST_HELPFUL
+  MOST_RECENT_RESPONSE
+}
+
+"""
+Reputation management dashboard
+"""
+type ReputationDashboard {
+  property: Property!
+  overallScore: Float!
+  reviewSummary: ReviewSummary!
+  sentimentAnalysis: SentimentAnalysis!
+  competitorAnalysis: CompetitorAnalysis!
+  alertsAndNotifications: [ReputationAlert!]!
+  actionItems: [ActionItem!]!
+  performanceMetrics: ReputationMetrics!
+}
+
+"""
+Review summary statistics
+"""
+type ReputationMetrics {
+  totalReviews: Int!
+  averageRating: Float!
+  responseRate: Float!
+  averageResponseTime: Float
+  reviewVelocity: Float!
+  satisfactionTrend: Float!
+  recommendationRate: Float
+}
+
+"""
+Review summary with key insights
+"""
+type ReviewSummary {
+  totalReviews: Int!
+  averageRating: Float!
+  newReviews: Int!
+  pendingResponses: Int!
+  flaggedReviews: Int!
+  ratingTrend: Float!
+}
+
+"""
+Sentiment analysis overview
+"""
+type SentimentAnalysis {
+  overallSentiment: ReviewSentiment!
+  positivePercentage: Float!
+  neutralPercentage: Float!
+  negativePercentage: Float!
+  sentimentTrend: Float!
+  keyIssues: [String!]!
+  keyStrengths: [String!]!
+}
+
+"""
+Competitor analysis for reputation
+"""
+type CompetitorAnalysis {
+  marketPosition: Int!
+  ratingComparison: Float!
+  reviewCountComparison: Float!
+  keyDifferentiators: [String!]!
+  improvementOpportunities: [String!]!
+}
+
+"""
+Reputation alerts and notifications
+"""
+type ReputationAlert {
+  id: ID!
+  type: AlertType!
+  severity: AlertSeverity!
+  message: String!
+  review: Review
+  createdAt: DateTime!
+  acknowledged: Boolean!
+  acknowledgedBy: User
+  acknowledgedAt: DateTime
+}
+
+"""
+Alert types for reputation management
+"""
+enum AlertType {
+  NEW_NEGATIVE_REVIEW
+  RATING_DROP
+  COMPETITOR_OUTPERFORMING
+  RESPONSE_OVERDUE
+  VIRAL_REVIEW
+  REVIEW_SPAM_DETECTED
+  SENTIMENT_SHIFT
+}
+
+"""
+Alert severity levels
+"""
+enum AlertSeverity {
+  INFO
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+"""
+Action items for reputation improvement
+"""
+type ActionItem {
+  id: ID!
+  title: String!
+  description: String!
+  priority: TaskPriority!
+  category: ActionCategory!
+  assignedTo: User
+  dueDate: Date
+  status: ActionStatus!
+  relatedReviews: [Review!]
+  createdAt: DateTime!
+  completedAt: DateTime
+}
+
+"""
+Action item categories
+"""
+enum ActionCategory {
+  RESPOND_TO_REVIEW
+  IMPROVE_SERVICE
+  TRAIN_STAFF
+  UPDATE_AMENITIES
+  FIX_MAINTENANCE_ISSUE
+  UPDATE_POLICIES
+  MARKETING_CAMPAIGN
+}
+
+"""
+Action item status
+"""
+enum ActionStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  ON_HOLD
+}
+
+"""
+Review template for consistent responses
+"""
+type ReviewResponseTemplate {
+  id: ID!
+  name: String!
+  category: ReviewType!
+  sentiment: ReviewSentiment!
+  template: String!
+  variables: [String!]!
+  language: String!
+  isActive: Boolean!
+  usageCount: Int!
+  effectiveness: Float
+  createdBy: User!
+  createdAt: DateTime!
+}
+
+# Extend existing types for reviews
+extend type Property @key(fields: "id") {
+  id: ID! @external
+  reviews: [Review!]!
+  reviewAnalytics: ReviewAnalytics!
+  reputationDashboard: ReputationDashboard!
+  averageRating: Float!
+  totalReviews: Int!
+}
+
+extend type Guest @key(fields: "id") {
+  id: ID! @external
+  reviews: [Review!]!
+  averageRatingGiven: Float
+  reviewCount: Int!
+}
+
+extend type Reservation @key(fields: "id") {
+  id: ID! @external
+  review: Review
+  reviewInvited: Boolean!
+  reviewInvitedAt: DateTime
+}
+
+"""
+Review invitation management
+"""
+type ReviewInvitation {
+  id: ID!
+  reservation: Reservation!
+  guest: Guest!
+  status: InvitationStatus!
+  sentAt: DateTime!
+  remindersSent: Int!
+  lastReminderAt: DateTime
+  reviewSubmitted: Boolean!
+  reviewSubmittedAt: DateTime
+  template: ReviewInvitationTemplate!
+}
+
+"""
+Review invitation status
+"""
+enum InvitationStatus {
+  PENDING
+  SENT
+  OPENED
+  CLICKED
+  COMPLETED
+  EXPIRED
+  CANCELLED
+}
+
+"""
+Review invitation templates
+"""
+type ReviewInvitationTemplate {
+  id: ID!
+  name: String!
+  subject: String!
+  content: String!
+  timing: InvitationTiming!
+  reminderSchedule: [Int!]!
+  isActive: Boolean!
+  effectiveness: Float
+}
+
+"""
+Timing for review invitations
+"""
+enum InvitationTiming {
+  AT_CHECKOUT
+  ONE_DAY_AFTER
+  THREE_DAYS_AFTER
+  ONE_WEEK_AFTER
+  CUSTOM
+}

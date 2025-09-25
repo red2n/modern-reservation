@@ -1,0 +1,248 @@
+# Property Management Schema
+# Types and operations for property and room management
+
+enum PropertyType {
+  HOTEL
+  RESORT
+  APARTMENT
+  VILLA
+  HOSTEL
+}
+
+enum RoomStatus {
+  AVAILABLE
+  OCCUPIED
+  MAINTENANCE
+  OUT_OF_ORDER
+}
+
+# Property Type
+type Property implements Node & Timestamped & SoftDeletable & Auditable @key(fields: "id") {
+  id: UUID!
+  tenantId: UUID!
+  name: String!
+  description: String
+  propertyType: PropertyType!
+  address: String!
+  city: String!
+  state: String
+  country: String!
+  postalCode: String
+  timezone: String!
+  phone: String
+  email: EmailAddress
+  website: URL
+  checkInTime: String!
+  checkOutTime: String!
+  currency: Currency!
+  taxRate: Float!
+  amenities: [String!]!
+  policies: JSON!
+  images: [URL!]!
+  isActive: Boolean!
+
+  # Relationships
+  rooms: [Room!]! @requires(fields: "id")
+  ratePlans: [RatePlan!]! @requires(fields: "id")
+  staff: [User!]! @requires(fields: "id")
+
+  # Analytics
+  occupancyRate(dateRange: DateRangeInput!): Float!
+  revenue(dateRange: DateRangeInput!): RevenueData!
+
+  # Timestamps and audit
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  isDeleted: Boolean!
+  deletedAt: DateTime
+  createdBy: UUID!
+  updatedBy: UUID!
+}
+
+# Room Type
+type Room implements Node & Timestamped & SoftDeletable & Auditable @key(fields: "id") {
+  id: UUID!
+  propertyId: UUID!
+  roomNumber: String!
+  roomType: String!
+  floor: Int
+  capacity: Int!
+  basePrice: Float!
+  currency: Currency!
+  size: Float
+  bedType: String
+  bedCount: Int!
+  amenities: [String!]!
+  description: String
+  images: [URL!]!
+  status: RoomStatus!
+  housekeepingStatus: String
+  maintenanceNotes: String
+  isActive: Boolean!
+
+  # Relationships
+  property: Property! @requires(fields: "propertyId")
+  reservations: [Reservation!]! @requires(fields: "id")
+  availability: [RoomAvailability!]! @requires(fields: "id")
+  housekeepingTasks: [HousekeepingTask!]! @requires(fields: "id")
+
+  # Current status
+  isAvailable(date: DateTime!): Boolean!
+  currentPrice(date: DateTime!): Float!
+
+  # Timestamps and audit
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  isDeleted: Boolean!
+  deletedAt: DateTime
+  createdBy: UUID!
+  updatedBy: UUID!
+}
+
+# Input types
+input PropertyFilterInput {
+  propertyType: PropertyType
+  city: String
+  country: String
+  isActive: Boolean
+}
+
+input RoomFilterInput {
+  propertyId: UUID
+  roomType: String
+  status: RoomStatus
+  capacity: Int
+  minPrice: Float
+  maxPrice: Float
+  amenities: [String!]
+}
+
+input CreatePropertyInput {
+  name: String!
+  description: String
+  propertyType: PropertyType!
+  address: String!
+  city: String!
+  state: String
+  country: String!
+  postalCode: String
+  timezone: String!
+  phone: String
+  email: EmailAddress
+  website: URL
+  checkInTime: String!
+  checkOutTime: String!
+  currency: Currency!
+  taxRate: Float!
+  amenities: [String!]!
+  policies: JSON!
+  isActive: Boolean
+}
+
+input UpdatePropertyInput {
+  name: String
+  description: String
+  propertyType: PropertyType
+  address: String
+  city: String
+  state: String
+  country: String
+  postalCode: String
+  timezone: String
+  phone: String
+  email: EmailAddress
+  website: URL
+  checkInTime: String
+  checkOutTime: String
+  currency: Currency
+  taxRate: Float
+  amenities: [String!]
+  policies: JSON
+  isActive: Boolean
+}
+
+input CreateRoomInput {
+  propertyId: UUID!
+  roomNumber: String!
+  roomType: String!
+  floor: Int
+  capacity: Int!
+  basePrice: Float!
+  currency: Currency
+  size: Float
+  bedType: String
+  bedCount: Int
+  amenities: [String!]
+  description: String
+  images: [URL!]
+  isActive: Boolean
+}
+
+input UpdateRoomInput {
+  roomNumber: String
+  roomType: String
+  floor: Int
+  capacity: Int
+  basePrice: Float
+  currency: Currency
+  size: Float
+  bedType: String
+  bedCount: Int
+  amenities: [String!]
+  description: String
+  images: [URL!]
+  status: RoomStatus
+  isActive: Boolean
+}
+
+# Connection types for pagination
+type PropertyConnection {
+  edges: [PropertyEdge!]!
+  pageInfo: PageInfo!
+}
+
+type PropertyEdge {
+  node: Property!
+  cursor: String!
+}
+
+type RoomConnection {
+  edges: [RoomEdge!]!
+  pageInfo: PageInfo!
+}
+
+type RoomEdge {
+  node: Room!
+  cursor: String!
+}
+
+# Extend root types
+extend type Query {
+  # Property queries
+  property(id: UUID!): Property
+  properties(
+    filter: PropertyFilterInput
+    pagination: PaginationInput
+    sort: SortInput
+  ): PropertyConnection!
+
+  # Room queries
+  room(id: UUID!): Room
+  rooms(
+    filter: RoomFilterInput
+    pagination: PaginationInput
+    sort: SortInput
+  ): RoomConnection!
+}
+
+extend type Mutation {
+  # Property mutations
+  createProperty(input: CreatePropertyInput!): Property!
+  updateProperty(id: UUID!, input: UpdatePropertyInput!): Property!
+  deleteProperty(id: UUID!): Boolean!
+
+  # Room mutations
+  createRoom(input: CreateRoomInput!): Room!
+  updateRoom(id: UUID!, input: UpdateRoomInput!): Room!
+  deleteRoom(id: UUID!): Boolean!
+}

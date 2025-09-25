@@ -1,0 +1,131 @@
+# Guest Management Schema
+# Types and operations for guest profiles and management
+
+# Guest Type
+type Guest implements Node & Timestamped & SoftDeletable @key(fields: "id") {
+  id: UUID!
+  tenantId: UUID!
+  email: EmailAddress!
+  firstName: String!
+  lastName: String!
+  fullName: String! # Computed field
+  phone: PhoneNumber
+  dateOfBirth: DateTime
+  nationality: String
+  passportNumber: String
+  loyaltyNumber: String
+  preferences: JSON!
+  emergencyContact: EmergencyContact
+  address: Address
+  totalStays: Int!
+  totalSpent: Float!
+  averageRating: Float
+  isVip: Boolean!
+
+  # Relationships
+  reservations: [Reservation!]! @requires(fields: "id")
+  payments: [Payment!]! @requires(fields: "id")
+  reviews: [Review!]! @requires(fields: "id")
+
+  # Computed fields
+  loyaltyTier: String!
+  lifetimeValue: Float!
+
+  # Timestamps
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  isDeleted: Boolean!
+  deletedAt: DateTime
+}
+
+# Supporting Types
+type EmergencyContact {
+  name: String!
+  phone: PhoneNumber!
+  relationship: String!
+}
+
+type AdditionalGuest {
+  firstName: String!
+  lastName: String!
+  age: Int
+}
+
+# Input types
+input GuestFilterInput {
+  email: String
+  firstName: String
+  lastName: String
+  isVip: Boolean
+  loyaltyNumber: String
+}
+
+input CreateGuestInput {
+  email: EmailAddress!
+  firstName: String!
+  lastName: String!
+  phone: PhoneNumber
+  dateOfBirth: DateTime
+  nationality: String
+  passportNumber: String
+  loyaltyNumber: String
+  preferences: JSON
+  emergencyContact: EmergencyContactInput
+  address: AddressInput
+}
+
+input UpdateGuestInput {
+  email: EmailAddress
+  firstName: String
+  lastName: String
+  phone: PhoneNumber
+  dateOfBirth: DateTime
+  nationality: String
+  passportNumber: String
+  loyaltyNumber: String
+  preferences: JSON
+  emergencyContact: EmergencyContactInput
+  address: AddressInput
+}
+
+input EmergencyContactInput {
+  name: String!
+  phone: PhoneNumber!
+  relationship: String!
+}
+
+input AdditionalGuestInput {
+  firstName: String!
+  lastName: String!
+  age: Int
+}
+
+# Connection types for pagination
+type GuestConnection {
+  edges: [GuestEdge!]!
+  pageInfo: PageInfo!
+}
+
+type GuestEdge {
+  node: Guest!
+  cursor: String!
+}
+
+# Extend root types
+extend type Query {
+  # Guest queries
+  guest(id: UUID!): Guest
+  guestByEmail(email: EmailAddress!): Guest
+  guests(
+    filter: GuestFilterInput
+    pagination: PaginationInput
+    sort: SortInput
+  ): GuestConnection!
+}
+
+extend type Mutation {
+  # Guest mutations
+  createGuest(input: CreateGuestInput!): Guest!
+  updateGuest(id: UUID!, input: UpdateGuestInput!): Guest!
+  deleteGuest(id: UUID!): Boolean!
+}

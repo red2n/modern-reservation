@@ -1,0 +1,194 @@
+# Reservation Management Schema
+# Types and operations for reservation and booking management
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+  NO_SHOW
+}
+
+enum ReservationSource {
+  DIRECT
+  BOOKING_DOT_COM
+  EXPEDIA
+  AIRBNB
+  PHONE
+  WALK_IN
+}
+
+enum RoomCondition {
+  GOOD
+  NEEDS_CLEANING
+  MAINTENANCE_REQUIRED
+  DAMAGED
+}
+
+# Reservation Type
+type Reservation implements Node & Timestamped & SoftDeletable & Auditable @key(fields: "id") {
+  id: UUID!
+  confirmationNumber: String!
+  propertyId: UUID!
+  roomId: UUID!
+  guestId: UUID!
+  checkInDate: DateTime!
+  checkOutDate: DateTime!
+  adults: Int!
+  children: Int!
+  totalAmount: Float!
+  currency: Currency!
+  status: ReservationStatus!
+  source: ReservationSource!
+  rateCode: String
+  ratePlanId: UUID
+  specialRequests: String
+  guestNotes: String
+  corporateCode: String
+  groupCode: String
+  marketSegment: String
+  additionalGuests: [AdditionalGuest!]!
+
+  # Calculated fields
+  numberOfNights: Int!
+  averageNightlyRate: Float!
+  totalTax: Float!
+  netAmount: Float!
+
+  # Check-in/out details
+  actualCheckInTime: DateTime
+  actualCheckOutTime: DateTime
+  roomKeys: [String!]
+  depositAmount: Float
+  identificationVerified: Boolean!
+  signatureObtained: Boolean!
+  specialInstructions: String
+
+  # Final billing
+  finalBill: Float
+  outstandingCharges: Float
+  roomCondition: RoomCondition
+  guestSatisfactionScore: Int
+  feedback: String
+
+  # Relationships
+  property: Property! @requires(fields: "propertyId")
+  room: Room! @requires(fields: "roomId")
+  guest: Guest! @requires(fields: "guestId")
+  payments: [Payment!]! @requires(fields: "id")
+  ratePlan: RatePlan @requires(fields: "ratePlanId")
+
+  # Timestamps and audit
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  isDeleted: Boolean!
+  deletedAt: DateTime
+  createdBy: UUID!
+  updatedBy: UUID!
+}
+
+# Input types
+input ReservationFilterInput {
+  propertyId: UUID
+  guestId: UUID
+  status: ReservationStatus
+  source: ReservationSource
+  checkInDate: DateTime
+  checkOutDate: DateTime
+  dateRange: DateRangeInput
+}
+
+input CreateReservationInput {
+  propertyId: UUID!
+  roomId: UUID!
+  guestId: UUID!
+  checkInDate: DateTime!
+  checkOutDate: DateTime!
+  adults: Int!
+  children: Int
+  source: ReservationSource
+  rateCode: String
+  ratePlanId: UUID
+  specialRequests: String
+  guestNotes: String
+  corporateCode: String
+  groupCode: String
+  marketSegment: String
+  additionalGuests: [AdditionalGuestInput!]
+}
+
+input UpdateReservationInput {
+  checkInDate: DateTime
+  checkOutDate: DateTime
+  adults: Int
+  children: Int
+  specialRequests: String
+  guestNotes: String
+  additionalGuests: [AdditionalGuestInput!]
+}
+
+input CheckInInput {
+  reservationId: UUID!
+  actualArrivalTime: DateTime
+  roomKeys: [String!]
+  depositAmount: Float
+  identificationVerified: Boolean
+  signatureObtained: Boolean
+  specialInstructions: String
+}
+
+input CheckOutInput {
+  reservationId: UUID!
+  actualDepartureTime: DateTime
+  roomCondition: RoomCondition
+  additionalCharges: [AdditionalChargeInput!]
+  guestSatisfactionScore: Int
+  feedback: String
+}
+
+input AdditionalChargeInput {
+  description: String!
+  amount: Float!
+  category: String!
+}
+
+# Connection types for pagination
+type ReservationConnection {
+  edges: [ReservationEdge!]!
+  pageInfo: PageInfo!
+}
+
+type ReservationEdge {
+  node: Reservation!
+  cursor: String!
+}
+
+# Extend root types
+extend type Query {
+  # Reservation queries
+  reservation(id: UUID!): Reservation
+  reservationByConfirmation(confirmationNumber: String!): Reservation
+  reservations(
+    filter: ReservationFilterInput
+    pagination: PaginationInput
+    sort: SortInput
+  ): ReservationConnection!
+}
+
+extend type Mutation {
+  # Reservation mutations
+  createReservation(input: CreateReservationInput!): Reservation!
+  updateReservation(id: UUID!, input: UpdateReservationInput!): Reservation!
+  cancelReservation(id: UUID!, reason: String!): Reservation!
+
+  # Check-in/out mutations
+  checkIn(input: CheckInInput!): Reservation!
+  checkOut(input: CheckOutInput!): Reservation!
+}
+
+extend type Subscription {
+  # Reservation updates
+  reservationUpdated(propertyId: UUID!): Reservation!
+  reservationCreated(propertyId: UUID!): Reservation!
+}

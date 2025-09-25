@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.modernreservation</groupId>
+    <artifactId>java-services-parent</artifactId>
+    <version>2.0.0</version>
+    <packaging>pom</packaging>
+
+    <name>Modern Reservation - Java Services Parent</name>
+    <description>Parent POM for all Java microservices in the Modern Reservation System</description>
+
+    <properties>
+        <java.version>21</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Spring Boot and Cloud versions -->
+        <spring-boot.version>3.2.0</spring-boot.version>
+        <spring-cloud.version>2023.0.0</spring-cloud.version>
+
+        <!-- Database and messaging -->
+        <postgresql.version>42.7.0</postgresql.version>
+        <redis.version>4.4.0</redis.version>
+        <kafka.version>3.6.0</kafka.version>
+
+        <!-- Monitoring and observability -->
+        <micrometer.version>1.12.0</micrometer.version>
+        <zipkin.version>2.24.0</zipkin.version>
+
+        <!-- Security and validation -->
+        <jwt.version>4.4.0</jwt.version>
+        <validation.version>3.0.2</validation.version>
+
+        <!-- Testing -->
+        <junit.version>5.10.0</junit.version>
+        <testcontainers.version>1.19.0</testcontainers.version>
+    </properties>
+
+    <modules>
+        <!-- Infrastructure Services -->
+        <module>infrastructure/config-server</module>
+        <module>infrastructure/eureka-server</module>
+        <module>infrastructure/gateway-service</module>
+        <module>infrastructure/zipkin-server</module>
+
+        <!-- Business Services -->
+        <module>business-services/reservation-engine</module>
+        <module>business-services/availability-calculator</module>
+        <module>business-services/rate-management</module>
+        <module>business-services/payment-processor</module>
+        <module>business-services/analytics-engine</module>
+        <module>business-services/batch-processor</module>
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>${spring-boot.version}</version>
+                    <configuration>
+                        <layers>
+                            <enabled>true</enabled>
+                        </layers>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>com.google.cloud.tools</groupId>
+                    <artifactId>jib-maven-plugin</artifactId>
+                    <version>3.4.0</version>
+                    <configuration>
+                        <from>
+                            <image>openjdk:21-jre-slim</image>
+                        </from>
+                        <to>
+                            <image>modernreservation/${project.artifactId}:${project.version}</image>
+                        </to>
+                        <container>
+                            <jvmFlags>
+                                <jvmFlag>-Xms512m</jvmFlag>
+                                <jvmFlag>-Xmx2g</jvmFlag>
+                                <jvmFlag>-XX:+UseG1GC</jvmFlag>
+                                <jvmFlag>-XX:+OptimizeStringConcat</jvmFlag>
+                            </jvmFlags>
+                            <ports>
+                                <port>8080</port>
+                            </ports>
+                        </container>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

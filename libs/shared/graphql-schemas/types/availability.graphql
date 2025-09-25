@@ -1,0 +1,190 @@
+# Rate and Availability Management Schema
+# Types and operations for pricing, availability, and rate management
+
+# Rate Plan Type
+type RatePlan implements Node & Timestamped & SoftDeletable & Auditable @key(fields: "id") {
+  id: UUID!
+  propertyId: UUID!
+  name: String!
+  description: String
+  ratePlanCode: String!
+  isActive: Boolean!
+  cancellationPolicy: String!
+  advanceBookingDays: Int
+  minStay: Int
+  maxStay: Int
+  blackoutDates: [DateTime!]!
+  discountPercent: Float!
+
+  # Relationships
+  property: Property! @requires(fields: "propertyId")
+  rates: [Rate!]! @requires(fields: "id")
+  reservations: [Reservation!]! @requires(fields: "id")
+
+  # Timestamps and audit
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  isDeleted: Boolean!
+  deletedAt: DateTime
+  createdBy: UUID!
+  updatedBy: UUID!
+}
+
+# Rate Type
+type Rate implements Node & Timestamped & Auditable @key(fields: "id") {
+  id: UUID!
+  ratePlanId: UUID!
+  roomId: UUID!
+  date: DateTime!
+  price: Float!
+  currency: Currency!
+  minStay: Int
+  maxStay: Int
+  closedToArrival: Boolean!
+  closedToDeparture: Boolean!
+
+  # Relationships
+  ratePlan: RatePlan! @requires(fields: "ratePlanId")
+  room: Room! @requires(fields: "roomId")
+
+  # Timestamps and audit
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  createdBy: UUID!
+  updatedBy: UUID!
+}
+
+# Room Availability Type
+type RoomAvailability implements Node & Timestamped & Auditable @key(fields: "roomId date") {
+  roomId: UUID!
+  date: DateTime!
+  isAvailable: Boolean!
+  price: Float!
+  currency: Currency!
+  minStay: Int
+  maxStay: Int
+  closedToArrival: Boolean!
+  closedToDeparture: Boolean!
+  availableUnits: Int!
+
+  # Relationships
+  room: Room! @requires(fields: "roomId")
+
+  # Timestamps and audit
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  createdBy: UUID!
+  updatedBy: UUID!
+}
+
+# Available Room for Search
+type AvailableRoom {
+  room: Room!
+  availableDate: DateTime!
+  currentPrice: Float!
+  isAvailable: Boolean!
+  restrictions: AvailabilityRestrictions
+}
+
+type AvailabilityRestrictions {
+  minStay: Int
+  maxStay: Int
+  closedToArrival: Boolean!
+  closedToDeparture: Boolean!
+}
+
+# Input types
+input AvailabilitySearchInput {
+  propertyId: UUID!
+  checkInDate: DateTime!
+  checkOutDate: DateTime!
+  adults: Int!
+  children: Int
+  roomType: String
+  minPrice: Float
+  maxPrice: Float
+  amenities: [String!]
+}
+
+input AvailabilityRequestInput {
+  propertyId: UUID!
+  roomId: UUID
+  startDate: DateTime!
+  endDate: DateTime!
+}
+
+input UpdateAvailabilityInput {
+  roomId: UUID!
+  updates: [AvailabilityUpdateInput!]!
+}
+
+input AvailabilityUpdateInput {
+  date: DateTime!
+  isAvailable: Boolean
+  price: Float
+  minStay: Int
+  maxStay: Int
+  closedToArrival: Boolean
+  closedToDeparture: Boolean
+}
+
+input CreateRatePlanInput {
+  propertyId: UUID!
+  name: String!
+  description: String
+  ratePlanCode: String!
+  cancellationPolicy: String!
+  advanceBookingDays: Int
+  minStay: Int
+  maxStay: Int
+  blackoutDates: [DateTime!]
+  discountPercent: Float
+  isActive: Boolean
+}
+
+# Search response type
+type RoomSearchResponse {
+  availableRooms: [AvailableRoom!]!
+  searchCriteria: AvailabilitySearchInput!
+  totalFound: Int!
+}
+
+# Extend root types
+extend type Query {
+  # Availability search
+  searchAvailability(input: AvailabilitySearchInput!): RoomSearchResponse!
+  roomAvailability(input: AvailabilityRequestInput!): [RoomAvailability!]!
+
+  # Rate queries
+  ratePlans(propertyId: UUID!): [RatePlan!]!
+  rates(
+    ratePlanId: UUID!
+    startDate: DateTime!
+    endDate: DateTime!
+  ): [Rate!]!
+}
+
+extend type Mutation {
+  # Availability mutations
+  updateAvailability(input: UpdateAvailabilityInput!): [RoomAvailability!]!
+  bulkUpdateAvailability(
+    propertyId: UUID!
+    roomIds: [UUID!]!
+    dateRange: DateRangeInput!
+    updates: AvailabilityUpdateInput!
+  ): Boolean!
+
+  # Rate mutations
+  createRatePlan(input: CreateRatePlanInput!): RatePlan!
+  updateRates(
+    ratePlanId: UUID!
+    roomId: UUID!
+    dateRange: DateRangeInput!
+    price: Float!
+  ): [Rate!]!
+}
+
+extend type Subscription {
+  # Availability updates
+  availabilityUpdated(propertyId: UUID!): RoomAvailability!
+}

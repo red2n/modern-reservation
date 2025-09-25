@@ -1,0 +1,160 @@
+# Master GraphQL Schema Composition
+# This file combines all domain-specific GraphQL schemas into a unified federation schema
+
+# Import all domain schemas in dependency order
+# 1. Common types and interfaces (no dependencies)
+# 2. Core domain types (properties, guests)
+# 3. Business logic types (reservations, payments)
+# 4. Supporting systems (analytics, housekeeping)
+
+# =============================================================================
+# PHASE 1: Foundation Types
+# =============================================================================
+
+# Common scalars, interfaces, and base types
+extend type Query
+extend type Mutation
+extend type Subscription
+
+# Root query type (extended by all domains)
+type Query {
+  # Health check
+  _service: _Service!
+  _health: HealthCheck!
+}
+
+# Root mutation type (extended by all domains)
+type Mutation {
+  # Placeholder - extended by domain schemas
+  _empty: String
+}
+
+# Root subscription type (extended by all domains)
+type Subscription {
+  # Placeholder - extended by domain schemas
+  _empty: String
+}
+
+# =============================================================================
+# PHASE 2: Core Domain Types (No Inter-Dependencies)
+# =============================================================================
+
+# Property and room management
+# Defined in: types/property.graphql
+# Exports: Property, Room, PropertyConnection, RoomConnection
+
+# Guest management
+# Defined in: types/guest.graphql
+# Exports: Guest, GuestConnection, EmergencyContact
+
+# User management and authentication
+# Defined in: types/user.graphql
+# Exports: User, Role, UserConnection
+
+# =============================================================================
+# PHASE 3: Business Logic Types (Depend on Core Domains)
+# =============================================================================
+
+# Reservation management (depends on Property, Room, Guest)
+# Defined in: types/reservation.graphql
+# Exports: Reservation, ReservationConnection
+
+# Payment processing (depends on Reservation, Guest)
+# Defined in: types/payment.graphql
+# Exports: Payment, Refund, PaymentDetails
+
+# Rate and availability management (depends on Property, Room)
+# Defined in: types/availability.graphql
+# Exports: RatePlan, Rate, RoomAvailability, AvailableRoom
+
+# =============================================================================
+# PHASE 4: Supporting Systems
+# =============================================================================
+
+# Analytics and reporting (depends on multiple domains)
+# Defined in: types/analytics.graphql
+# Exports: RevenueData, OccupancyData, AnalyticsReport
+
+# Housekeeping operations (depends on Property, Room, User)
+# Defined in: types/housekeeping.graphql
+# Exports: HousekeepingTask, TaskType, Priority
+
+# Channel management (depends on Property, Room, Availability)
+# Defined in: types/channel.graphql
+# Exports: Channel, ChannelConnection
+
+# Review and rating system (depends on Reservation, Guest, Property)
+# Defined in: types/review.graphql
+# Exports: Review, ReviewConnection
+
+# =============================================================================
+# Service Health and Metadata
+# =============================================================================
+
+type _Service {
+  sdl: String!
+}
+
+type HealthCheck {
+  status: String!
+  timestamp: DateTime!
+  version: String!
+  services: [ServiceHealth!]!
+}
+
+type ServiceHealth {
+  name: String!
+  status: String!
+  responseTime: Float
+  lastCheck: DateTime!
+  details: JSON
+}
+
+# =============================================================================
+# Schema Composition Instructions
+# =============================================================================
+
+# This master schema should be used with Apollo Federation Gateway
+# Each microservice implements its portion of the federated schema
+
+# Example Gateway Configuration:
+# ```typescript
+# const gateway = new ApolloGateway({
+#   serviceList: [
+#     { name: 'property-service', url: 'http://property-service:4001/graphql' },
+#     { name: 'guest-service', url: 'http://guest-service:4002/graphql' },
+#     { name: 'reservation-service', url: 'http://reservation-service:4003/graphql' },
+#     { name: 'payment-service', url: 'http://payment-service:4004/graphql' },
+#     { name: 'availability-service', url: 'http://availability-service:4005/graphql' },
+#     { name: 'analytics-service', url: 'http://analytics-service:4006/graphql' },
+#     { name: 'housekeeping-service', url: 'http://housekeeping-service:4007/graphql' },
+#     { name: 'channel-service', url: 'http://channel-service:4008/graphql' },
+#     { name: 'user-service', url: 'http://user-service:4009/graphql' },
+#   ],
+# });
+# ```
+
+# =============================================================================
+# Development Usage
+# =============================================================================
+
+# For development, you can compose the schema using:
+# 1. rover supergraph compose --config ./supergraph.yaml
+# 2. Apollo Studio schema composition
+# 3. Manual composition for testing
+
+# File loading order for manual composition:
+# 1. types/common.graphql
+# 2. types/property.graphql
+# 3. types/guest.graphql
+# 4. types/user.graphql
+# 5. types/reservation.graphql
+# 6. types/payment.graphql
+# 7. types/availability.graphql
+# 8. types/analytics.graphql
+# 9. types/housekeeping.graphql
+# 10. types/channel.graphql
+# 11. types/review.graphql
+
+# Each file extends the root Query, Mutation, and Subscription types
+# ensuring a complete unified schema when composed.

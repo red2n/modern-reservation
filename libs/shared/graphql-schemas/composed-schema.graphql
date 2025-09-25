@@ -1,0 +1,3457 @@
+# Composed GraphQL Schema
+# Auto-generated from modular schema files
+# DO NOT EDIT DIRECTLY - Edit individual files in types/ directory
+
+
+# =============================================================================
+# COMMON SCHEMA
+# =============================================================================
+
+# Common Types and Scalars
+# Base types, scalars, and interfaces used across all domains
+
+# Federation directives
+directive @key(fields: _FieldSet!, resolvable: Boolean = true) repeatable on OBJECT | INTERFACE
+directive @requires(fields: _FieldSet!) on FIELD_DEFINITION
+directive @provides(fields: _FieldSet!) on FIELD_DEFINITION
+directive @external(reason: String) on OBJECT | FIELD_DEFINITION
+directive @tag(name: String!) repeatable on FIELD_DEFINITION | OBJECT | INTERFACE | UNION | ARGUMENT_DEFINITION | SCALAR | ENUM | ENUM_VALUE | INPUT_OBJECT | INPUT_FIELD_DEFINITION
+directive @extends on OBJECT | INTERFACE
+directive @shareable on OBJECT | FIELD_DEFINITION
+directive @inaccessible on FIELD_DEFINITION | OBJECT | INTERFACE | UNION | ARGUMENT_DEFINITION | SCALAR | ENUM | ENUM_VALUE | INPUT_OBJECT | INPUT_FIELD_DEFINITION
+directive @override(from: String!) on FIELD_DEFINITION
+
+# Scalar types
+scalar DateTime
+scalar UUID
+scalar JSON
+scalar Upload
+scalar EmailAddress
+scalar PhoneNumber
+scalar URL
+scalar Currency
+scalar BigInt
+
+# Common interfaces
+interface Node {
+  id: UUID!
+}
+
+interface Timestamped {
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+interface SoftDeletable {
+  isDeleted: Boolean!
+  deletedAt: DateTime
+}
+
+interface Auditable {
+  createdBy: UUID!
+  updatedBy: UUID!
+}
+
+# Common enums
+enum SortDirection {
+  ASC
+  DESC
+}
+
+# Common input types
+input DateRangeInput {
+  startDate: DateTime!
+  endDate: DateTime!
+}
+
+input PaginationInput {
+  page: Int = 1
+  limit: Int = 20
+}
+
+input SortInput {
+  field: String!
+  direction: SortDirection = ASC
+}
+
+# Pagination result wrapper
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+  totalCount: Int!
+}
+
+# Supporting Types
+type Address {
+  street: String!
+  city: String!
+  state: String
+  country: String!
+  postalCode: String
+}
+
+input AddressInput {
+  street: String!
+  city: String!
+  state: String
+  country: String!
+  postalCode: String
+}
+
+# =============================================================================
+# PROPERTY SCHEMA
+# =============================================================================
+
+# Property Management Schema
+# Types and operations for property and room management
+
+enum PropertyType {
+  HOTEL
+  RESORT
+  APARTMENT
+  VILLA
+  HOSTEL
+}
+
+enum RoomStatus {
+  AVAILABLE
+  OCCUPIED
+  MAINTENANCE
+  OUT_OF_ORDER
+}
+
+# Property Type
+type Property implements Node & Timestamped & SoftDeletable & Auditable @key(fields: "id") {
+  id: UUID!
+  tenantId: UUID!
+  name: String!
+  description: String
+  propertyType: PropertyType!
+  address: String!
+  city: String!
+  state: String
+  country: String!
+  postalCode: String
+  timezone: String!
+  phone: String
+  email: EmailAddress
+  website: URL
+  checkInTime: String!
+  checkOutTime: String!
+  currency: Currency!
+  taxRate: Float!
+  amenities: [String!]!
+  policies: JSON!
+  images: [URL!]!
+  isActive: Boolean!
+
+  # Relationships
+  rooms: [Room!]! @requires(fields: "id")
+  ratePlans: [RatePlan!]! @requires(fields: "id")
+  staff: [User!]! @requires(fields: "id")
+
+  # Analytics
+  occupancyRate(dateRange: DateRangeInput!): Float!
+  revenue(dateRange: DateRangeInput!): RevenueData!
+
+  # Timestamps and audit
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  isDeleted: Boolean!
+  deletedAt: DateTime
+  createdBy: UUID!
+  updatedBy: UUID!
+}
+
+# Room Type
+type Room implements Node & Timestamped & SoftDeletable & Auditable @key(fields: "id") {
+  id: UUID!
+  propertyId: UUID!
+  roomNumber: String!
+  roomType: String!
+  floor: Int
+  capacity: Int!
+  basePrice: Float!
+  currency: Currency!
+  size: Float
+  bedType: String
+  bedCount: Int!
+  amenities: [String!]!
+  description: String
+  images: [URL!]!
+  status: RoomStatus!
+  housekeepingStatus: String
+  maintenanceNotes: String
+  isActive: Boolean!
+
+  # Relationships
+  property: Property! @requires(fields: "propertyId")
+  reservations: [Reservation!]! @requires(fields: "id")
+  availability: [RoomAvailability!]! @requires(fields: "id")
+  housekeepingTasks: [HousekeepingTask!]! @requires(fields: "id")
+
+  # Current status
+  isAvailable(date: DateTime!): Boolean!
+  currentPrice(date: DateTime!): Float!
+
+  # Timestamps and audit
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  isDeleted: Boolean!
+  deletedAt: DateTime
+  createdBy: UUID!
+  updatedBy: UUID!
+}
+
+# Input types
+input PropertyFilterInput {
+  propertyType: PropertyType
+  city: String
+  country: String
+  isActive: Boolean
+}
+
+input RoomFilterInput {
+  propertyId: UUID
+  roomType: String
+  status: RoomStatus
+  capacity: Int
+  minPrice: Float
+  maxPrice: Float
+  amenities: [String!]
+}
+
+input CreatePropertyInput {
+  name: String!
+  description: String
+  propertyType: PropertyType!
+  address: String!
+  city: String!
+  state: String
+  country: String!
+  postalCode: String
+  timezone: String!
+  phone: String
+  email: EmailAddress
+  website: URL
+  checkInTime: String!
+  checkOutTime: String!
+  currency: Currency!
+  taxRate: Float!
+  amenities: [String!]!
+  policies: JSON!
+  isActive: Boolean
+}
+
+input UpdatePropertyInput {
+  name: String
+  description: String
+  propertyType: PropertyType
+  address: String
+  city: String
+  state: String
+  country: String
+  postalCode: String
+  timezone: String
+  phone: String
+  email: EmailAddress
+  website: URL
+  checkInTime: String
+  checkOutTime: String
+  currency: Currency
+  taxRate: Float
+  amenities: [String!]
+  policies: JSON
+  isActive: Boolean
+}
+
+input CreateRoomInput {
+  propertyId: UUID!
+  roomNumber: String!
+  roomType: String!
+  floor: Int
+  capacity: Int!
+  basePrice: Float!
+  currency: Currency
+  size: Float
+  bedType: String
+  bedCount: Int
+  amenities: [String!]
+  description: String
+  images: [URL!]
+  isActive: Boolean
+}
+
+input UpdateRoomInput {
+  roomNumber: String
+  roomType: String
+  floor: Int
+  capacity: Int
+  basePrice: Float
+  currency: Currency
+  size: Float
+  bedType: String
+  bedCount: Int
+  amenities: [String!]
+  description: String
+  images: [URL!]
+  status: RoomStatus
+  isActive: Boolean
+}
+
+# Connection types for pagination
+type PropertyConnection {
+  edges: [PropertyEdge!]!
+  pageInfo: PageInfo!
+}
+
+type PropertyEdge {
+  node: Property!
+  cursor: String!
+}
+
+type RoomConnection {
+  edges: [RoomEdge!]!
+  pageInfo: PageInfo!
+}
+
+type RoomEdge {
+  node: Room!
+  cursor: String!
+}
+
+# Extend root types
+extend type Query {
+  # Property queries
+  property(id: UUID!): Property
+  properties(
+    filter: PropertyFilterInput
+    pagination: PaginationInput
+    sort: SortInput
+  ): PropertyConnection!
+
+  # Room queries
+  room(id: UUID!): Room
+  rooms(
+    filter: RoomFilterInput
+    pagination: PaginationInput
+    sort: SortInput
+  ): RoomConnection!
+}
+
+extend type Mutation {
+  # Property mutations
+  createProperty(input: CreatePropertyInput!): Property!
+  updateProperty(id: UUID!, input: UpdatePropertyInput!): Property!
+  deleteProperty(id: UUID!): Boolean!
+
+  # Room mutations
+  createRoom(input: CreateRoomInput!): Room!
+  updateRoom(id: UUID!, input: UpdateRoomInput!): Room!
+  deleteRoom(id: UUID!): Boolean!
+}
+
+# =============================================================================
+# GUEST SCHEMA
+# =============================================================================
+
+# Guest Management Schema
+# Types and operations for guest profiles and management
+
+# Guest Type
+type Guest implements Node & Timestamped & SoftDeletable @key(fields: "id") {
+  id: UUID!
+  tenantId: UUID!
+  email: EmailAddress!
+  firstName: String!
+  lastName: String!
+  fullName: String! # Computed field
+  phone: PhoneNumber
+  dateOfBirth: DateTime
+  nationality: String
+  passportNumber: String
+  loyaltyNumber: String
+  preferences: JSON!
+  emergencyContact: EmergencyContact
+  address: Address
+  totalStays: Int!
+  totalSpent: Float!
+  averageRating: Float
+  isVip: Boolean!
+
+  # Relationships
+  reservations: [Reservation!]! @requires(fields: "id")
+  payments: [Payment!]! @requires(fields: "id")
+  reviews: [Review!]! @requires(fields: "id")
+
+  # Computed fields
+  loyaltyTier: String!
+  lifetimeValue: Float!
+
+  # Timestamps
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  isDeleted: Boolean!
+  deletedAt: DateTime
+}
+
+# Supporting Types
+type EmergencyContact {
+  name: String!
+  phone: PhoneNumber!
+  relationship: String!
+}
+
+type AdditionalGuest {
+  firstName: String!
+  lastName: String!
+  age: Int
+}
+
+# Input types
+input GuestFilterInput {
+  email: String
+  firstName: String
+  lastName: String
+  isVip: Boolean
+  loyaltyNumber: String
+}
+
+input CreateGuestInput {
+  email: EmailAddress!
+  firstName: String!
+  lastName: String!
+  phone: PhoneNumber
+  dateOfBirth: DateTime
+  nationality: String
+  passportNumber: String
+  loyaltyNumber: String
+  preferences: JSON
+  emergencyContact: EmergencyContactInput
+  address: AddressInput
+}
+
+input UpdateGuestInput {
+  email: EmailAddress
+  firstName: String
+  lastName: String
+  phone: PhoneNumber
+  dateOfBirth: DateTime
+  nationality: String
+  passportNumber: String
+  loyaltyNumber: String
+  preferences: JSON
+  emergencyContact: EmergencyContactInput
+  address: AddressInput
+}
+
+input EmergencyContactInput {
+  name: String!
+  phone: PhoneNumber!
+  relationship: String!
+}
+
+input AdditionalGuestInput {
+  firstName: String!
+  lastName: String!
+  age: Int
+}
+
+# Connection types for pagination
+type GuestConnection {
+  edges: [GuestEdge!]!
+  pageInfo: PageInfo!
+}
+
+type GuestEdge {
+  node: Guest!
+  cursor: String!
+}
+
+# Extend root types
+extend type Query {
+  # Guest queries
+  guest(id: UUID!): Guest
+  guestByEmail(email: EmailAddress!): Guest
+  guests(
+    filter: GuestFilterInput
+    pagination: PaginationInput
+    sort: SortInput
+  ): GuestConnection!
+}
+
+extend type Mutation {
+  # Guest mutations
+  createGuest(input: CreateGuestInput!): Guest!
+  updateGuest(id: UUID!, input: UpdateGuestInput!): Guest!
+  deleteGuest(id: UUID!): Boolean!
+}
+
+# =============================================================================
+# USER SCHEMA
+# =============================================================================
+
+# User Management & Authentication Types
+# Domain: Users, roles, permissions, authentication, authorization
+
+"""
+User account in the system
+"""
+type User @key(fields: "id") {
+  id: ID!
+  email: String!
+  username: String
+  firstName: String!
+  lastName: String!
+  fullName: String!
+  phone: String
+  avatar: String
+  profile: UserProfile!
+  roles: [Role!]!
+  permissions: [Permission!]!
+  status: UserStatus!
+  preferences: UserPreferences!
+  authentication: UserAuthentication!
+  sessions: [UserSession!]!
+  auditLog: [UserAuditEntry!]!
+  lastLoginAt: DateTime
+  emailVerifiedAt: DateTime
+  phoneVerifiedAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+User account status
+"""
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+  LOCKED
+  DELETED
+}
+
+"""
+User profile information
+"""
+type UserProfile {
+  bio: String
+  dateOfBirth: Date
+  gender: Gender
+  nationality: String
+  language: String!
+  timezone: String!
+  address: Address
+  emergencyContact: EmergencyContact
+  employeeId: String
+  department: String
+  position: String
+  hireDate: Date
+  manager: User
+  directReports: [User!]!
+}
+
+"""
+Gender options
+"""
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+"""
+Emergency contact information
+"""
+type EmergencyContact {
+  name: String!
+  relationship: String!
+  phone: String!
+  email: String
+}
+
+"""
+User role in the system
+"""
+type Role {
+  id: ID!
+  name: String!
+  description: String!
+  permissions: [Permission!]!
+  isSystemRole: Boolean!
+  createdBy: User
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+System permission
+"""
+type Permission {
+  id: ID!
+  name: String!
+  description: String!
+  resource: String!
+  action: String!
+  scope: PermissionScope!
+}
+
+"""
+Permission scope levels
+"""
+enum PermissionScope {
+  GLOBAL
+  PROPERTY
+  DEPARTMENT
+  SELF
+  NONE
+}
+
+"""
+User preferences and settings
+"""
+type UserPreferences {
+  language: String!
+  timezone: String!
+  dateFormat: String!
+  timeFormat: String!
+  currency: String!
+  notifications: NotificationPreferences!
+  dashboard: DashboardPreferences!
+  privacy: PrivacyPreferences!
+}
+
+"""
+Notification preferences
+"""
+type NotificationPreferences {
+  email: EmailNotificationSettings!
+  sms: SmsNotificationSettings!
+  push: PushNotificationSettings!
+  inApp: InAppNotificationSettings!
+}
+
+"""
+Email notification settings
+"""
+type EmailNotificationSettings {
+  enabled: Boolean!
+  bookingConfirmations: Boolean!
+  cancellations: Boolean!
+  modifications: Boolean!
+  paymentReceipts: Boolean!
+  promotions: Boolean!
+  systemAlerts: Boolean!
+  reviews: Boolean!
+  frequency: NotificationFrequency!
+}
+
+"""
+SMS notification settings
+"""
+type SmsNotificationSettings {
+  enabled: Boolean!
+  bookingReminders: Boolean!
+  checkinReminders: Boolean!
+  emergencyAlerts: Boolean!
+  verificationCodes: Boolean!
+}
+
+"""
+Push notification settings
+"""
+type PushNotificationSettings {
+  enabled: Boolean!
+  bookingUpdates: Boolean!
+  promotions: Boolean!
+  locationBased: Boolean!
+  quiet: Boolean!
+  quietHours: QuietHours
+}
+
+"""
+In-app notification settings
+"""
+type InAppNotificationSettings {
+  enabled: Boolean!
+  sound: Boolean!
+  badge: Boolean!
+  popup: Boolean!
+}
+
+"""
+Notification frequency options
+"""
+enum NotificationFrequency {
+  IMMEDIATE
+  DAILY_DIGEST
+  WEEKLY_DIGEST
+  MONTHLY_DIGEST
+  NEVER
+}
+
+"""
+Quiet hours for notifications
+"""
+type QuietHours {
+  enabled: Boolean!
+  startTime: String!
+  endTime: String!
+  timezone: String!
+}
+
+"""
+Dashboard customization preferences
+"""
+type DashboardPreferences {
+  layout: DashboardLayout!
+  widgets: [DashboardWidget!]!
+  defaultView: String!
+  refreshInterval: Int!
+}
+
+"""
+Dashboard layout options
+"""
+enum DashboardLayout {
+  GRID
+  LIST
+  CARDS
+  COMPACT
+}
+
+"""
+Dashboard widget configuration
+"""
+type DashboardWidget {
+  id: ID!
+  type: WidgetType!
+  position: WidgetPosition!
+  size: WidgetSize!
+  configuration: JSON
+  isVisible: Boolean!
+}
+
+"""
+Widget types
+"""
+enum WidgetType {
+  BOOKINGS_SUMMARY
+  REVENUE_CHART
+  OCCUPANCY_RATE
+  GUEST_SATISFACTION
+  TASKS_PENDING
+  RECENT_REVIEWS
+  WEATHER
+  CALENDAR
+}
+
+"""
+Widget position on dashboard
+"""
+type WidgetPosition {
+  x: Int!
+  y: Int!
+  row: Int!
+  column: Int!
+}
+
+"""
+Widget size configuration
+"""
+type WidgetSize {
+  width: Int!
+  height: Int!
+  minWidth: Int
+  minHeight: Int
+  maxWidth: Int
+  maxHeight: Int
+}
+
+"""
+Privacy preferences
+"""
+type PrivacyPreferences {
+  profileVisibility: ProfileVisibility!
+  activityTracking: Boolean!
+  analyticsOptOut: Boolean!
+  dataSharing: Boolean!
+  marketingConsent: Boolean!
+}
+
+"""
+Profile visibility options
+"""
+enum ProfileVisibility {
+  PUBLIC
+  COLLEAGUES_ONLY
+  PRIVATE
+}
+
+"""
+User authentication details
+"""
+type UserAuthentication {
+  twoFactorEnabled: Boolean!
+  twoFactorMethod: TwoFactorMethod
+  backupCodes: [String!]
+  passwordLastChanged: DateTime
+  passwordExpiry: DateTime
+  loginAttempts: Int!
+  lockedUntil: DateTime
+  ssoEnabled: Boolean!
+  ssoProvider: SsoProvider
+  apiKeys: [ApiKey!]!
+}
+
+"""
+Two-factor authentication methods
+"""
+enum TwoFactorMethod {
+  SMS
+  EMAIL
+  AUTHENTICATOR_APP
+  HARDWARE_TOKEN
+}
+
+"""
+SSO provider options
+"""
+enum SsoProvider {
+  GOOGLE
+  MICROSOFT
+  OKTA
+  AUTH0
+  SAML
+  LDAP
+}
+
+"""
+API key for programmatic access
+"""
+type ApiKey {
+  id: ID!
+  name: String!
+  key: String! @deprecated(reason: "Use keyHash for security")
+  keyHash: String!
+  permissions: [Permission!]!
+  lastUsed: DateTime
+  expiresAt: DateTime
+  isActive: Boolean!
+  createdAt: DateTime!
+}
+
+"""
+User session information
+"""
+type UserSession {
+  id: ID!
+  user: User!
+  deviceInfo: DeviceInfo!
+  ipAddress: String!
+  location: String
+  isActive: Boolean!
+  lastActivity: DateTime!
+  expiresAt: DateTime!
+  createdAt: DateTime!
+}
+
+"""
+Device information for sessions
+"""
+type DeviceInfo {
+  type: DeviceType!
+  os: String!
+  browser: String
+  version: String
+  userAgent: String!
+}
+
+"""
+Device types
+"""
+enum DeviceType {
+  DESKTOP
+  MOBILE
+  TABLET
+  API_CLIENT
+  BOT
+}
+
+"""
+User audit log entry
+"""
+type UserAuditEntry {
+  id: ID!
+  user: User!
+  action: AuditAction!
+  resource: String
+  resourceId: String
+  details: JSON
+  ipAddress: String!
+  userAgent: String
+  success: Boolean!
+  createdAt: DateTime!
+}
+
+"""
+Audit actions
+"""
+enum AuditAction {
+  LOGIN
+  LOGOUT
+  PASSWORD_CHANGE
+  PROFILE_UPDATE
+  ROLE_ASSIGNMENT
+  PERMISSION_GRANTED
+  PERMISSION_REVOKED
+  DATA_ACCESS
+  DATA_MODIFICATION
+  EXPORT
+  IMPORT
+  DELETE
+}
+
+"""
+User group for organization
+"""
+type UserGroup {
+  id: ID!
+  name: String!
+  description: String!
+  type: GroupType!
+  members: [User!]!
+  roles: [Role!]!
+  permissions: [Permission!]!
+  parent: UserGroup
+  children: [UserGroup!]!
+  isActive: Boolean!
+  createdBy: User!
+  createdAt: DateTime!
+}
+
+"""
+Group types
+"""
+enum GroupType {
+  DEPARTMENT
+  TEAM
+  PROJECT
+  LOCATION
+  CUSTOM
+}
+
+"""
+Authentication token
+"""
+type AuthToken {
+  accessToken: String!
+  refreshToken: String!
+  tokenType: String!
+  expiresIn: Int!
+  expiresAt: DateTime!
+  scope: [String!]!
+}
+
+"""
+Password reset request
+"""
+type PasswordResetRequest {
+  id: ID!
+  user: User!
+  token: String!
+  expiresAt: DateTime!
+  used: Boolean!
+  ipAddress: String!
+  createdAt: DateTime!
+}
+
+"""
+Email verification request
+"""
+type EmailVerificationRequest {
+  id: ID!
+  user: User!
+  email: String!
+  token: String!
+  expiresAt: DateTime!
+  verified: Boolean!
+  verifiedAt: DateTime
+  createdAt: DateTime!
+}
+
+"""
+User invitation for new accounts
+"""
+type UserInvitation {
+  id: ID!
+  email: String!
+  roles: [Role!]!
+  invitedBy: User!
+  status: InvitationStatus!
+  token: String!
+  expiresAt: DateTime!
+  acceptedAt: DateTime
+  properties: [Property!]
+  personalMessage: String
+  createdAt: DateTime!
+}
+
+"""
+Security policy configuration
+"""
+type SecurityPolicy {
+  passwordMinLength: Int!
+  passwordRequireUppercase: Boolean!
+  passwordRequireLowercase: Boolean!
+  passwordRequireNumbers: Boolean!
+  passwordRequireSymbols: Boolean!
+  passwordExpiryDays: Int
+  maxLoginAttempts: Int!
+  lockoutDuration: Int!
+  sessionTimeout: Int!
+  twoFactorRequired: Boolean!
+  allowedIpRanges: [String!]
+  blockedIpRanges: [String!]
+}
+
+# System-level user queries and mutations would be defined here
+# but are kept minimal to focus on the type definitions
+
+"""
+User registration input
+"""
+input UserRegistrationInput {
+  email: String!
+  password: String!
+  firstName: String!
+  lastName: String!
+  phone: String
+  language: String
+  timezone: String
+  acceptTerms: Boolean!
+  marketingConsent: Boolean
+}
+
+"""
+User profile update input
+"""
+input UserProfileUpdateInput {
+  firstName: String
+  lastName: String
+  phone: String
+  avatar: String
+  bio: String
+  dateOfBirth: Date
+  gender: Gender
+  nationality: String
+  language: String
+  timezone: String
+}
+
+"""
+User preferences update input
+"""
+input UserPreferencesUpdateInput {
+  language: String
+  timezone: String
+  dateFormat: String
+  timeFormat: String
+  currency: String
+  notifications: NotificationPreferencesInput
+  dashboard: DashboardPreferencesInput
+  privacy: PrivacyPreferencesInput
+}
+
+"""
+Notification preferences input
+"""
+input NotificationPreferencesInput {
+  email: EmailNotificationSettingsInput
+  sms: SmsNotificationSettingsInput
+  push: PushNotificationSettingsInput
+  inApp: InAppNotificationSettingsInput
+}
+
+"""
+Email notification settings input
+"""
+input EmailNotificationSettingsInput {
+  enabled: Boolean
+  bookingConfirmations: Boolean
+  cancellations: Boolean
+  modifications: Boolean
+  paymentReceipts: Boolean
+  promotions: Boolean
+  systemAlerts: Boolean
+  reviews: Boolean
+  frequency: NotificationFrequency
+}
+
+# =============================================================================
+# RESERVATION SCHEMA
+# =============================================================================
+
+# Reservation Management Schema
+# Types and operations for reservation and booking management
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+  NO_SHOW
+}
+
+enum ReservationSource {
+  DIRECT
+  BOOKING_DOT_COM
+  EXPEDIA
+  AIRBNB
+  PHONE
+  WALK_IN
+}
+
+enum RoomCondition {
+  GOOD
+  NEEDS_CLEANING
+  MAINTENANCE_REQUIRED
+  DAMAGED
+}
+
+# Reservation Type
+type Reservation implements Node & Timestamped & SoftDeletable & Auditable @key(fields: "id") {
+  id: UUID!
+  confirmationNumber: String!
+  propertyId: UUID!
+  roomId: UUID!
+  guestId: UUID!
+  checkInDate: DateTime!
+  checkOutDate: DateTime!
+  adults: Int!
+  children: Int!
+  totalAmount: Float!
+  currency: Currency!
+  status: ReservationStatus!
+  source: ReservationSource!
+  rateCode: String
+  ratePlanId: UUID
+  specialRequests: String
+  guestNotes: String
+  corporateCode: String
+  groupCode: String
+  marketSegment: String
+  additionalGuests: [AdditionalGuest!]!
+
+  # Calculated fields
+  numberOfNights: Int!
+  averageNightlyRate: Float!
+  totalTax: Float!
+  netAmount: Float!
+
+  # Check-in/out details
+  actualCheckInTime: DateTime
+  actualCheckOutTime: DateTime
+  roomKeys: [String!]
+  depositAmount: Float
+  identificationVerified: Boolean!
+  signatureObtained: Boolean!
+  specialInstructions: String
+
+  # Final billing
+  finalBill: Float
+  outstandingCharges: Float
+  roomCondition: RoomCondition
+  guestSatisfactionScore: Int
+  feedback: String
+
+  # Relationships
+  property: Property! @requires(fields: "propertyId")
+  room: Room! @requires(fields: "roomId")
+  guest: Guest! @requires(fields: "guestId")
+  payments: [Payment!]! @requires(fields: "id")
+  ratePlan: RatePlan @requires(fields: "ratePlanId")
+
+  # Timestamps and audit
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  isDeleted: Boolean!
+  deletedAt: DateTime
+  createdBy: UUID!
+  updatedBy: UUID!
+}
+
+# Input types
+input ReservationFilterInput {
+  propertyId: UUID
+  guestId: UUID
+  status: ReservationStatus
+  source: ReservationSource
+  checkInDate: DateTime
+  checkOutDate: DateTime
+  dateRange: DateRangeInput
+}
+
+input CreateReservationInput {
+  propertyId: UUID!
+  roomId: UUID!
+  guestId: UUID!
+  checkInDate: DateTime!
+  checkOutDate: DateTime!
+  adults: Int!
+  children: Int
+  source: ReservationSource
+  rateCode: String
+  ratePlanId: UUID
+  specialRequests: String
+  guestNotes: String
+  corporateCode: String
+  groupCode: String
+  marketSegment: String
+  additionalGuests: [AdditionalGuestInput!]
+}
+
+input UpdateReservationInput {
+  checkInDate: DateTime
+  checkOutDate: DateTime
+  adults: Int
+  children: Int
+  specialRequests: String
+  guestNotes: String
+  additionalGuests: [AdditionalGuestInput!]
+}
+
+input CheckInInput {
+  reservationId: UUID!
+  actualArrivalTime: DateTime
+  roomKeys: [String!]
+  depositAmount: Float
+  identificationVerified: Boolean
+  signatureObtained: Boolean
+  specialInstructions: String
+}
+
+input CheckOutInput {
+  reservationId: UUID!
+  actualDepartureTime: DateTime
+  roomCondition: RoomCondition
+  additionalCharges: [AdditionalChargeInput!]
+  guestSatisfactionScore: Int
+  feedback: String
+}
+
+input AdditionalChargeInput {
+  description: String!
+  amount: Float!
+  category: String!
+}
+
+# Connection types for pagination
+type ReservationConnection {
+  edges: [ReservationEdge!]!
+  pageInfo: PageInfo!
+}
+
+type ReservationEdge {
+  node: Reservation!
+  cursor: String!
+}
+
+# Extend root types
+extend type Query {
+  # Reservation queries
+  reservation(id: UUID!): Reservation
+  reservationByConfirmation(confirmationNumber: String!): Reservation
+  reservations(
+    filter: ReservationFilterInput
+    pagination: PaginationInput
+    sort: SortInput
+  ): ReservationConnection!
+}
+
+extend type Mutation {
+  # Reservation mutations
+  createReservation(input: CreateReservationInput!): Reservation!
+  updateReservation(id: UUID!, input: UpdateReservationInput!): Reservation!
+  cancelReservation(id: UUID!, reason: String!): Reservation!
+
+  # Check-in/out mutations
+  checkIn(input: CheckInInput!): Reservation!
+  checkOut(input: CheckOutInput!): Reservation!
+}
+
+extend type Subscription {
+  # Reservation updates
+  reservationUpdated(propertyId: UUID!): Reservation!
+  reservationCreated(propertyId: UUID!): Reservation!
+}
+
+# =============================================================================
+# PAYMENT SCHEMA
+# =============================================================================
+
+# Payment Management Schema
+# Types and operations for payment processing and financial management
+
+enum PaymentMethod {
+  CREDIT_CARD
+  DEBIT_CARD
+  CASH
+  BANK_TRANSFER
+  DIGITAL_WALLET
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+# Payment Type
+type Payment implements Node & Timestamped & Auditable @key(fields: "id") {
+  id: UUID!
+  reservationId: UUID!
+  guestId: UUID!
+  amount: Float!
+  currency: Currency!
+  paymentMethod: PaymentMethod!
+  paymentProvider: String!
+  transactionId: String!
+  status: PaymentStatus!
+  description: String
+  reference: String
+
+  # Payment details (encrypted/tokenized)
+  paymentDetails: PaymentDetails
+
+  # Billing information
+  billingAddress: Address
+
+  # Processing details
+  processedAt: DateTime
+  failureReason: String
+
+  # Refund information
+  refundAmount: Float
+  refundReason: String
+  refundedAt: DateTime
+
+  # Relationships
+  reservation: Reservation! @requires(fields: "reservationId")
+  guest: Guest! @requires(fields: "guestId")
+  refunds: [Refund!]! @requires(fields: "id")
+
+  # Timestamps and audit
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  createdBy: UUID!
+  updatedBy: UUID!
+}
+
+# Payment Details (Tokenized)
+type PaymentDetails {
+  lastFourDigits: String
+  cardType: String
+  expiryMonth: Int
+  expiryYear: Int
+  cardHolderName: String
+}
+
+# Refund Type
+type Refund implements Node & Timestamped & Auditable {
+  id: UUID!
+  paymentId: UUID!
+  amount: Float!
+  reason: String!
+  status: String!
+  processedAt: DateTime
+
+  # Relationships
+  payment: Payment! @requires(fields: "paymentId")
+
+  # Timestamps and audit
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  createdBy: UUID!
+  updatedBy: UUID!
+}
+
+# Input types
+input CreatePaymentInput {
+  reservationId: UUID!
+  amount: Float!
+  currency: Currency!
+  paymentMethod: PaymentMethod!
+  paymentDetails: PaymentDetailsInput
+  description: String
+  reference: String
+}
+
+input PaymentDetailsInput {
+  cardNumber: String
+  expiryMonth: Int
+  expiryYear: Int
+  cvv: String
+  cardHolderName: String
+  billingAddress: AddressInput
+}
+
+input CreateRefundInput {
+  paymentId: UUID!
+  amount: Float!
+  reason: String!
+  refundMethod: String
+}
+
+# Extend root types
+extend type Query {
+  # Payment queries
+  payment(id: UUID!): Payment
+  payments(reservationId: UUID!): [Payment!]!
+}
+
+extend type Mutation {
+  # Payment mutations
+  createPayment(input: CreatePaymentInput!): Payment!
+  refundPayment(paymentId: UUID!, amount: Float!, reason: String!): Refund!
+}
+
+extend type Subscription {
+  # Payment updates
+  paymentProcessed(reservationId: UUID!): Payment!
+}
+
+# =============================================================================
+# AVAILABILITY SCHEMA
+# =============================================================================
+
+# Rate and Availability Management Schema
+# Types and operations for pricing, availability, and rate management
+
+# Rate Plan Type
+type RatePlan implements Node & Timestamped & SoftDeletable & Auditable @key(fields: "id") {
+  id: UUID!
+  propertyId: UUID!
+  name: String!
+  description: String
+  ratePlanCode: String!
+  isActive: Boolean!
+  cancellationPolicy: String!
+  advanceBookingDays: Int
+  minStay: Int
+  maxStay: Int
+  blackoutDates: [DateTime!]!
+  discountPercent: Float!
+
+  # Relationships
+  property: Property! @requires(fields: "propertyId")
+  rates: [Rate!]! @requires(fields: "id")
+  reservations: [Reservation!]! @requires(fields: "id")
+
+  # Timestamps and audit
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  isDeleted: Boolean!
+  deletedAt: DateTime
+  createdBy: UUID!
+  updatedBy: UUID!
+}
+
+# Rate Type
+type Rate implements Node & Timestamped & Auditable @key(fields: "id") {
+  id: UUID!
+  ratePlanId: UUID!
+  roomId: UUID!
+  date: DateTime!
+  price: Float!
+  currency: Currency!
+  minStay: Int
+  maxStay: Int
+  closedToArrival: Boolean!
+  closedToDeparture: Boolean!
+
+  # Relationships
+  ratePlan: RatePlan! @requires(fields: "ratePlanId")
+  room: Room! @requires(fields: "roomId")
+
+  # Timestamps and audit
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  createdBy: UUID!
+  updatedBy: UUID!
+}
+
+# Room Availability Type
+type RoomAvailability implements Node & Timestamped & Auditable @key(fields: "roomId date") {
+  roomId: UUID!
+  date: DateTime!
+  isAvailable: Boolean!
+  price: Float!
+  currency: Currency!
+  minStay: Int
+  maxStay: Int
+  closedToArrival: Boolean!
+  closedToDeparture: Boolean!
+  availableUnits: Int!
+
+  # Relationships
+  room: Room! @requires(fields: "roomId")
+
+  # Timestamps and audit
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  createdBy: UUID!
+  updatedBy: UUID!
+}
+
+# Available Room for Search
+type AvailableRoom {
+  room: Room!
+  availableDate: DateTime!
+  currentPrice: Float!
+  isAvailable: Boolean!
+  restrictions: AvailabilityRestrictions
+}
+
+type AvailabilityRestrictions {
+  minStay: Int
+  maxStay: Int
+  closedToArrival: Boolean!
+  closedToDeparture: Boolean!
+}
+
+# Input types
+input AvailabilitySearchInput {
+  propertyId: UUID!
+  checkInDate: DateTime!
+  checkOutDate: DateTime!
+  adults: Int!
+  children: Int
+  roomType: String
+  minPrice: Float
+  maxPrice: Float
+  amenities: [String!]
+}
+
+input AvailabilityRequestInput {
+  propertyId: UUID!
+  roomId: UUID
+  startDate: DateTime!
+  endDate: DateTime!
+}
+
+input UpdateAvailabilityInput {
+  roomId: UUID!
+  updates: [AvailabilityUpdateInput!]!
+}
+
+input AvailabilityUpdateInput {
+  date: DateTime!
+  isAvailable: Boolean
+  price: Float
+  minStay: Int
+  maxStay: Int
+  closedToArrival: Boolean
+  closedToDeparture: Boolean
+}
+
+input CreateRatePlanInput {
+  propertyId: UUID!
+  name: String!
+  description: String
+  ratePlanCode: String!
+  cancellationPolicy: String!
+  advanceBookingDays: Int
+  minStay: Int
+  maxStay: Int
+  blackoutDates: [DateTime!]
+  discountPercent: Float
+  isActive: Boolean
+}
+
+# Search response type
+type RoomSearchResponse {
+  availableRooms: [AvailableRoom!]!
+  searchCriteria: AvailabilitySearchInput!
+  totalFound: Int!
+}
+
+# Extend root types
+extend type Query {
+  # Availability search
+  searchAvailability(input: AvailabilitySearchInput!): RoomSearchResponse!
+  roomAvailability(input: AvailabilityRequestInput!): [RoomAvailability!]!
+
+  # Rate queries
+  ratePlans(propertyId: UUID!): [RatePlan!]!
+  rates(
+    ratePlanId: UUID!
+    startDate: DateTime!
+    endDate: DateTime!
+  ): [Rate!]!
+}
+
+extend type Mutation {
+  # Availability mutations
+  updateAvailability(input: UpdateAvailabilityInput!): [RoomAvailability!]!
+  bulkUpdateAvailability(
+    propertyId: UUID!
+    roomIds: [UUID!]!
+    dateRange: DateRangeInput!
+    updates: AvailabilityUpdateInput!
+  ): Boolean!
+
+  # Rate mutations
+  createRatePlan(input: CreateRatePlanInput!): RatePlan!
+  updateRates(
+    ratePlanId: UUID!
+    roomId: UUID!
+    dateRange: DateRangeInput!
+    price: Float!
+  ): [Rate!]!
+}
+
+extend type Subscription {
+  # Availability updates
+  availabilityUpdated(propertyId: UUID!): RoomAvailability!
+}
+
+# =============================================================================
+# ANALYTICS SCHEMA
+# =============================================================================
+
+# Analytics & Reporting Types
+# Domain: Business Intelligence, Reports, Metrics, KPIs
+
+"""
+Analytics dashboard data
+"""
+type Analytics {
+  id: ID!
+  reportType: AnalyticsReportType!
+  dateRange: DateRange!
+  metrics: [AnalyticsMetric!]!
+  charts: [AnalyticsChart!]!
+  filters: AnalyticsFilters
+  generatedAt: DateTime!
+  generatedBy: User!
+}
+
+"""
+Types of analytics reports
+"""
+enum AnalyticsReportType {
+  OCCUPANCY
+  REVENUE
+  BOOKING_CONVERSION
+  GUEST_SATISFACTION
+  CHANNEL_PERFORMANCE
+  RATE_PERFORMANCE
+  OPERATIONAL_EFFICIENCY
+  MAINTENANCE_COSTS
+  STAFF_PRODUCTIVITY
+  MARKET_ANALYSIS
+}
+
+"""
+Individual metric within analytics
+"""
+type AnalyticsMetric {
+  id: ID!
+  name: String!
+  value: Float!
+  unit: String
+  change: Float
+  changeDirection: ChangeDirection!
+  benchmark: Float
+  target: Float
+  status: MetricStatus!
+}
+
+"""
+Chart visualization data
+"""
+type AnalyticsChart {
+  id: ID!
+  type: ChartType!
+  title: String!
+  data: [ChartDataPoint!]!
+  xAxis: String!
+  yAxis: String!
+  colors: [String!]
+}
+
+"""
+Chart data point
+"""
+type ChartDataPoint {
+  label: String!
+  value: Float!
+  category: String
+  date: Date
+}
+
+"""
+Chart visualization types
+"""
+enum ChartType {
+  LINE
+  BAR
+  PIE
+  DONUT
+  AREA
+  SCATTER
+  HEATMAP
+  GAUGE
+}
+
+"""
+Metric change direction
+"""
+enum ChangeDirection {
+  UP
+  DOWN
+  STABLE
+}
+
+"""
+Metric status based on performance
+"""
+enum MetricStatus {
+  EXCELLENT
+  GOOD
+  WARNING
+  CRITICAL
+}
+
+"""
+Analytics filters
+"""
+type AnalyticsFilters {
+  properties: [ID!]
+  dateRange: DateRange
+  channels: [BookingChannel!]
+  guestTypes: [GuestType!]
+  roomTypes: [ID!]
+  customFilters: JSON
+}
+
+"""
+Date range for analytics
+"""
+type DateRange {
+  startDate: Date!
+  endDate: Date!
+  period: DatePeriod!
+}
+
+"""
+Predefined date periods
+"""
+enum DatePeriod {
+  TODAY
+  YESTERDAY
+  LAST_7_DAYS
+  LAST_30_DAYS
+  LAST_90_DAYS
+  LAST_YEAR
+  MONTH_TO_DATE
+  YEAR_TO_DATE
+  CUSTOM
+}
+
+"""
+Revenue analytics data
+"""
+type RevenueAnalytics {
+  totalRevenue: Money!
+  averageDailyRate: Money!
+  revenuePerAvailableRoom: Money!
+  occupancyRate: Float!
+  revenueByChannel: [ChannelRevenue!]!
+  revenueByRoomType: [RoomTypeRevenue!]!
+  revenueGrowth: Float!
+}
+
+"""
+Revenue by booking channel
+"""
+type ChannelRevenue {
+  channel: BookingChannel!
+  revenue: Money!
+  percentage: Float!
+  bookingCount: Int!
+}
+
+"""
+Revenue by room type
+"""
+type RoomTypeRevenue {
+  roomType: RoomType!
+  revenue: Money!
+  percentage: Float!
+  nightsBooked: Int!
+}
+
+"""
+Occupancy analytics data
+"""
+type OccupancyAnalytics {
+  occupancyRate: Float!
+  availableRooms: Int!
+  occupiedRooms: Int!
+  outOfOrderRooms: Int!
+  occupancyByRoomType: [RoomTypeOccupancy!]!
+  occupancyTrend: [OccupancyDataPoint!]!
+  comparisonPeriod: Float!
+}
+
+"""
+Occupancy by room type
+"""
+type RoomTypeOccupancy {
+  roomType: RoomType!
+  occupancyRate: Float!
+  availableRooms: Int!
+  occupiedRooms: Int!
+}
+
+"""
+Occupancy data point for trends
+"""
+type OccupancyDataPoint {
+  date: Date!
+  occupancyRate: Float!
+  roomsOccupied: Int!
+  roomsAvailable: Int!
+}
+
+"""
+Guest satisfaction analytics
+"""
+type GuestSatisfactionAnalytics {
+  averageRating: Float!
+  totalReviews: Int!
+  satisfactionScore: Float!
+  npsScore: Float!
+  ratingDistribution: [RatingDistribution!]!
+  satisfactionTrends: [SatisfactionDataPoint!]!
+  topComplaints: [ComplaintCategory!]!
+  topPraises: [PraiseCategory!]!
+}
+
+"""
+Rating distribution
+"""
+type RatingDistribution {
+  rating: Int!
+  count: Int!
+  percentage: Float!
+}
+
+"""
+Satisfaction trend data point
+"""
+type SatisfactionDataPoint {
+  date: Date!
+  averageRating: Float!
+  reviewCount: Int!
+  satisfactionScore: Float!
+}
+
+"""
+Complaint category analytics
+"""
+type ComplaintCategory {
+  category: String!
+  count: Int!
+  percentage: Float!
+  trend: ChangeDirection!
+}
+
+"""
+Praise category analytics
+"""
+type PraiseCategory {
+  category: String!
+  count: Int!
+  percentage: Float!
+  trend: ChangeDirection!
+}
+
+# Extend existing types for analytics
+extend type Property @key(fields: "id") {
+  id: ID! @external
+  analytics: PropertyAnalytics!
+}
+
+extend type Reservation @key(fields: "id") {
+  id: ID! @external
+  analyticsData: ReservationAnalytics
+}
+
+"""
+Property-specific analytics
+"""
+type PropertyAnalytics {
+  revenue: RevenueAnalytics!
+  occupancy: OccupancyAnalytics!
+  guestSatisfaction: GuestSatisfactionAnalytics!
+  performance: PropertyPerformance!
+  benchmarks: PropertyBenchmarks!
+}
+
+"""
+Property performance metrics
+"""
+type PropertyPerformance {
+  rankInMarket: Int
+  competitorSet: [Property!]!
+  marketShare: Float
+  performanceIndex: Float!
+  strengths: [String!]!
+  improvements: [String!]!
+}
+
+"""
+Property benchmarks
+"""
+type PropertyBenchmarks {
+  marketAverageDailyRate: Money!
+  marketOccupancyRate: Float!
+  marketRevPAR: Money!
+  competitorComparison: [CompetitorComparison!]!
+}
+
+"""
+Competitor comparison data
+"""
+type CompetitorComparison {
+  competitor: Property!
+  ourRate: Money!
+  theirRate: Money!
+  ourOccupancy: Float!
+  theirOccupancy: Float!
+  competitiveIndex: Float!
+}
+
+"""
+Reservation analytics data
+"""
+type ReservationAnalytics {
+  leadTime: Int!
+  stayLength: Int!
+  totalSpend: Money!
+  ancillaryRevenue: Money!
+  channelPerformance: Float!
+  guestLifetimeValue: Money
+}
+
+# =============================================================================
+# HOUSEKEEPING SCHEMA
+# =============================================================================
+
+# Housekeeping & Maintenance Types
+# Domain: Room maintenance, cleaning, repairs, work orders
+
+"""
+Housekeeping room status and tasks
+"""
+type HousekeepingRoom {
+  id: ID!
+  room: Room!
+  status: HousekeepingStatus!
+  assignedTo: HousekeepingStaff
+  tasks: [HousekeepingTask!]!
+  priority: TaskPriority!
+  estimatedDuration: Int
+  actualDuration: Int
+  inspectionRequired: Boolean!
+  notes: String
+  lastCleaned: DateTime
+  nextService: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+Housekeeping room status
+"""
+enum HousekeepingStatus {
+  DIRTY
+  CLEAN
+  INSPECTED
+  OUT_OF_ORDER
+  MAINTENANCE_REQUIRED
+  IN_PROGRESS
+  READY
+  PICKUP
+}
+
+"""
+Individual housekeeping task
+"""
+type HousekeepingTask {
+  id: ID!
+  type: HousekeepingTaskType!
+  description: String!
+  status: TaskStatus!
+  assignedTo: HousekeepingStaff
+  priority: TaskPriority!
+  estimatedDuration: Int!
+  actualDuration: Int
+  completedAt: DateTime
+  verifiedBy: HousekeepingStaff
+  notes: String
+  supplies: [HousekeepingSupply!]!
+  photos: [String!]
+  createdAt: DateTime!
+}
+
+"""
+Types of housekeeping tasks
+"""
+enum HousekeepingTaskType {
+  CHECKOUT_CLEANING
+  MAINTENANCE_CLEANING
+  DEEP_CLEANING
+  INVENTORY_CHECK
+  LINEN_CHANGE
+  AMENITY_RESTOCK
+  INSPECTION
+  REPAIR_REQUEST
+  PREVENTIVE_MAINTENANCE
+  EMERGENCY_CLEANING
+}
+
+"""
+Task status
+"""
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  ON_HOLD
+  REQUIRES_ATTENTION
+}
+
+"""
+Task priority levels
+"""
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+  EMERGENCY
+}
+
+"""
+Housekeeping staff member
+"""
+type HousekeepingStaff {
+  id: ID!
+  employee: User!
+  department: HousekeepingDepartment!
+  shift: WorkShift!
+  skills: [HousekeepingSkill!]!
+  assignedRooms: [Room!]!
+  currentTasks: [HousekeepingTask!]!
+  availability: StaffAvailability!
+  performance: StaffPerformance
+}
+
+"""
+Housekeeping departments
+"""
+enum HousekeepingDepartment {
+  ROOM_ATTENDANTS
+  PUBLIC_AREAS
+  LAUNDRY
+  MAINTENANCE
+  INSPECTION
+  MANAGEMENT
+}
+
+"""
+Work shifts
+"""
+enum WorkShift {
+  MORNING
+  AFTERNOON
+  EVENING
+  NIGHT
+  SPLIT
+}
+
+"""
+Housekeeping skills
+"""
+enum HousekeepingSkill {
+  STANDARD_CLEANING
+  DEEP_CLEANING
+  CARPET_CARE
+  WINDOW_CLEANING
+  FLOOR_MAINTENANCE
+  BATHROOM_SANITIZATION
+  LINEN_MANAGEMENT
+  INVENTORY_MANAGEMENT
+  QUALITY_INSPECTION
+  MINOR_REPAIRS
+}
+
+"""
+Staff availability status
+"""
+enum StaffAvailability {
+  AVAILABLE
+  BUSY
+  ON_BREAK
+  OFF_SHIFT
+  UNAVAILABLE
+}
+
+"""
+Staff performance metrics
+"""
+type StaffPerformance {
+  tasksCompleted: Int!
+  averageTaskTime: Float!
+  qualityScore: Float!
+  punctualityScore: Float!
+  guestFeedbackScore: Float
+  lastEvaluation: DateTime
+}
+
+"""
+Housekeeping supplies and inventory
+"""
+type HousekeepingSupply {
+  id: ID!
+  name: String!
+  category: SupplyCategory!
+  currentStock: Int!
+  minimumStock: Int!
+  unit: String!
+  cost: Money!
+  supplier: Supplier
+  lastRestocked: DateTime
+  expiryDate: Date
+  location: String!
+}
+
+"""
+Supply categories
+"""
+enum SupplyCategory {
+  CLEANING_CHEMICALS
+  LINENS
+  TOWELS
+  AMENITIES
+  PAPER_PRODUCTS
+  EQUIPMENT
+  UNIFORMS
+  MAINTENANCE_SUPPLIES
+}
+
+"""
+Supply supplier information
+"""
+type Supplier {
+  id: ID!
+  name: String!
+  contactInfo: ContactInfo!
+  products: [HousekeepingSupply!]!
+  reliability: Float!
+  lastOrder: DateTime
+}
+
+"""
+Maintenance work orders
+"""
+type MaintenanceWorkOrder {
+  id: ID!
+  room: Room
+  area: PublicArea
+  type: MaintenanceType!
+  priority: TaskPriority!
+  description: String!
+  reportedBy: User!
+  assignedTo: MaintenanceTechnician
+  status: WorkOrderStatus!
+  category: MaintenanceCategory!
+  estimatedCost: Money
+  actualCost: Money
+  estimatedDuration: Int
+  actualDuration: Int
+  partsRequired: [MaintenancePart!]!
+  scheduledDate: DateTime
+  completedDate: DateTime
+  inspectionDate: DateTime
+  inspectedBy: MaintenanceTechnician
+  photos: [String!]
+  notes: String
+  followUpRequired: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+Types of maintenance work
+"""
+enum MaintenanceType {
+  PREVENTIVE
+  CORRECTIVE
+  EMERGENCY
+  COSMETIC
+  UPGRADE
+  INSPECTION
+}
+
+"""
+Maintenance categories
+"""
+enum MaintenanceCategory {
+  PLUMBING
+  ELECTRICAL
+  HVAC
+  CARPENTRY
+  PAINTING
+  FLOORING
+  FIXTURES
+  APPLIANCES
+  ELECTRONICS
+  EXTERIOR
+  LANDSCAPING
+}
+
+"""
+Work order status
+"""
+enum WorkOrderStatus {
+  REPORTED
+  ASSIGNED
+  IN_PROGRESS
+  PARTS_ORDERED
+  ON_HOLD
+  COMPLETED
+  INSPECTED
+  CLOSED
+  CANCELLED
+}
+
+"""
+Maintenance technician
+"""
+type MaintenanceTechnician {
+  id: ID!
+  employee: User!
+  specialties: [MaintenanceCategory!]!
+  certifications: [String!]!
+  workOrders: [MaintenanceWorkOrder!]!
+  availability: StaffAvailability!
+  tools: [MaintenanceTool!]!
+  performance: TechnicianPerformance
+}
+
+"""
+Technician performance metrics
+"""
+type TechnicianPerformance {
+  workOrdersCompleted: Int!
+  averageCompletionTime: Float!
+  qualityScore: Float!
+  customerSatisfaction: Float
+  safetyScore: Float!
+  certificationLevel: String!
+}
+
+"""
+Maintenance parts and inventory
+"""
+type MaintenancePart {
+  id: ID!
+  name: String!
+  partNumber: String!
+  category: MaintenanceCategory!
+  currentStock: Int!
+  minimumStock: Int!
+  cost: Money!
+  supplier: Supplier!
+  location: String!
+  lastOrdered: DateTime
+}
+
+"""
+Maintenance tools
+"""
+type MaintenanceTool {
+  id: ID!
+  name: String!
+  category: String!
+  assignedTo: MaintenanceTechnician
+  condition: ToolCondition!
+  lastMaintenance: DateTime
+  nextMaintenance: DateTime
+}
+
+"""
+Tool condition status
+"""
+enum ToolCondition {
+  EXCELLENT
+  GOOD
+  FAIR
+  NEEDS_REPAIR
+  OUT_OF_SERVICE
+}
+
+"""
+Public areas for maintenance
+"""
+type PublicArea {
+  id: ID!
+  name: String!
+  type: PublicAreaType!
+  location: String!
+  maintenanceSchedule: [MaintenanceSchedule!]!
+  currentCondition: AreaCondition!
+  lastInspection: DateTime
+  nextInspection: DateTime
+}
+
+"""
+Public area types
+"""
+enum PublicAreaType {
+  LOBBY
+  RESTAURANT
+  BAR
+  POOL
+  GYM
+  SPA
+  CONFERENCE_ROOM
+  CORRIDOR
+  ELEVATOR
+  PARKING
+  GARDEN
+  TERRACE
+}
+
+"""
+Area condition assessment
+"""
+enum AreaCondition {
+  EXCELLENT
+  GOOD
+  FAIR
+  NEEDS_ATTENTION
+  POOR
+}
+
+"""
+Maintenance schedule for areas
+"""
+type MaintenanceSchedule {
+  id: ID!
+  area: PublicArea!
+  taskType: MaintenanceType!
+  frequency: MaintenanceFrequency!
+  nextDue: DateTime!
+  assignedTo: MaintenanceTechnician
+  estimatedDuration: Int!
+  instructions: String
+}
+
+"""
+Maintenance frequency
+"""
+enum MaintenanceFrequency {
+  DAILY
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  QUARTERLY
+  BIANNUALLY
+  ANNUALLY
+  AS_NEEDED
+}
+
+# Extend existing types for housekeeping
+extend type Room @key(fields: "id") {
+  id: ID! @external
+  housekeepingStatus: HousekeepingStatus!
+  lastCleaned: DateTime
+  nextService: DateTime
+  maintenanceHistory: [MaintenanceWorkOrder!]!
+}
+
+extend type Property @key(fields: "id") {
+  id: ID! @external
+  housekeepingRooms: [HousekeepingRoom!]!
+  maintenanceWorkOrders: [MaintenanceWorkOrder!]!
+  housekeepingStaff: [HousekeepingStaff!]!
+  maintenanceTechnicians: [MaintenanceTechnician!]!
+  publicAreas: [PublicArea!]!
+  supplies: [HousekeepingSupply!]!
+}
+
+# =============================================================================
+# CHANNEL SCHEMA
+# =============================================================================
+
+# Channel Management Types
+# Domain: Distribution channels, OTA integrations, rate parity, inventory distribution
+
+"""
+Booking channel configuration and management
+"""
+type Channel {
+  id: ID!
+  name: String!
+  type: ChannelType!
+  status: ChannelStatus!
+  configuration: ChannelConfiguration!
+  connectivity: ChannelConnectivity!
+  rateParity: RateParitySettings!
+  inventoryAllocation: InventoryAllocation!
+  commissionStructure: CommissionStructure!
+  performance: ChannelPerformance!
+  lastSync: DateTime
+  nextSync: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+Channel types
+"""
+enum ChannelType {
+  DIRECT_BOOKING
+  OTA
+  GDS
+  METASEARCH
+  WHOLESALE
+  CORPORATE
+  GROUP
+  WALK_IN
+  PHONE
+  EMAIL
+  SOCIAL_MEDIA
+  MOBILE_APP
+}
+
+"""
+Channel operational status
+"""
+enum ChannelStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  MAINTENANCE
+  TESTING
+  PENDING_ACTIVATION
+}
+
+"""
+Channel configuration settings
+"""
+type ChannelConfiguration {
+  id: ID!
+  apiEndpoint: String
+  credentials: ChannelCredentials
+  ratePlan: String!
+  inventoryType: InventoryType!
+  bookingRules: BookingRules!
+  cancellationPolicy: CancellationPolicy!
+  prepaymentRequired: Boolean!
+  taxInclusive: Boolean!
+  currencyCode: String!
+  language: String!
+  timeZone: String!
+  customFields: JSON
+}
+
+"""
+Channel API credentials (sensitive data)
+"""
+type ChannelCredentials {
+  username: String
+  endpoint: String
+  lastTested: DateTime
+  isValid: Boolean!
+}
+
+"""
+Inventory allocation types
+"""
+enum InventoryType {
+  FREEBASE
+  ALLOCATION
+  STOP_SELL
+  CLOSE_TO_ARRIVAL
+  CLOSE_TO_DEPARTURE
+  MINIMUM_STAY
+  MAXIMUM_STAY
+}
+
+"""
+Channel booking rules
+"""
+type BookingRules {
+  minimumStay: Int
+  maximumStay: Int
+  advanceBooking: Int
+  cutoffTime: Int
+  closedToArrival: [Date!]
+  closedToDeparture: [Date!]
+  blackoutDates: [DateRange!]
+  allowModifications: Boolean!
+  allowCancellations: Boolean!
+}
+
+"""
+Channel connectivity status and metrics
+"""
+type ChannelConnectivity {
+  isConnected: Boolean!
+  lastSuccessfulSync: DateTime
+  lastError: String
+  errorCount: Int!
+  uptimePercentage: Float!
+  averageResponseTime: Float!
+  dataConsistency: Float!
+  syncFrequency: SyncFrequency!
+}
+
+"""
+Synchronization frequency
+"""
+enum SyncFrequency {
+  REAL_TIME
+  EVERY_5_MINUTES
+  EVERY_15_MINUTES
+  EVERY_30_MINUTES
+  HOURLY
+  DAILY
+  MANUAL
+}
+
+"""
+Rate parity monitoring and settings
+"""
+type RateParitySettings {
+  enabled: Boolean!
+  tolerance: Float!
+  checkFrequency: SyncFrequency!
+  notifications: RateParityNotifications!
+  competitors: [CompetitorChannel!]!
+  violations: [RateParityViolation!]!
+  lastCheck: DateTime
+}
+
+"""
+Rate parity notification preferences
+"""
+type RateParityNotifications {
+  emailAlerts: Boolean!
+  smsAlerts: Boolean!
+  dashboardAlerts: Boolean!
+  recipients: [User!]!
+  severity: NotificationSeverity!
+}
+
+"""
+Notification severity levels
+"""
+enum NotificationSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+"""
+Competitor channel for rate comparison
+"""
+type CompetitorChannel {
+  id: ID!
+  name: String!
+  url: String
+  lastChecked: DateTime
+  currentRate: Money
+  rateComparison: Float
+  isActive: Boolean!
+}
+
+"""
+Rate parity violation record
+"""
+type RateParityViolation {
+  id: ID!
+  channel: Channel!
+  detectedAt: DateTime!
+  ourRate: Money!
+  competitorRate: Money!
+  difference: Money!
+  percentageDifference: Float!
+  severity: ViolationSeverity!
+  status: ViolationStatus!
+  resolvedAt: DateTime
+  notes: String
+}
+
+"""
+Violation severity
+"""
+enum ViolationSeverity {
+  MINOR
+  MODERATE
+  MAJOR
+  CRITICAL
+}
+
+"""
+Violation resolution status
+"""
+enum ViolationStatus {
+  OPEN
+  INVESTIGATING
+  RESOLVED
+  DISMISSED
+  ESCALATED
+}
+
+"""
+Inventory allocation per channel
+"""
+type InventoryAllocation {
+  roomType: RoomType!
+  totalInventory: Int!
+  allocatedInventory: Int!
+  availableInventory: Int!
+  reservedInventory: Int!
+  allocationPercentage: Float!
+  overbookingAllowed: Boolean!
+  overbookingLimit: Int
+  restrictions: [InventoryRestriction!]!
+}
+
+"""
+Inventory restrictions
+"""
+type InventoryRestriction {
+  type: RestrictionType!
+  dateRange: DateRange!
+  value: Int
+  reason: String
+  createdBy: User!
+}
+
+"""
+Types of inventory restrictions
+"""
+enum RestrictionType {
+  STOP_SELL
+  MINIMUM_STAY
+  MAXIMUM_STAY
+  CLOSE_TO_ARRIVAL
+  CLOSE_TO_DEPARTURE
+  ALLOCATION_LIMIT
+  RATE_RESTRICTION
+}
+
+"""
+Commission structure for channel
+"""
+type CommissionStructure {
+  type: CommissionType!
+  rate: Float!
+  currency: String!
+  minimumCommission: Money
+  maximumCommission: Money
+  paymentTerms: String!
+  invoicingFrequency: InvoicingFrequency!
+  lastInvoice: DateTime
+  outstandingAmount: Money
+}
+
+"""
+Commission calculation types
+"""
+enum CommissionType {
+  PERCENTAGE
+  FLAT_FEE
+  PER_BOOKING
+  TIERED
+  PERFORMANCE_BASED
+}
+
+"""
+Invoicing frequency
+"""
+enum InvoicingFrequency {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  QUARTERLY
+  ON_CHECKOUT
+  ON_PAYMENT
+}
+
+"""
+Channel performance metrics
+"""
+type ChannelPerformance {
+  bookings: Int!
+  revenue: Money!
+  conversionRate: Float!
+  averageBookingValue: Money!
+  cancellationRate: Float!
+  noShowRate: Float!
+  leadTime: Float!
+  stayLength: Float!
+  repeatBookingRate: Float
+  customerSatisfaction: Float
+  roi: Float!
+  trends: [PerformanceDataPoint!]!
+}
+
+"""
+Performance data point for trends
+"""
+type PerformanceDataPoint {
+  date: Date!
+  bookings: Int!
+  revenue: Money!
+  conversionRate: Float!
+  cancellationRate: Float!
+}
+
+"""
+Channel mapping for room types and rates
+"""
+type ChannelMapping {
+  id: ID!
+  channel: Channel!
+  internalRoomType: RoomType!
+  channelRoomType: String!
+  internalRatePlan: String!
+  channelRatePlan: String!
+  isActive: Boolean!
+  lastSync: DateTime
+  syncErrors: [String!]
+}
+
+"""
+Metasearch engine configuration
+"""
+type MetasearchEngine {
+  id: ID!
+  name: String!
+  type: MetasearchType!
+  bidding: BiddingStrategy!
+  budget: MetasearchBudget!
+  performance: MetasearchPerformance!
+  campaigns: [MetasearchCampaign!]!
+  keywords: [String!]!
+  isActive: Boolean!
+}
+
+"""
+Metasearch engine types
+"""
+enum MetasearchType {
+  GOOGLE_HOTEL_ADS
+  TRIPADVISOR
+  KAYAK
+  TRIVAGO
+  BOOKING_META
+  PRICELINE_META
+}
+
+"""
+Bidding strategy for metasearch
+"""
+type BiddingStrategy {
+  type: BiddingType!
+  maxBid: Money!
+  targetRoas: Float
+  adjustmentRules: [BidAdjustmentRule!]!
+  performanceTargets: BidPerformanceTargets!
+}
+
+"""
+Bidding strategy types
+"""
+enum BiddingType {
+  MANUAL_CPC
+  AUTOMATED_BIDDING
+  TARGET_ROAS
+  MAXIMIZE_CLICKS
+  MAXIMIZE_CONVERSIONS
+}
+
+"""
+Bid adjustment rules
+"""
+type BidAdjustmentRule {
+  condition: String!
+  adjustment: Float!
+  isActive: Boolean!
+}
+
+"""
+Bid performance targets
+"""
+type BidPerformanceTargets {
+  targetCpc: Money
+  targetRoas: Float
+  maxCostPerBooking: Money
+  minConversionRate: Float
+}
+
+"""
+Metasearch budget management
+"""
+type MetasearchBudget {
+  dailyBudget: Money!
+  monthlyBudget: Money!
+  spentToday: Money!
+  spentThisMonth: Money!
+  averageCpc: Money!
+  budgetUtilization: Float!
+}
+
+"""
+Metasearch performance metrics
+"""
+type MetasearchPerformance {
+  impressions: Int!
+  clicks: Int!
+  bookings: Int!
+  ctr: Float!
+  conversionRate: Float!
+  averageCpc: Money!
+  costPerBooking: Money!
+  roas: Float!
+}
+
+"""
+Metasearch campaigns
+"""
+type MetasearchCampaign {
+  id: ID!
+  name: String!
+  engine: MetasearchEngine!
+  budget: Money!
+  bidAmount: Money!
+  targetKeywords: [String!]!
+  performance: MetasearchPerformance!
+  isActive: Boolean!
+  createdAt: DateTime!
+}
+
+# Extend existing types for channel management
+extend type Property @key(fields: "id") {
+  id: ID! @external
+  channels: [Channel!]!
+  channelMappings: [ChannelMapping!]!
+  metasearchEngines: [MetasearchEngine!]!
+  channelPerformance: PropertyChannelPerformance!
+}
+
+extend type Reservation @key(fields: "id") {
+  id: ID! @external
+  channel: Channel!
+  channelBookingId: String
+  channelCommission: Money
+}
+
+"""
+Property-level channel performance
+"""
+type PropertyChannelPerformance {
+  totalRevenue: Money!
+  directBookingPercentage: Float!
+  channelMix: [ChannelMixData!]!
+  averageCommission: Float!
+  bestPerformingChannel: Channel!
+  channelTrends: [ChannelTrend!]!
+}
+
+"""
+Channel mix distribution data
+"""
+type ChannelMixData {
+  channel: Channel!
+  bookings: Int!
+  revenue: Money!
+  percentage: Float!
+  growth: Float!
+}
+
+"""
+Channel performance trends
+"""
+type ChannelTrend {
+  channel: Channel!
+  period: DatePeriod!
+  bookingTrend: Float!
+  revenueTrend: Float!
+  conversionTrend: Float!
+}
+
+# =============================================================================
+# REVIEW SCHEMA
+# =============================================================================
+
+# Review & Rating Types
+# Domain: Guest reviews, ratings, feedback, reputation management
+
+"""
+Guest review for property or service
+"""
+type Review {
+  id: ID!
+  guest: Guest!
+  reservation: Reservation
+  property: Property!
+  type: ReviewType!
+  rating: ReviewRating!
+  title: String
+  content: String!
+  photos: [String!]
+  videos: [String!]
+  categories: [ReviewCategory!]!
+  isVerified: Boolean!
+  isPublic: Boolean!
+  status: ReviewStatus!
+  source: ReviewSource!
+  language: String!
+  translatedContent: String
+  sentiment: ReviewSentiment!
+  keywords: [String!]
+  helpfulVotes: Int!
+  reportCount: Int!
+  moderationNotes: String
+  response: ReviewResponse
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+Types of reviews
+"""
+enum ReviewType {
+  OVERALL
+  SERVICE
+  CLEANLINESS
+  LOCATION
+  VALUE
+  AMENITIES
+  STAFF
+  FOOD_BEVERAGE
+  WIFI
+  CHECKIN_CHECKOUT
+}
+
+"""
+Review rating with breakdown
+"""
+type ReviewRating {
+  overall: Float!
+  service: Float
+  cleanliness: Float
+  location: Float
+  value: Float
+  amenities: Float
+  staff: Float
+  foodBeverage: Float
+  wifi: Float
+  checkinCheckout: Float
+}
+
+"""
+Review categories for classification
+"""
+type ReviewCategory {
+  name: String!
+  score: Float!
+  sentiment: ReviewSentiment!
+  keywords: [String!]
+}
+
+"""
+Review status for moderation
+"""
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  HIDDEN
+  FLAGGED
+  UNDER_REVIEW
+}
+
+"""
+Review sources/platforms
+"""
+enum ReviewSource {
+  DIRECT
+  BOOKING_COM
+  EXPEDIA
+  TRIPADVISOR
+  GOOGLE
+  AGODA
+  HOTELS_COM
+  AIRBNB
+  VRBO
+  YELP
+  FACEBOOK
+  INSTAGRAM
+}
+
+"""
+Review sentiment analysis
+"""
+enum ReviewSentiment {
+  VERY_POSITIVE
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+  VERY_NEGATIVE
+}
+
+"""
+Property response to review
+"""
+type ReviewResponse {
+  id: ID!
+  review: Review!
+  content: String!
+  respondedBy: User!
+  isPublic: Boolean!
+  language: String!
+  translatedContent: String
+  sentiment: ReviewSentiment!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+Review analytics and insights
+"""
+type ReviewAnalytics {
+  totalReviews: Int!
+  averageRating: Float!
+  ratingDistribution: [RatingDistribution!]!
+  sentimentBreakdown: [SentimentBreakdown!]!
+  categoryScores: [CategoryScore!]!
+  reviewTrends: [ReviewTrend!]!
+  topKeywords: [KeywordAnalysis!]!
+  competitorComparison: [CompetitorReviewComparison!]!
+  responseRate: Float!
+  averageResponseTime: Float
+}
+
+"""
+Rating distribution statistics
+"""
+type RatingDistribution {
+  rating: Int!
+  count: Int!
+  percentage: Float!
+}
+
+"""
+Sentiment breakdown statistics
+"""
+type SentimentBreakdown {
+  sentiment: ReviewSentiment!
+  count: Int!
+  percentage: Float!
+}
+
+"""
+Category score analysis
+"""
+type CategoryScore {
+  category: ReviewType!
+  averageScore: Float!
+  count: Int!
+  trend: Float!
+  topComplaints: [String!]
+  topPraises: [String!]
+}
+
+"""
+Review trend data over time
+"""
+type ReviewTrend {
+  date: Date!
+  reviewCount: Int!
+  averageRating: Float!
+  sentiment: ReviewSentiment!
+}
+
+"""
+Keyword analysis from reviews
+"""
+type KeywordAnalysis {
+  keyword: String!
+  frequency: Int!
+  sentiment: ReviewSentiment!
+  category: ReviewType
+  trend: Float!
+}
+
+"""
+Competitor review comparison
+"""
+type CompetitorReviewComparison {
+  competitor: Property!
+  ourRating: Float!
+  theirRating: Float!
+  ourReviewCount: Int!
+  theirReviewCount: Int!
+  categoryComparison: [CompetitorCategoryComparison!]!
+}
+
+"""
+Category-wise competitor comparison
+"""
+type CompetitorCategoryComparison {
+  category: ReviewType!
+  ourScore: Float!
+  theirScore: Float!
+  difference: Float!
+}
+
+"""
+Review moderation workflow
+"""
+type ReviewModeration {
+  id: ID!
+  review: Review!
+  moderator: User
+  action: ModerationAction!
+  reason: String
+  notes: String
+  automated: Boolean!
+  confidence: Float
+  createdAt: DateTime!
+}
+
+"""
+Moderation actions
+"""
+enum ModerationAction {
+  APPROVED
+  REJECTED
+  HIDDEN
+  FLAGGED
+  REQUIRES_RESPONSE
+  ESCALATED
+  AUTO_APPROVED
+  AUTO_REJECTED
+}
+
+"""
+Review filters for searching and sorting
+"""
+input ReviewFilters {
+  rating: IntRange
+  dateRange: DateRange
+  source: ReviewSource
+  sentiment: ReviewSentiment
+  status: ReviewStatus
+  hasResponse: Boolean
+  language: String
+  keywords: [String!]
+  categories: [ReviewType!]
+}
+
+"""
+Review sorting options
+"""
+enum ReviewSortOption {
+  NEWEST_FIRST
+  OLDEST_FIRST
+  HIGHEST_RATING
+  LOWEST_RATING
+  MOST_HELPFUL
+  MOST_RECENT_RESPONSE
+}
+
+"""
+Reputation management dashboard
+"""
+type ReputationDashboard {
+  property: Property!
+  overallScore: Float!
+  reviewSummary: ReviewSummary!
+  sentimentAnalysis: SentimentAnalysis!
+  competitorAnalysis: CompetitorAnalysis!
+  alertsAndNotifications: [ReputationAlert!]!
+  actionItems: [ActionItem!]!
+  performanceMetrics: ReputationMetrics!
+}
+
+"""
+Review summary statistics
+"""
+type ReputationMetrics {
+  totalReviews: Int!
+  averageRating: Float!
+  responseRate: Float!
+  averageResponseTime: Float
+  reviewVelocity: Float!
+  satisfactionTrend: Float!
+  recommendationRate: Float
+}
+
+"""
+Review summary with key insights
+"""
+type ReviewSummary {
+  totalReviews: Int!
+  averageRating: Float!
+  newReviews: Int!
+  pendingResponses: Int!
+  flaggedReviews: Int!
+  ratingTrend: Float!
+}
+
+"""
+Sentiment analysis overview
+"""
+type SentimentAnalysis {
+  overallSentiment: ReviewSentiment!
+  positivePercentage: Float!
+  neutralPercentage: Float!
+  negativePercentage: Float!
+  sentimentTrend: Float!
+  keyIssues: [String!]!
+  keyStrengths: [String!]!
+}
+
+"""
+Competitor analysis for reputation
+"""
+type CompetitorAnalysis {
+  marketPosition: Int!
+  ratingComparison: Float!
+  reviewCountComparison: Float!
+  keyDifferentiators: [String!]!
+  improvementOpportunities: [String!]!
+}
+
+"""
+Reputation alerts and notifications
+"""
+type ReputationAlert {
+  id: ID!
+  type: AlertType!
+  severity: AlertSeverity!
+  message: String!
+  review: Review
+  createdAt: DateTime!
+  acknowledged: Boolean!
+  acknowledgedBy: User
+  acknowledgedAt: DateTime
+}
+
+"""
+Alert types for reputation management
+"""
+enum AlertType {
+  NEW_NEGATIVE_REVIEW
+  RATING_DROP
+  COMPETITOR_OUTPERFORMING
+  RESPONSE_OVERDUE
+  VIRAL_REVIEW
+  REVIEW_SPAM_DETECTED
+  SENTIMENT_SHIFT
+}
+
+"""
+Alert severity levels
+"""
+enum AlertSeverity {
+  INFO
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+"""
+Action items for reputation improvement
+"""
+type ActionItem {
+  id: ID!
+  title: String!
+  description: String!
+  priority: TaskPriority!
+  category: ActionCategory!
+  assignedTo: User
+  dueDate: Date
+  status: ActionStatus!
+  relatedReviews: [Review!]
+  createdAt: DateTime!
+  completedAt: DateTime
+}
+
+"""
+Action item categories
+"""
+enum ActionCategory {
+  RESPOND_TO_REVIEW
+  IMPROVE_SERVICE
+  TRAIN_STAFF
+  UPDATE_AMENITIES
+  FIX_MAINTENANCE_ISSUE
+  UPDATE_POLICIES
+  MARKETING_CAMPAIGN
+}
+
+"""
+Action item status
+"""
+enum ActionStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  ON_HOLD
+}
+
+"""
+Review template for consistent responses
+"""
+type ReviewResponseTemplate {
+  id: ID!
+  name: String!
+  category: ReviewType!
+  sentiment: ReviewSentiment!
+  template: String!
+  variables: [String!]!
+  language: String!
+  isActive: Boolean!
+  usageCount: Int!
+  effectiveness: Float
+  createdBy: User!
+  createdAt: DateTime!
+}
+
+# Extend existing types for reviews
+extend type Property @key(fields: "id") {
+  id: ID! @external
+  reviews: [Review!]!
+  reviewAnalytics: ReviewAnalytics!
+  reputationDashboard: ReputationDashboard!
+  averageRating: Float!
+  totalReviews: Int!
+}
+
+extend type Guest @key(fields: "id") {
+  id: ID! @external
+  reviews: [Review!]!
+  averageRatingGiven: Float
+  reviewCount: Int!
+}
+
+extend type Reservation @key(fields: "id") {
+  id: ID! @external
+  review: Review
+  reviewInvited: Boolean!
+  reviewInvitedAt: DateTime
+}
+
+"""
+Review invitation management
+"""
+type ReviewInvitation {
+  id: ID!
+  reservation: Reservation!
+  guest: Guest!
+  status: InvitationStatus!
+  sentAt: DateTime!
+  remindersSent: Int!
+  lastReminderAt: DateTime
+  reviewSubmitted: Boolean!
+  reviewSubmittedAt: DateTime
+  template: ReviewInvitationTemplate!
+}
+
+"""
+Review invitation status
+"""
+enum InvitationStatus {
+  PENDING
+  SENT
+  OPENED
+  CLICKED
+  COMPLETED
+  EXPIRED
+  CANCELLED
+}
+
+"""
+Review invitation templates
+"""
+type ReviewInvitationTemplate {
+  id: ID!
+  name: String!
+  subject: String!
+  content: String!
+  timing: InvitationTiming!
+  reminderSchedule: [Int!]!
+  isActive: Boolean!
+  effectiveness: Float
+}
+
+"""
+Timing for review invitations
+"""
+enum InvitationTiming {
+  AT_CHECKOUT
+  ONE_DAY_AFTER
+  THREE_DAYS_AFTER
+  ONE_WEEK_AFTER
+  CUSTOM
+}
+
+# =============================================================================
+# ROOT TYPES
+# =============================================================================
+
+# Define root types if not already defined
+type Query {
+  # Health check
+  _service: _Service!
+}
+
+type Mutation {
+  # Placeholder
+  _empty: String
+}
+
+type Subscription {
+  # Placeholder
+  _empty: String
+}
+
+type _Service {
+  sdl: String!
+}

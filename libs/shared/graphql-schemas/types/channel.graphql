@@ -1,0 +1,501 @@
+# Channel Management Types
+# Domain: Distribution channels, OTA integrations, rate parity, inventory distribution
+
+"""
+Booking channel configuration and management
+"""
+type Channel {
+  id: ID!
+  name: String!
+  type: ChannelType!
+  status: ChannelStatus!
+  configuration: ChannelConfiguration!
+  connectivity: ChannelConnectivity!
+  rateParity: RateParitySettings!
+  inventoryAllocation: InventoryAllocation!
+  commissionStructure: CommissionStructure!
+  performance: ChannelPerformance!
+  lastSync: DateTime
+  nextSync: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+Channel types
+"""
+enum ChannelType {
+  DIRECT_BOOKING
+  OTA
+  GDS
+  METASEARCH
+  WHOLESALE
+  CORPORATE
+  GROUP
+  WALK_IN
+  PHONE
+  EMAIL
+  SOCIAL_MEDIA
+  MOBILE_APP
+}
+
+"""
+Channel operational status
+"""
+enum ChannelStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  MAINTENANCE
+  TESTING
+  PENDING_ACTIVATION
+}
+
+"""
+Channel configuration settings
+"""
+type ChannelConfiguration {
+  id: ID!
+  apiEndpoint: String
+  credentials: ChannelCredentials
+  ratePlan: String!
+  inventoryType: InventoryType!
+  bookingRules: BookingRules!
+  cancellationPolicy: CancellationPolicy!
+  prepaymentRequired: Boolean!
+  taxInclusive: Boolean!
+  currencyCode: String!
+  language: String!
+  timeZone: String!
+  customFields: JSON
+}
+
+"""
+Channel API credentials (sensitive data)
+"""
+type ChannelCredentials {
+  username: String
+  endpoint: String
+  lastTested: DateTime
+  isValid: Boolean!
+}
+
+"""
+Inventory allocation types
+"""
+enum InventoryType {
+  FREEBASE
+  ALLOCATION
+  STOP_SELL
+  CLOSE_TO_ARRIVAL
+  CLOSE_TO_DEPARTURE
+  MINIMUM_STAY
+  MAXIMUM_STAY
+}
+
+"""
+Channel booking rules
+"""
+type BookingRules {
+  minimumStay: Int
+  maximumStay: Int
+  advanceBooking: Int
+  cutoffTime: Int
+  closedToArrival: [Date!]
+  closedToDeparture: [Date!]
+  blackoutDates: [DateRange!]
+  allowModifications: Boolean!
+  allowCancellations: Boolean!
+}
+
+"""
+Channel connectivity status and metrics
+"""
+type ChannelConnectivity {
+  isConnected: Boolean!
+  lastSuccessfulSync: DateTime
+  lastError: String
+  errorCount: Int!
+  uptimePercentage: Float!
+  averageResponseTime: Float!
+  dataConsistency: Float!
+  syncFrequency: SyncFrequency!
+}
+
+"""
+Synchronization frequency
+"""
+enum SyncFrequency {
+  REAL_TIME
+  EVERY_5_MINUTES
+  EVERY_15_MINUTES
+  EVERY_30_MINUTES
+  HOURLY
+  DAILY
+  MANUAL
+}
+
+"""
+Rate parity monitoring and settings
+"""
+type RateParitySettings {
+  enabled: Boolean!
+  tolerance: Float!
+  checkFrequency: SyncFrequency!
+  notifications: RateParityNotifications!
+  competitors: [CompetitorChannel!]!
+  violations: [RateParityViolation!]!
+  lastCheck: DateTime
+}
+
+"""
+Rate parity notification preferences
+"""
+type RateParityNotifications {
+  emailAlerts: Boolean!
+  smsAlerts: Boolean!
+  dashboardAlerts: Boolean!
+  recipients: [User!]!
+  severity: NotificationSeverity!
+}
+
+"""
+Notification severity levels
+"""
+enum NotificationSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+"""
+Competitor channel for rate comparison
+"""
+type CompetitorChannel {
+  id: ID!
+  name: String!
+  url: String
+  lastChecked: DateTime
+  currentRate: Money
+  rateComparison: Float
+  isActive: Boolean!
+}
+
+"""
+Rate parity violation record
+"""
+type RateParityViolation {
+  id: ID!
+  channel: Channel!
+  detectedAt: DateTime!
+  ourRate: Money!
+  competitorRate: Money!
+  difference: Money!
+  percentageDifference: Float!
+  severity: ViolationSeverity!
+  status: ViolationStatus!
+  resolvedAt: DateTime
+  notes: String
+}
+
+"""
+Violation severity
+"""
+enum ViolationSeverity {
+  MINOR
+  MODERATE
+  MAJOR
+  CRITICAL
+}
+
+"""
+Violation resolution status
+"""
+enum ViolationStatus {
+  OPEN
+  INVESTIGATING
+  RESOLVED
+  DISMISSED
+  ESCALATED
+}
+
+"""
+Inventory allocation per channel
+"""
+type InventoryAllocation {
+  roomType: RoomType!
+  totalInventory: Int!
+  allocatedInventory: Int!
+  availableInventory: Int!
+  reservedInventory: Int!
+  allocationPercentage: Float!
+  overbookingAllowed: Boolean!
+  overbookingLimit: Int
+  restrictions: [InventoryRestriction!]!
+}
+
+"""
+Inventory restrictions
+"""
+type InventoryRestriction {
+  type: RestrictionType!
+  dateRange: DateRange!
+  value: Int
+  reason: String
+  createdBy: User!
+}
+
+"""
+Types of inventory restrictions
+"""
+enum RestrictionType {
+  STOP_SELL
+  MINIMUM_STAY
+  MAXIMUM_STAY
+  CLOSE_TO_ARRIVAL
+  CLOSE_TO_DEPARTURE
+  ALLOCATION_LIMIT
+  RATE_RESTRICTION
+}
+
+"""
+Commission structure for channel
+"""
+type CommissionStructure {
+  type: CommissionType!
+  rate: Float!
+  currency: String!
+  minimumCommission: Money
+  maximumCommission: Money
+  paymentTerms: String!
+  invoicingFrequency: InvoicingFrequency!
+  lastInvoice: DateTime
+  outstandingAmount: Money
+}
+
+"""
+Commission calculation types
+"""
+enum CommissionType {
+  PERCENTAGE
+  FLAT_FEE
+  PER_BOOKING
+  TIERED
+  PERFORMANCE_BASED
+}
+
+"""
+Invoicing frequency
+"""
+enum InvoicingFrequency {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  QUARTERLY
+  ON_CHECKOUT
+  ON_PAYMENT
+}
+
+"""
+Channel performance metrics
+"""
+type ChannelPerformance {
+  bookings: Int!
+  revenue: Money!
+  conversionRate: Float!
+  averageBookingValue: Money!
+  cancellationRate: Float!
+  noShowRate: Float!
+  leadTime: Float!
+  stayLength: Float!
+  repeatBookingRate: Float
+  customerSatisfaction: Float
+  roi: Float!
+  trends: [PerformanceDataPoint!]!
+}
+
+"""
+Performance data point for trends
+"""
+type PerformanceDataPoint {
+  date: Date!
+  bookings: Int!
+  revenue: Money!
+  conversionRate: Float!
+  cancellationRate: Float!
+}
+
+"""
+Channel mapping for room types and rates
+"""
+type ChannelMapping {
+  id: ID!
+  channel: Channel!
+  internalRoomType: RoomType!
+  channelRoomType: String!
+  internalRatePlan: String!
+  channelRatePlan: String!
+  isActive: Boolean!
+  lastSync: DateTime
+  syncErrors: [String!]
+}
+
+"""
+Metasearch engine configuration
+"""
+type MetasearchEngine {
+  id: ID!
+  name: String!
+  type: MetasearchType!
+  bidding: BiddingStrategy!
+  budget: MetasearchBudget!
+  performance: MetasearchPerformance!
+  campaigns: [MetasearchCampaign!]!
+  keywords: [String!]!
+  isActive: Boolean!
+}
+
+"""
+Metasearch engine types
+"""
+enum MetasearchType {
+  GOOGLE_HOTEL_ADS
+  TRIPADVISOR
+  KAYAK
+  TRIVAGO
+  BOOKING_META
+  PRICELINE_META
+}
+
+"""
+Bidding strategy for metasearch
+"""
+type BiddingStrategy {
+  type: BiddingType!
+  maxBid: Money!
+  targetRoas: Float
+  adjustmentRules: [BidAdjustmentRule!]!
+  performanceTargets: BidPerformanceTargets!
+}
+
+"""
+Bidding strategy types
+"""
+enum BiddingType {
+  MANUAL_CPC
+  AUTOMATED_BIDDING
+  TARGET_ROAS
+  MAXIMIZE_CLICKS
+  MAXIMIZE_CONVERSIONS
+}
+
+"""
+Bid adjustment rules
+"""
+type BidAdjustmentRule {
+  condition: String!
+  adjustment: Float!
+  isActive: Boolean!
+}
+
+"""
+Bid performance targets
+"""
+type BidPerformanceTargets {
+  targetCpc: Money
+  targetRoas: Float
+  maxCostPerBooking: Money
+  minConversionRate: Float
+}
+
+"""
+Metasearch budget management
+"""
+type MetasearchBudget {
+  dailyBudget: Money!
+  monthlyBudget: Money!
+  spentToday: Money!
+  spentThisMonth: Money!
+  averageCpc: Money!
+  budgetUtilization: Float!
+}
+
+"""
+Metasearch performance metrics
+"""
+type MetasearchPerformance {
+  impressions: Int!
+  clicks: Int!
+  bookings: Int!
+  ctr: Float!
+  conversionRate: Float!
+  averageCpc: Money!
+  costPerBooking: Money!
+  roas: Float!
+}
+
+"""
+Metasearch campaigns
+"""
+type MetasearchCampaign {
+  id: ID!
+  name: String!
+  engine: MetasearchEngine!
+  budget: Money!
+  bidAmount: Money!
+  targetKeywords: [String!]!
+  performance: MetasearchPerformance!
+  isActive: Boolean!
+  createdAt: DateTime!
+}
+
+# Extend existing types for channel management
+extend type Property @key(fields: "id") {
+  id: ID! @external
+  channels: [Channel!]!
+  channelMappings: [ChannelMapping!]!
+  metasearchEngines: [MetasearchEngine!]!
+  channelPerformance: PropertyChannelPerformance!
+}
+
+extend type Reservation @key(fields: "id") {
+  id: ID! @external
+  channel: Channel!
+  channelBookingId: String
+  channelCommission: Money
+}
+
+"""
+Property-level channel performance
+"""
+type PropertyChannelPerformance {
+  totalRevenue: Money!
+  directBookingPercentage: Float!
+  channelMix: [ChannelMixData!]!
+  averageCommission: Float!
+  bestPerformingChannel: Channel!
+  channelTrends: [ChannelTrend!]!
+}
+
+"""
+Channel mix distribution data
+"""
+type ChannelMixData {
+  channel: Channel!
+  bookings: Int!
+  revenue: Money!
+  percentage: Float!
+  growth: Float!
+}
+
+"""
+Channel performance trends
+"""
+type ChannelTrend {
+  channel: Channel!
+  period: DatePeriod!
+  bookingTrend: Float!
+  revenueTrend: Float!
+  conversionTrend: Float!
+}

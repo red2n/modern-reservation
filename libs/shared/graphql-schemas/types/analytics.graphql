@@ -1,0 +1,326 @@
+# Analytics & Reporting Types
+# Domain: Business Intelligence, Reports, Metrics, KPIs
+
+"""
+Analytics dashboard data
+"""
+type Analytics {
+  id: ID!
+  reportType: AnalyticsReportType!
+  dateRange: DateRange!
+  metrics: [AnalyticsMetric!]!
+  charts: [AnalyticsChart!]!
+  filters: AnalyticsFilters
+  generatedAt: DateTime!
+  generatedBy: User!
+}
+
+"""
+Types of analytics reports
+"""
+enum AnalyticsReportType {
+  OCCUPANCY
+  REVENUE
+  BOOKING_CONVERSION
+  GUEST_SATISFACTION
+  CHANNEL_PERFORMANCE
+  RATE_PERFORMANCE
+  OPERATIONAL_EFFICIENCY
+  MAINTENANCE_COSTS
+  STAFF_PRODUCTIVITY
+  MARKET_ANALYSIS
+}
+
+"""
+Individual metric within analytics
+"""
+type AnalyticsMetric {
+  id: ID!
+  name: String!
+  value: Float!
+  unit: String
+  change: Float
+  changeDirection: ChangeDirection!
+  benchmark: Float
+  target: Float
+  status: MetricStatus!
+}
+
+"""
+Chart visualization data
+"""
+type AnalyticsChart {
+  id: ID!
+  type: ChartType!
+  title: String!
+  data: [ChartDataPoint!]!
+  xAxis: String!
+  yAxis: String!
+  colors: [String!]
+}
+
+"""
+Chart data point
+"""
+type ChartDataPoint {
+  label: String!
+  value: Float!
+  category: String
+  date: Date
+}
+
+"""
+Chart visualization types
+"""
+enum ChartType {
+  LINE
+  BAR
+  PIE
+  DONUT
+  AREA
+  SCATTER
+  HEATMAP
+  GAUGE
+}
+
+"""
+Metric change direction
+"""
+enum ChangeDirection {
+  UP
+  DOWN
+  STABLE
+}
+
+"""
+Metric status based on performance
+"""
+enum MetricStatus {
+  EXCELLENT
+  GOOD
+  WARNING
+  CRITICAL
+}
+
+"""
+Analytics filters
+"""
+type AnalyticsFilters {
+  properties: [ID!]
+  dateRange: DateRange
+  channels: [BookingChannel!]
+  guestTypes: [GuestType!]
+  roomTypes: [ID!]
+  customFilters: JSON
+}
+
+"""
+Date range for analytics
+"""
+type DateRange {
+  startDate: Date!
+  endDate: Date!
+  period: DatePeriod!
+}
+
+"""
+Predefined date periods
+"""
+enum DatePeriod {
+  TODAY
+  YESTERDAY
+  LAST_7_DAYS
+  LAST_30_DAYS
+  LAST_90_DAYS
+  LAST_YEAR
+  MONTH_TO_DATE
+  YEAR_TO_DATE
+  CUSTOM
+}
+
+"""
+Revenue analytics data
+"""
+type RevenueAnalytics {
+  totalRevenue: Money!
+  averageDailyRate: Money!
+  revenuePerAvailableRoom: Money!
+  occupancyRate: Float!
+  revenueByChannel: [ChannelRevenue!]!
+  revenueByRoomType: [RoomTypeRevenue!]!
+  revenueGrowth: Float!
+}
+
+"""
+Revenue by booking channel
+"""
+type ChannelRevenue {
+  channel: BookingChannel!
+  revenue: Money!
+  percentage: Float!
+  bookingCount: Int!
+}
+
+"""
+Revenue by room type
+"""
+type RoomTypeRevenue {
+  roomType: RoomType!
+  revenue: Money!
+  percentage: Float!
+  nightsBooked: Int!
+}
+
+"""
+Occupancy analytics data
+"""
+type OccupancyAnalytics {
+  occupancyRate: Float!
+  availableRooms: Int!
+  occupiedRooms: Int!
+  outOfOrderRooms: Int!
+  occupancyByRoomType: [RoomTypeOccupancy!]!
+  occupancyTrend: [OccupancyDataPoint!]!
+  comparisonPeriod: Float!
+}
+
+"""
+Occupancy by room type
+"""
+type RoomTypeOccupancy {
+  roomType: RoomType!
+  occupancyRate: Float!
+  availableRooms: Int!
+  occupiedRooms: Int!
+}
+
+"""
+Occupancy data point for trends
+"""
+type OccupancyDataPoint {
+  date: Date!
+  occupancyRate: Float!
+  roomsOccupied: Int!
+  roomsAvailable: Int!
+}
+
+"""
+Guest satisfaction analytics
+"""
+type GuestSatisfactionAnalytics {
+  averageRating: Float!
+  totalReviews: Int!
+  satisfactionScore: Float!
+  npsScore: Float!
+  ratingDistribution: [RatingDistribution!]!
+  satisfactionTrends: [SatisfactionDataPoint!]!
+  topComplaints: [ComplaintCategory!]!
+  topPraises: [PraiseCategory!]!
+}
+
+"""
+Rating distribution
+"""
+type RatingDistribution {
+  rating: Int!
+  count: Int!
+  percentage: Float!
+}
+
+"""
+Satisfaction trend data point
+"""
+type SatisfactionDataPoint {
+  date: Date!
+  averageRating: Float!
+  reviewCount: Int!
+  satisfactionScore: Float!
+}
+
+"""
+Complaint category analytics
+"""
+type ComplaintCategory {
+  category: String!
+  count: Int!
+  percentage: Float!
+  trend: ChangeDirection!
+}
+
+"""
+Praise category analytics
+"""
+type PraiseCategory {
+  category: String!
+  count: Int!
+  percentage: Float!
+  trend: ChangeDirection!
+}
+
+# Extend existing types for analytics
+extend type Property @key(fields: "id") {
+  id: ID! @external
+  analytics: PropertyAnalytics!
+}
+
+extend type Reservation @key(fields: "id") {
+  id: ID! @external
+  analyticsData: ReservationAnalytics
+}
+
+"""
+Property-specific analytics
+"""
+type PropertyAnalytics {
+  revenue: RevenueAnalytics!
+  occupancy: OccupancyAnalytics!
+  guestSatisfaction: GuestSatisfactionAnalytics!
+  performance: PropertyPerformance!
+  benchmarks: PropertyBenchmarks!
+}
+
+"""
+Property performance metrics
+"""
+type PropertyPerformance {
+  rankInMarket: Int
+  competitorSet: [Property!]!
+  marketShare: Float
+  performanceIndex: Float!
+  strengths: [String!]!
+  improvements: [String!]!
+}
+
+"""
+Property benchmarks
+"""
+type PropertyBenchmarks {
+  marketAverageDailyRate: Money!
+  marketOccupancyRate: Float!
+  marketRevPAR: Money!
+  competitorComparison: [CompetitorComparison!]!
+}
+
+"""
+Competitor comparison data
+"""
+type CompetitorComparison {
+  competitor: Property!
+  ourRate: Money!
+  theirRate: Money!
+  ourOccupancy: Float!
+  theirOccupancy: Float!
+  competitiveIndex: Float!
+}
+
+"""
+Reservation analytics data
+"""
+type ReservationAnalytics {
+  leadTime: Int!
+  stayLength: Int!
+  totalSpend: Money!
+  ancillaryRevenue: Money!
+  channelPerformance: Float!
+  guestLifetimeValue: Money
+}

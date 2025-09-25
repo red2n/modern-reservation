@@ -1,0 +1,92 @@
+# Common Types and Scalars
+# Base types, scalars, and interfaces used across all domains
+
+# Federation directives
+directive @key(fields: _FieldSet!, resolvable: Boolean = true) repeatable on OBJECT | INTERFACE
+directive @requires(fields: _FieldSet!) on FIELD_DEFINITION
+directive @provides(fields: _FieldSet!) on FIELD_DEFINITION
+directive @external(reason: String) on OBJECT | FIELD_DEFINITION
+directive @tag(name: String!) repeatable on FIELD_DEFINITION | OBJECT | INTERFACE | UNION | ARGUMENT_DEFINITION | SCALAR | ENUM | ENUM_VALUE | INPUT_OBJECT | INPUT_FIELD_DEFINITION
+directive @extends on OBJECT | INTERFACE
+directive @shareable on OBJECT | FIELD_DEFINITION
+directive @inaccessible on FIELD_DEFINITION | OBJECT | INTERFACE | UNION | ARGUMENT_DEFINITION | SCALAR | ENUM | ENUM_VALUE | INPUT_OBJECT | INPUT_FIELD_DEFINITION
+directive @override(from: String!) on FIELD_DEFINITION
+
+# Scalar types
+scalar DateTime
+scalar UUID
+scalar JSON
+scalar Upload
+scalar EmailAddress
+scalar PhoneNumber
+scalar URL
+scalar Currency
+scalar BigInt
+
+# Common interfaces
+interface Node {
+  id: UUID!
+}
+
+interface Timestamped {
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+interface SoftDeletable {
+  isDeleted: Boolean!
+  deletedAt: DateTime
+}
+
+interface Auditable {
+  createdBy: UUID!
+  updatedBy: UUID!
+}
+
+# Common enums
+enum SortDirection {
+  ASC
+  DESC
+}
+
+# Common input types
+input DateRangeInput {
+  startDate: DateTime!
+  endDate: DateTime!
+}
+
+input PaginationInput {
+  page: Int = 1
+  limit: Int = 20
+}
+
+input SortInput {
+  field: String!
+  direction: SortDirection = ASC
+}
+
+# Pagination result wrapper
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+  totalCount: Int!
+}
+
+# Supporting Types
+type Address {
+  street: String!
+  city: String!
+  state: String
+  country: String!
+  postalCode: String
+}
+
+input AddressInput {
+  street: String!
+  city: String!
+  state: String
+  country: String!
+  postalCode: String
+}
