@@ -1,0 +1,160 @@
+# Availability Calculator Service Configuration
+
+# Server Configuration
+server:
+  port: 8083
+  servlet:
+    context-path: /availability-calculator
+
+# Spring Application Configuration
+spring:
+  application:
+    name: availability-calculator
+  profiles:
+    active: development
+
+  # Database Configuration
+  datasource:
+    url: jdbc:postgresql://localhost:5432/modern_reservation
+    username: ${DB_USERNAME:reservation_user}
+    password: ${DB_PASSWORD:reservation_pass}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      connection-timeout: 20000
+      leak-detection-threshold: 60000
+
+  # JPA Configuration
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+    show-sql: false
+    generate-ddl: false
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          batch_size: 25
+        order_inserts: true
+        order_updates: true
+
+  # Redis Configuration
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+      jedis:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+
+  # Kafka Configuration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
+
+  # Config Server
+  config:
+    import: "optional:configserver:http://localhost:8888"
+
+  # Cloud Configuration
+  cloud:
+    config:
+      enabled: true
+      uri: http://localhost:8888
+      fail-fast: false
+      retry:
+        max-attempts: 6
+        max-interval: 2000
+
+# Eureka Client Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+    healthcheck:
+      enabled: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+    metadata-map:
+      management.context-path: /actuator
+
+# Management & Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,caches
+  endpoint:
+    health:
+      show-details: when-authorized
+  health:
+    circuitbreakers:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Logging Configuration
+logging:
+  level:
+    com.modernreservation.availabilitycalculator: INFO
+    org.springframework.cache: DEBUG
+    org.springframework.kafka: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/availability-calculator.log
+
+# OpenAPI Documentation
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  show-actuator: true
+
+# Application Specific Configuration
+availability:
+  cache:
+    default-ttl: 30m
+    search-ttl: 15m
+    pricing-ttl: 10m
+    daily-ttl: 5m
+    stats-ttl: 1h
+  pricing:
+    tax-rate: 0.12
+    service-fee-rate: 0.05
+    currency: USD
+  business:
+    max-rooms-per-search: 10
+    max-guests-per-room: 20
+    default-minimum-stay: 1
+    max-advance-booking-days: 365

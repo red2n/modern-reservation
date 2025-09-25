@@ -1,0 +1,488 @@
+package com.modernreservation.availabilitycalculator.service;
+
+import com.modernreservation.availabilitycalculator.dto.*;
+import com.modernreservation.availabilitycalculator.entity.RoomAvailability;
+import com.modernreservation.availabilitycalculator.enums.RoomCategory;
+import com.modernreservation.availabilitycalculator.repository.RoomAvailabilityRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.util.*;
+import java.util.stream.Collectors;
+
+/**
+ * Service for room availability calculations and management
+ *
+ * Provides comprehensive availability search, pricing calculations,
+ * and inventory management capabilities using modern Java patterns.
+ */
+@Service
+@Transactional
+@RequiredArgsConstructor
+@Slf4j
+public class AvailabilityService {
+
+    private final RoomAvailabilityRepository availabilityRepository;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+
+    // Constants for calculations
+    private static final BigDecimal TAX_RATE = new BigDecimal("0.12"); // 12% tax
+    private static final BigDecimal SERVICE_FEE_RATE = new BigDecimal("0.05"); // 5% service fee
+    private static final String AVAILABILITY_TOPIC = "availability-events";
+
+    /**
+     * Search for available rooms based on criteria
+     */
+    @Cacheable(value = "availability-search", key = "#request.propertyId + '_' + #request.checkInDate + '_' + #request.checkOutDate")
+    @Transactional(readOnly = true)
+    public List<AvailabilityResponseDTO> searchAvailability(AvailabilitySearchRequestDTO request) {
+        log.info("Searching availability for property {} from {} to {}",
+                request.propertyId(), request.checkInDate(), request.checkOutDate());
+
+        List<RoomAvailability> availabilities;
+
+        // Search by category if specified
+        if (request.roomCategory() != null) {
+            availabilities = availabilityRepository.findAvailableRoomsByCategory(
+                request.propertyId(),
+                request.checkInDate(),
+                request.checkOutDate(),
+                request.roomCategory(),
+                request.roomsNeeded()
+            );
+        } else {
+            availabilities = availabilityRepository.findByPropertyAndDateRange(
+                request.propertyId(),
+                request.checkInDate(),
+                request.checkOutDate()
+            );
+
+            // Filter by availability and rate constraints
+            availabilities = availabilities.stream()
+                .filter(this::isAvailableForBooking)
+                .filter(availability -> filterByRateRange(availability, request.minRate(), request.maxRate()))
+                .filter(availability -> availability.getAvailableRooms() >= request.roomsNeeded())
+                .collect(Collectors.toList());
+        }
+
+        // Group by room type and return best rates
+        Map<UUID, List<RoomAvailability>> groupedByRoomType = availabilities.stream()
+            .collect(Collectors.groupingBy(RoomAvailability::getRoomTypeId));
+
+        List<AvailabilityResponseDTO> results = new ArrayList<>();
+
+        for (Map.Entry<UUID, List<RoomAvailability>> entry : groupedByRoomType.entrySet()) {
+            List<RoomAvailability> roomTypeAvailabilities = entry.getValue();
+
+            // Check if all nights are available
+            long requiredNights = request.nightsStay();
+            if (roomTypeAvailabilities.size() >= requiredNights) {
+                // Calculate average rate and create response
+                AvailabilityResponseDTO response = createAvailabilityResponse(roomTypeAvailabilities, request);
+                results.add(response);
+            }
+        }
+
+        log.info("Found {} available room types for search criteria", results.size());
+        return results.stream()
+            .sorted(Comparator.comparing(AvailabilityResponseDTO::currentRate))
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Calculate pricing for a specific stay
+     */
+    @Cacheable(value = "pricing-calculation", key = "#request.propertyId + '_' + #request.roomTypeId + '_' + #request.checkInDate")
+    @Transactional(readOnly = true)
+    public PricingCalculationResponseDTO calculatePricing(PricingCalculationRequestDTO request) {
+        log.info("Calculating pricing for room type {} from {} to {}",
+                request.roomTypeId(), request.checkInDate(), request.checkOutDate());
+
+        List<RoomAvailability> availabilities = availabilityRepository.findAvailableRoomsByTypeAndDateRange(
+            request.propertyId(),
+            request.roomTypeId(),
+            request.checkInDate(),
+            request.checkOutDate()
+        );
+
+        if (availabilities.isEmpty()) {
+            throw new RuntimeException("No availability found for the specified criteria");
+        }
+
+        // Calculate base amount
+        BigDecimal totalBaseAmount = availabilities.stream()
+            .map(RoomAvailability::getCurrentRate)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Apply guest-based pricing adjustments
+        BigDecimal guestAdjustment = calculateGuestAdjustment(totalBaseAmount, request.guests());
+        totalBaseAmount = totalBaseAmount.add(guestAdjustment);
+
+        // Calculate taxes and fees if requested
+        BigDecimal taxes = BigDecimal.ZERO;
+        BigDecimal fees = BigDecimal.ZERO;
+
+        if (Boolean.TRUE.equals(request.includeTaxes())) {
+            taxes = totalBaseAmount.multiply(TAX_RATE).setScale(2, RoundingMode.HALF_UP);
+        }
+
+        if (Boolean.TRUE.equals(request.includeFees())) {
+            fees = totalBaseAmount.multiply(SERVICE_FEE_RATE).setScale(2, RoundingMode.HALF_UP);
+        }
+
+        // Apply promo code discount if provided
+        BigDecimal discount = calculatePromoDiscount(totalBaseAmount, request.promoCode());
+
+        BigDecimal totalAmount = totalBaseAmount.add(taxes).add(fees).subtract(discount);
+
+        return new PricingCalculationResponseDTO(
+            request.propertyId(),
+            request.roomTypeId(),
+            request.checkInDate(),
+            request.checkOutDate(),
+            request.calculateNights(),
+            totalBaseAmount,
+            taxes,
+            fees,
+            discount,
+            totalAmount,
+            "USD",
+            request.promoCode(),
+            createRateBreakdown(availabilities)
+        );
+    }
+
+    /**
+     * Update room availability
+     */
+    @CacheEvict(value = {"availability-search", "pricing-calculation"}, allEntries = true)
+    public AvailabilityResponseDTO updateAvailability(UUID availabilityId,
+                                                     AvailabilityUpdateRequestDTO request,
+                                                     String updatedBy) {
+        log.info("Updating availability {} by user {}", availabilityId, updatedBy);
+
+        RoomAvailability availability = availabilityRepository.findById(availabilityId)
+            .orElseThrow(() -> new RuntimeException("Availability not found with ID: " + availabilityId));
+
+        RoomAvailability originalAvailability = cloneAvailability(availability);
+
+        // Update fields if provided
+        if (request.availabilityStatus() != null) {
+            availability.setAvailabilityStatus(request.availabilityStatus());
+        }
+        if (request.currentRate() != null) {
+            availability.setCurrentRate(request.currentRate());
+        }
+        if (request.availableRooms() != null) {
+            availability.setAvailableRooms(request.availableRooms());
+            // Recalculate occupied rooms
+            availability.setOccupiedRooms(
+                availability.getTotalRooms() - request.availableRooms() -
+                availability.getMaintenanceRooms() - availability.getBlockedRooms()
+            );
+        }
+        if (request.minimumStay() != null) {
+            availability.setMinimumStay(request.minimumStay());
+        }
+        if (request.closedToArrival() != null) {
+            availability.setClosedToArrival(request.closedToArrival());
+        }
+        if (request.closedToDeparture() != null) {
+            availability.setClosedToDeparture(request.closedToDeparture());
+        }
+        if (request.stopSell() != null) {
+            availability.setStopSell(request.stopSell());
+        }
+        if (request.notes() != null) {
+            availability.setNotes(request.notes());
+        }
+
+        availability.setUpdatedBy(updatedBy);
+
+        RoomAvailability savedAvailability = availabilityRepository.save(availability);
+
+        // Publish availability change event
+        publishAvailabilityChangeEvent(originalAvailability, savedAvailability, updatedBy);
+
+        log.info("Successfully updated availability {}", availabilityId);
+        return mapToAvailabilityResponse(savedAvailability);
+    }
+
+    /**
+     * Book rooms - update availability counts
+     */
+    @CacheEvict(value = {"availability-search", "pricing-calculation"}, allEntries = true)
+    public void bookRooms(UUID propertyId, UUID roomTypeId, LocalDate checkInDate,
+                         LocalDate checkOutDate, int roomsBooked, String bookedBy) {
+        log.info("Booking {} rooms for room type {} from {} to {}",
+                roomsBooked, roomTypeId, checkInDate, checkOutDate);
+
+        int updatedRows = availabilityRepository.updateRoomCounts(
+            propertyId, roomTypeId, checkInDate, checkOutDate, roomsBooked, bookedBy
+        );
+
+        if (updatedRows == 0) {
+            throw new RuntimeException("Failed to update room availability - no matching records found");
+        }
+
+        // Publish booking event
+        publishBookingEvent(propertyId, roomTypeId, checkInDate, checkOutDate, roomsBooked, bookedBy);
+
+        log.info("Successfully booked {} rooms, updated {} availability records", roomsBooked, updatedRows);
+    }
+
+    /**
+     * Get availability for a specific date
+     */
+    @Cacheable(value = "daily-availability", key = "#propertyId + '_' + #date")
+    @Transactional(readOnly = true)
+    public List<AvailabilityResponseDTO> getDailyAvailability(UUID propertyId, LocalDate date) {
+        log.info("Getting daily availability for property {} on {}", propertyId, date);
+
+        List<RoomAvailability> availabilities = availabilityRepository.findByPropertyAndDate(propertyId, date);
+
+        return availabilities.stream()
+            .map(this::mapToAvailabilityResponse)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Get availability with pagination
+     */
+    @Transactional(readOnly = true)
+    public Page<AvailabilityResponseDTO> getAvailabilityWithPagination(UUID propertyId,
+                                                                       LocalDate date,
+                                                                       Pageable pageable) {
+        log.info("Getting paginated availability for property {} on {}", propertyId, date);
+
+        Page<RoomAvailability> availabilityPage = availabilityRepository
+            .findByPropertyAndDateWithPagination(propertyId, date, pageable);
+
+        return availabilityPage.map(this::mapToAvailabilityResponse);
+    }
+
+    /**
+     * Get occupancy statistics
+     */
+    @Cacheable(value = "occupancy-stats", key = "#propertyId + '_' + #startDate + '_' + #endDate")
+    @Transactional(readOnly = true)
+    public OccupancyStatsDTO getOccupancyStatistics(UUID propertyId, LocalDate startDate, LocalDate endDate) {
+        log.info("Getting occupancy statistics for property {} from {} to {}", propertyId, startDate, endDate);
+
+        Double averageOccupancy = availabilityRepository.findAverageOccupancyForDateRange(
+            propertyId, startDate, endDate).orElse(0.0);
+
+        Long soldOutDays = availabilityRepository.countSoldOutDates(propertyId, startDate, endDate);
+
+        Optional<BigDecimal> minRate = availabilityRepository.findMinRateForDateRange(
+            propertyId, startDate, endDate);
+        Optional<BigDecimal> maxRate = availabilityRepository.findMaxRateForDateRange(
+            propertyId, startDate, endDate);
+
+        return new OccupancyStatsDTO(
+            propertyId,
+            startDate,
+            endDate,
+            averageOccupancy,
+            soldOutDays,
+            minRate.orElse(BigDecimal.ZERO),
+            maxRate.orElse(BigDecimal.ZERO)
+        );
+    }
+
+    // Helper methods
+
+    private boolean isAvailableForBooking(RoomAvailability availability) {
+        return availability.isAvailable() && availability.canAcceptArrival();
+    }
+
+    private boolean filterByRateRange(RoomAvailability availability, BigDecimal minRate, BigDecimal maxRate) {
+        if (minRate != null && availability.getCurrentRate().compareTo(minRate) < 0) {
+            return false;
+        }
+        if (maxRate != null && availability.getCurrentRate().compareTo(maxRate) > 0) {
+            return false;
+        }
+        return true;
+    }
+
+    private AvailabilityResponseDTO createAvailabilityResponse(List<RoomAvailability> availabilities,
+                                                              AvailabilitySearchRequestDTO request) {
+        // Use the first availability for room type info, calculate averages
+        RoomAvailability first = availabilities.get(0);
+
+        BigDecimal averageRate = availabilities.stream()
+            .map(RoomAvailability::getCurrentRate)
+            .reduce(BigDecimal.ZERO, BigDecimal::add)
+            .divide(BigDecimal.valueOf(availabilities.size()), 2, RoundingMode.HALF_UP);
+
+        Integer minAvailableRooms = availabilities.stream()
+            .mapToInt(RoomAvailability::getAvailableRooms)
+            .min()
+            .orElse(0);
+
+        return new AvailabilityResponseDTO(
+            first.getId(),
+            first.getPropertyId(),
+            first.getRoomTypeId(),
+            first.getRoomCategory(),
+            request.checkInDate(),
+            first.getAvailabilityStatus(),
+            first.getBaseRate(),
+            averageRate,
+            first.getTotalRooms(),
+            minAvailableRooms,
+            first.getOccupiedRooms(),
+            first.getMinimumStay(),
+            first.getMaximumStay(),
+            first.getClosedToArrival(),
+            first.getClosedToDeparture(),
+            first.getStopSell(),
+            first.getCurrency(),
+            first.getOccupancyPercentage(),
+            minAvailableRooms >= request.roomsNeeded()
+        );
+    }
+
+    private AvailabilityResponseDTO mapToAvailabilityResponse(RoomAvailability availability) {
+        return new AvailabilityResponseDTO(
+            availability.getId(),
+            availability.getPropertyId(),
+            availability.getRoomTypeId(),
+            availability.getRoomCategory(),
+            availability.getAvailabilityDate(),
+            availability.getAvailabilityStatus(),
+            availability.getBaseRate(),
+            availability.getCurrentRate(),
+            availability.getTotalRooms(),
+            availability.getAvailableRooms(),
+            availability.getOccupiedRooms(),
+            availability.getMinimumStay(),
+            availability.getMaximumStay(),
+            availability.getClosedToArrival(),
+            availability.getClosedToDeparture(),
+            availability.getStopSell(),
+            availability.getCurrency(),
+            availability.getOccupancyPercentage(),
+            availability.isAvailable()
+        );
+    }
+
+    private BigDecimal calculateGuestAdjustment(BigDecimal baseAmount, Integer guests) {
+        // Add 10% for each guest beyond 2
+        if (guests > 2) {
+            BigDecimal additionalGuestRate = new BigDecimal("0.10");
+            return baseAmount.multiply(additionalGuestRate)
+                .multiply(BigDecimal.valueOf(guests - 2))
+                .setScale(2, RoundingMode.HALF_UP);
+        }
+        return BigDecimal.ZERO;
+    }
+
+    private BigDecimal calculatePromoDiscount(BigDecimal baseAmount, String promoCode) {
+        if (promoCode == null || promoCode.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+
+        // Simple promo code logic - in real implementation, this would be more sophisticated
+        return switch (promoCode.toUpperCase()) {
+            case "SAVE10" -> baseAmount.multiply(new BigDecimal("0.10")).setScale(2, RoundingMode.HALF_UP);
+            case "SAVE20" -> baseAmount.multiply(new BigDecimal("0.20")).setScale(2, RoundingMode.HALF_UP);
+            case "SUMMER2024" -> baseAmount.multiply(new BigDecimal("0.15")).setScale(2, RoundingMode.HALF_UP);
+            default -> BigDecimal.ZERO;
+        };
+    }
+
+    private List<DailyRateDTO> createRateBreakdown(List<RoomAvailability> availabilities) {
+        return availabilities.stream()
+            .map(availability -> new DailyRateDTO(
+                availability.getAvailabilityDate(),
+                availability.getCurrentRate(),
+                availability.getCurrency()
+            ))
+            .collect(Collectors.toList());
+    }
+
+    private RoomAvailability cloneAvailability(RoomAvailability original) {
+        return RoomAvailability.builder()
+            .id(original.getId())
+            .propertyId(original.getPropertyId())
+            .roomTypeId(original.getRoomTypeId())
+            .availabilityStatus(original.getAvailabilityStatus())
+            .currentRate(original.getCurrentRate())
+            .availableRooms(original.getAvailableRooms())
+            .build();
+    }
+
+    private void publishAvailabilityChangeEvent(RoomAvailability original, RoomAvailability updated, String updatedBy) {
+        Map<String, Object> event = new HashMap<>();
+        event.put("eventType", "AVAILABILITY_UPDATED");
+        event.put("propertyId", updated.getPropertyId());
+        event.put("roomTypeId", updated.getRoomTypeId());
+        event.put("date", updated.getAvailabilityDate());
+        event.put("originalAvailableRooms", original.getAvailableRooms());
+        event.put("newAvailableRooms", updated.getAvailableRooms());
+        event.put("updatedBy", updatedBy);
+        event.put("timestamp", LocalDate.now());
+
+        kafkaTemplate.send(AVAILABILITY_TOPIC, event);
+    }
+
+    private void publishBookingEvent(UUID propertyId, UUID roomTypeId, LocalDate checkInDate,
+                                   LocalDate checkOutDate, int roomsBooked, String bookedBy) {
+        Map<String, Object> event = new HashMap<>();
+        event.put("eventType", "ROOMS_BOOKED");
+        event.put("propertyId", propertyId);
+        event.put("roomTypeId", roomTypeId);
+        event.put("checkInDate", checkInDate);
+        event.put("checkOutDate", checkOutDate);
+        event.put("roomsBooked", roomsBooked);
+        event.put("bookedBy", bookedBy);
+        event.put("timestamp", LocalDate.now());
+
+        kafkaTemplate.send(AVAILABILITY_TOPIC, event);
+    }
+
+    // Additional DTOs for responses
+    public record PricingCalculationResponseDTO(
+        UUID propertyId,
+        UUID roomTypeId,
+        LocalDate checkInDate,
+        LocalDate checkOutDate,
+        Integer nights,
+        BigDecimal baseAmount,
+        BigDecimal taxes,
+        BigDecimal fees,
+        BigDecimal discount,
+        BigDecimal totalAmount,
+        String currency,
+        String promoCode,
+        List<DailyRateDTO> rateBreakdown
+    ) {}
+
+    public record DailyRateDTO(
+        LocalDate date,
+        BigDecimal rate,
+        String currency
+    ) {}
+
+    public record OccupancyStatsDTO(
+        UUID propertyId,
+        LocalDate startDate,
+        LocalDate endDate,
+        Double averageOccupancy,
+        Long soldOutDays,
+        BigDecimal minRate,
+        BigDecimal maxRate
+    ) {}
+}
