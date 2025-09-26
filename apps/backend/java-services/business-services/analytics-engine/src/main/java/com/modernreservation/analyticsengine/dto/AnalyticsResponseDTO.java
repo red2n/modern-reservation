@@ -195,6 +195,9 @@ public class AnalyticsResponseDTO {
         private String formattedValue;
         private String unit;
         private String description;
+        private String calculationMethod;
+        private List<Object> dataPoints;
+        private String notes;
     }
 
     /**
@@ -234,6 +237,7 @@ public class AnalyticsResponseDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class TrendAnalysisDTO {
+        private UUID analysisId;
         private List<TrendPointDTO> trendPoints;
         private String overallTrend;
         private BigDecimal trendStrength;
@@ -258,12 +262,18 @@ public class AnalyticsResponseDTO {
         @NoArgsConstructor
         @AllArgsConstructor
         public static class MetricTrendDTO {
+            private MetricType metricType;
             private String metricName;
             private Double trendValue;
             private String trendDirection;
             private Double slope;
             private Double correlation;
             private LocalDateTime timestamp;
+            private Double trendStrength;
+            private Double significance;
+            private Double volatility;
+            private Boolean seasonalityDetected;
+            private Integer outliersCount;
         }
     }
 
@@ -275,6 +285,7 @@ public class AnalyticsResponseDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ForecastResultDTO {
+        private UUID forecastId;
         private List<ForecastPointDTO> forecastPoints;
         private String forecastMethod;
         private BigDecimal accuracy;
@@ -301,12 +312,15 @@ public class AnalyticsResponseDTO {
         @NoArgsConstructor
         @AllArgsConstructor
         public static class MetricForecastDTO {
+            private MetricType metricType;
             private String metricName;
             private BigDecimal forecastValue;
             private LocalDateTime forecastDate;
             private Double confidence;
+            private Double accuracy;
             private String forecastMethod;
             private Map<String, Object> forecastMetadata;
+            private List<Object> historicalDataPoints;
         }
 
         @Data
@@ -318,6 +332,7 @@ public class AnalyticsResponseDTO {
             private Double upperBound;
             private Double confidence;
             private String intervalType;
+            private Integer period;
         }
     }
 
@@ -629,6 +644,7 @@ public class AnalyticsResponseDTO {
         private Double correlation;
         private Double regression;
         private Map<String, Double> distribution;
+        private Integer sampleSize;
     }
 
     /**

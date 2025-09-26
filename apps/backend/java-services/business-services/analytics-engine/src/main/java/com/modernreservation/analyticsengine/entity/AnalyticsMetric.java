@@ -96,6 +96,9 @@ public class AnalyticsMetric {
     @Size(max = 3, message = "Currency code must be 3 characters or less")
     private String currencyCode;
 
+    @Column(name = "formatted_value", length = 255)
+    private String formattedValue;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)
     @NotNull(message = "Status is required")

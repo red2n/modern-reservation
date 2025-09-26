@@ -620,12 +620,18 @@ public class ReportResponseDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ReportContentDTO {
+        private String title;
+        private String subtitle;
         private String textContent;
         private Map<String, Object> structuredData;
         private List<String> charts;
         private List<String> tables;
         private String htmlContent;
         private String executiveSummary;
+        private LocalDateTime generatedAt;
+        private String reportPeriod;
+        private List<String> insights;
+        private AnalyticsResponseDTO analyticsData;
     }
 
     /**

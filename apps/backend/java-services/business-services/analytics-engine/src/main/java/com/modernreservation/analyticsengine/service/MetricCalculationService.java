@@ -781,12 +781,12 @@ public class MetricCalculationService {
 
     private String getMetricUnit(MetricType metricType) {
         return switch (metricType.getCategory()) {
-            case REVENUE, FINANCIAL -> "USD";
-            case OCCUPANCY -> "%";
-            case BOOKING -> "count";
-            case CUSTOMER -> "score";
-            case CHANNEL -> "count";
-            case MARKET -> "index";
+            case MetricType.MetricCategory.REVENUE, MetricType.MetricCategory.FINANCIAL -> "USD";
+            case MetricType.MetricCategory.OCCUPANCY -> "%";
+            case MetricType.MetricCategory.BOOKING -> "count";
+            case MetricType.MetricCategory.CUSTOMER -> "score";
+            case MetricType.MetricCategory.CHANNEL -> "count";
+            case MetricType.MetricCategory.MARKET -> "index";
             default -> "value";
         };
     }
@@ -797,10 +797,10 @@ public class MetricCalculationService {
         }
 
         return switch (metricType.getCategory()) {
-            case REVENUE, FINANCIAL -> String.format("$%,.2f", value);
-            case OCCUPANCY -> String.format("%.1f%%", value);
-            case BOOKING, CUSTOMER, CHANNEL -> String.format("%,d", value.intValue());
-            case MARKET -> String.format("%.2f", value);
+            case MetricType.MetricCategory.REVENUE, MetricType.MetricCategory.FINANCIAL -> String.format("$%,.2f", value);
+            case MetricType.MetricCategory.OCCUPANCY -> String.format("%.1f%%", value);
+            case MetricType.MetricCategory.BOOKING, MetricType.MetricCategory.CUSTOMER, MetricType.MetricCategory.CHANNEL -> String.format("%,d", value.intValue());
+            case MetricType.MetricCategory.MARKET -> String.format("%.2f", value);
             default -> value.toString();
         };
     }

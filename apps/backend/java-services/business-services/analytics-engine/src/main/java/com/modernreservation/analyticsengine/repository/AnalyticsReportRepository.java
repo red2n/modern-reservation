@@ -66,6 +66,28 @@ public interface AnalyticsReportRepository extends JpaRepository<AnalyticsReport
     );
 
     /**
+     * Find reports by property with pagination
+     */
+    @Query("SELECT ar FROM AnalyticsReport ar WHERE " +
+           "(:propertyId IS NULL OR ar.propertyId = :propertyId OR :propertyId MEMBER OF ar.propertyIds) " +
+           "ORDER BY ar.createdAt DESC")
+    List<AnalyticsReport> findByPropertyIdOrderByCreatedAtDesc(
+        @Param("propertyId") UUID propertyId,
+        @Param("offset") int offset,
+        @Param("limit") int limit
+    );
+
+    /**
+     * Find scheduled reports for a property
+     */
+    @Query("SELECT ar FROM AnalyticsReport ar WHERE " +
+           "ar.isScheduled = true " +
+           "AND (:propertyId IS NULL OR ar.propertyId = :propertyId OR :propertyId MEMBER OF ar.propertyIds) " +
+           "AND ar.status IN ('PENDING', 'SCHEDULED') " +
+           "ORDER BY ar.nextRunAt ASC")
+    List<AnalyticsReport> findScheduledReports(@Param("propertyId") UUID propertyId);
+
+    /**
      * Find public reports
      */
     @Query("SELECT ar FROM AnalyticsReport ar WHERE ar.isPublic = true " +

@@ -116,6 +116,12 @@ public class ReportRequestDTO {
     private List<VisualizationConfigDTO> visualizations;
 
     /**
+     * Whether to generate report asynchronously
+     */
+    @Builder.Default
+    private Boolean asyncGeneration = false;
+
+    /**
      * Whether this is a scheduled report
      */
     @Builder.Default
@@ -125,6 +131,11 @@ public class ReportRequestDTO {
      * Schedule expression (cron format)
      */
     private String scheduleExpression;
+
+    /**
+     * Specific time to schedule the report
+     */
+    private LocalDateTime scheduleTime;
 
     /**
      * Whether the report should recur
@@ -137,6 +148,11 @@ public class ReportRequestDTO {
      */
     @Pattern(regexp = "DAILY|WEEKLY|MONTHLY|QUARTERLY|YEARLY", message = "Invalid recurrence pattern")
     private String recurrencePattern;
+
+    /**
+     * Recurring schedule configuration
+     */
+    private String recurringSchedule;
 
     /**
      * Recipient email addresses

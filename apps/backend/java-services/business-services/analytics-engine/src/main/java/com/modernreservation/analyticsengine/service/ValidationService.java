@@ -1,6 +1,7 @@
 package com.modernreservation.analyticsengine.service;
 
 import com.modernreservation.analyticsengine.dto.AnalyticsResponseDTO;
+import com.modernreservation.analyticsengine.enums.MetricType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -76,8 +77,8 @@ public class ValidationService {
         // Check for negative values where they shouldn't exist
         if (value.compareTo(BigDecimal.ZERO) < 0) {
             return switch (metricType.getCategory()) {
-                case REVENUE, BOOKING, CUSTOMER -> false; // These should not be negative
-                case OCCUPANCY -> false; // Occupancy rates should not be negative
+                case MetricType.MetricCategory.REVENUE, MetricType.MetricCategory.BOOKING, MetricType.MetricCategory.CUSTOMER -> false; // These should not be negative
+                case MetricType.MetricCategory.OCCUPANCY -> false; // Occupancy rates should not be negative
                 default -> true; // Other metrics might have negative values
             };
         }

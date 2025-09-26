@@ -71,6 +71,7 @@ public class ReportService {
             log.error("Error generating report: {}", e.getMessage(), e);
             return ReportResponseDTO.createErrorResponse(
                 UUID.randomUUID(),
+                "Error Report",
                 "Report generation failed: " + e.getMessage()
             );
         }

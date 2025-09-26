@@ -174,6 +174,9 @@ public class AnalyticsReport {
     @Column(name = "download_url", length = 1000)
     private String downloadUrl;
 
+    @Column(name = "file_url", length = 500)
+    private String fileUrl;
+
     @Column(name = "is_scheduled", nullable = false)
     @Builder.Default
     private Boolean isScheduled = false;
