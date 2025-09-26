@@ -53,7 +53,6 @@
         <module>infrastructure/config-server</module>
         <module>infrastructure/eureka-server</module>
         <module>infrastructure/gateway-service</module>
-        <module>infrastructure/zipkin-server</module>
 
         <!-- Business Services -->
         <module>business-services/reservation-engine</module>

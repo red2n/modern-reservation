@@ -143,6 +143,12 @@ public class Reservation {    @Id
     @Column(name = "booking_date", nullable = false)
     private LocalDateTime bookingDate;
 
+    @Column(name = "arrival_time", length = 5)
+    private String arrivalTime;
+
+    @Column(name = "departure_time", length = 5)
+    private String departureTime;
+
     @Column(name = "actual_check_in_time")
     private LocalDateTime actualCheckInTime;
 

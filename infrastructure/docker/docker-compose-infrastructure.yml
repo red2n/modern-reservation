@@ -1,0 +1,73 @@
+# Infrastructure Services - External Dependencies
+# These are not part of your application code but required for operation
+
+version: '3.8'
+
+services:
+  # Distributed Tracing
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: modern-reservation-zipkin
+    ports:
+      - "9411:9411"
+    environment:
+      - STORAGE_TYPE=mem
+      - QUERY_PORT=9411
+    networks:
+      - modern-reservation-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9411/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Database
+  postgres:
+    image: postgres:16
+    container_name: modern-reservation-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=modern_reservation
+      - POSTGRES_USER=dev_user
+      - POSTGRES_PASSWORD=dev_password123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../../database/schema:/docker-entrypoint-initdb.d
+    networks:
+      - modern-reservation-network
+    restart: unless-stopped
+
+  # Cache
+  redis:
+    image: redis:7-alpine
+    container_name: modern-reservation-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - modern-reservation-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+  # Service Discovery (Alternative to your Java Eureka)
+  consul:
+    image: consul:1.15
+    container_name: modern-reservation-consul
+    ports:
+      - "8500:8500"
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0
+    networks:
+      - modern-reservation-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  modern-reservation-network:
+    driver: bridge

@@ -65,6 +65,29 @@ check_service_health() {
     return 1  # Not healthy
 }
 
+# Function to check Docker Zipkin service
+check_zipkin_docker() {
+    local service_name="zipkin-server"
+    local port=9411
+
+    print_status "Checking $service_name (Docker)..."
+
+    # Check if Docker container is running
+    if docker ps --filter "name=modern-reservation-zipkin" --format "{{.Names}}" | grep -q "modern-reservation-zipkin"; then
+        # Check if service is responding
+        if check_service_health "$service_name" "$port"; then
+            print_success "✅ $service_name is healthy (Docker container)"
+            return 0
+        else
+            print_warning "⚠️  $service_name Docker container is running but not responding on port $port"
+            return 1
+        fi
+    else
+        print_error "❌ $service_name Docker container is not running"
+        return 1
+    fi
+}
+
 # Function to check a single service
 check_service() {
     local service_name=$1
@@ -145,7 +168,7 @@ show_service_urls() {
     declare -A SERVICE_URLS=(
         ["config-server"]="http://localhost:8888"
         ["eureka-server"]="http://localhost:8761"
-        ["zipkin-server"]="http://localhost:9411"
+        ["zipkin-server"]="http://localhost:9411 (Docker)"
         ["gateway-service"]="http://localhost:8080"
     )
 
@@ -178,8 +201,15 @@ main() {
 
     for service_config in "${SERVICES[@]}"; do
         IFS=':' read -r service_name port <<< "$service_config"
-        if check_service "$service_name" "$port"; then
-            healthy_count=$((healthy_count + 1))
+        # Handle zipkin-server specially (Docker container)
+        if [ "$service_name" = "zipkin-server" ]; then
+            if check_zipkin_docker; then
+                healthy_count=$((healthy_count + 1))
+            fi
+        else
+            if check_service "$service_name" "$port"; then
+                healthy_count=$((healthy_count + 1))
+            fi
         fi
     done
 

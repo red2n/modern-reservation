@@ -36,16 +36,22 @@ show_usage() {
     echo -e "  ${RED}./infra.sh stop-all${NC}       - Stop all services (business + infrastructure)"
     echo -e "  ${BLUE}./infra.sh status-all${NC}     - Check status of all services"
     echo ""
+    echo -e "${YELLOW}Docker Infrastructure Commands:${NC}"
+    echo -e "  ${GREEN}./infra.sh docker-infra-start${NC}  - Start external services (Zipkin, PostgreSQL, Redis) via Docker"
+    echo -e "  ${RED}./infra.sh docker-infra-stop${NC}   - Stop external Docker services"
+    echo -e "  ${BLUE}./infra.sh docker-infra-status${NC} - Check Docker infrastructure status"
+    echo ""
     echo -e "${YELLOW}Other Commands:${NC}"
     echo -e "  ${YELLOW}./infra.sh help${NC}          - Show this help message"
     echo ""
     echo -e "${CYAN}Direct script access:${NC}"
-    echo -e "  ${GREEN}scripts/start-infrastructure.sh${NC}    - Infrastructure startup"
+    echo -e "  ${GREEN}scripts/start-infrastructure.sh${NC}    - Infrastructure startup (with Docker Zipkin)"
     echo -e "  ${GREEN}scripts/start-business-services.sh${NC}  - Business services startup"
-    echo -e "  ${RED}scripts/stop-infrastructure.sh${NC}     - Infrastructure shutdown"
+    echo -e "  ${RED}scripts/stop-infrastructure.sh${NC}     - Infrastructure shutdown (with Docker Zipkin)"
     echo -e "  ${RED}scripts/stop-business-services.sh${NC}   - Business services shutdown"
-    echo -e "  ${BLUE}scripts/check-infrastructure.sh${NC}    - Infrastructure status"
+    echo -e "  ${BLUE}scripts/check-infrastructure.sh${NC}    - Infrastructure status (with Docker Zipkin)"
     echo -e "  ${BLUE}scripts/check-business-services.sh${NC}  - Business services status"
+    echo -e "  ${GREEN}./docker-infra.sh${NC}               - Direct Docker infrastructure management"
     echo ""
 }
 
@@ -102,6 +108,18 @@ case "${1:-help}" in
         echo ""
         echo -e "${CYAN}=== BUSINESS SERVICES ===${NC}"
         exec "$SCRIPTS_DIR/check-business-services.sh"
+        ;;
+    "docker-infra-start")
+        echo -e "${GREEN}🐳 Starting Docker infrastructure services...${NC}"
+        exec "$SCRIPT_DIR/docker-infra.sh" infra-start
+        ;;
+    "docker-infra-stop")
+        echo -e "${RED}🐳 Stopping Docker infrastructure services...${NC}"
+        exec "$SCRIPT_DIR/docker-infra.sh" infra-stop
+        ;;
+    "docker-infra-status")
+        echo -e "${BLUE}🐳 Checking Docker infrastructure status...${NC}"
+        exec "$SCRIPT_DIR/docker-infra.sh" health
         ;;
     "help"|"-h"|"--help")
         show_usage

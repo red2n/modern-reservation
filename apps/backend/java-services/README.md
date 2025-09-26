@@ -39,15 +39,17 @@
   - Security filtering
 - **Tech Stack**: Spring Cloud Gateway
 
-### 4. Zipkin Server (`infrastructure/zipkin-server/`)
+### 4. Zipkin Server (Docker-based)
 - **Purpose**: Distributed tracing and monitoring
 - **Performance**: 100,000+ traces/minute processing
+- **Deployment**: External Docker container (`openzipkin/zipkin:latest`)
 - **Features**:
   - Request flow visualization
   - Performance bottleneck identification
   - Service dependency mapping
   - Latency analysis
-- **Tech Stack**: Zipkin Server, Elasticsearch storage
+- **Tech Stack**: Zipkin Server (Docker), In-memory storage
+- **Management**: Via `./docker-infra.sh` or `./infra.sh docker-infra-*` commands
 
 ## Business Services
 

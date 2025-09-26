@@ -88,6 +88,32 @@ stop_service() {
     fi
 }
 
+# Function to stop Docker Zipkin service
+stop_zipkin_docker() {
+    local service_name="zipkin-server"
+
+    print_status "Stopping $service_name Docker container..."
+
+    # Check if container exists and is running
+    if docker ps --filter "name=modern-reservation-zipkin" --format "{{.Names}}" | grep -q "modern-reservation-zipkin"; then
+        docker stop modern-reservation-zipkin > /dev/null 2>&1
+        docker rm modern-reservation-zipkin > /dev/null 2>&1
+
+        # Wait a moment and verify it's stopped
+        sleep 2
+        if ! docker ps --filter "name=modern-reservation-zipkin" --format "{{.Names}}" | grep -q "modern-reservation-zipkin"; then
+            print_success "$service_name Docker container stopped successfully"
+            return 0
+        else
+            print_error "Failed to stop $service_name Docker container"
+            return 1
+        fi
+    else
+        print_warning "$service_name Docker container is not running"
+        return 0
+    fi
+}
+
 # Main execution
 main() {
     print_status "Stopping Modern Reservation Infrastructure Services"
@@ -106,7 +132,13 @@ main() {
     local total_found=0
 
     for service_name in "${SERVICES[@]}"; do
-        if [ -f "${service_name}.pid" ]; then
+        # Handle zipkin-server specially (Docker container)
+        if [ "$service_name" = "zipkin-server" ]; then
+            total_found=$((total_found + 1))
+            if stop_zipkin_docker; then
+                stopped_count=$((stopped_count + 1))
+            fi
+        elif [ -f "${service_name}.pid" ]; then
             total_found=$((total_found + 1))
             if stop_service "$service_name"; then
                 stopped_count=$((stopped_count + 1))

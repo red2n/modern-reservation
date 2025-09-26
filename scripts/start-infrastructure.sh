@@ -70,50 +70,49 @@ wait_for_service() {
     return 1
 }
 
-# Function to start zipkin server using standalone jar
+# Function to start zipkin server using Docker
 start_zipkin_service() {
     local service_name="zipkin-server"
     local port=9411
     local wait_time=10
 
-    print_status "Starting $service_name..."
+    print_status "Starting $service_name via Docker..."
 
-    # Check if port is already in use
-    if ! check_port $port; then
-        print_warning "Port $port is already in use. Checking if it's our service..."
-        if wait_for_service "$service_name" $port; then
-            print_success "$service_name is already running on port $port"
-            return 0
-        else
-            print_error "Port $port is occupied by another process"
-            return 1
-        fi
+    # Check if Docker Zipkin container is already running
+    if docker ps --filter "name=modern-reservation-zipkin" --format "{{.Names}}" | grep -q "modern-reservation-zipkin"; then
+        print_success "$service_name is already running via Docker"
+        return 0
     fi
 
-    # Change to zipkin-server directory
-    cd "$INFRA_DIR/zipkin-server"
+    # Ensure Docker network exists
+    if ! docker network ls | grep -q "modern-reservation-network"; then
+        print_status "Creating Docker network: modern-reservation-network"
+        docker network create modern-reservation-network
+    fi
 
-    # Create logs directory if it doesn't exist
-    mkdir -p logs
+    # Start Zipkin via Docker
+    print_status "Executing: docker run for $service_name"
+    docker run -d \
+        --name modern-reservation-zipkin \
+        --network modern-reservation-network \
+        -p $port:9411 \
+        --restart unless-stopped \
+        openzipkin/zipkin:latest
 
-    # Start zipkin server using standalone jar
-    print_status "Executing: java -jar zipkin.jar for $service_name"
-    nohup java -jar zipkin.jar --server.port=$port > "logs/${service_name}.log" 2>&1 &
-    local pid=$!
+    if [ $? -eq 0 ]; then
+        print_status "$service_name Docker container started"
 
-    # Save PID
-    echo $pid > "$BASE_DIR/${service_name}.pid"
-    print_status "$service_name started with PID $pid"
-
-    # Wait a bit for the service to initialize
-    sleep $wait_time
-
-    # Wait for service to be ready
-    if wait_for_service "$service_name" $port; then
-        print_success "$service_name is running successfully on port $port"
-        return 0
+        # Wait for service to be ready
+        sleep $wait_time
+        if wait_for_service "$service_name" $port; then
+            print_success "$service_name is running successfully on port $port"
+            return 0
+        else
+            print_error "Failed to start $service_name - service not responding"
+            return 1
+        fi
     else
-        print_error "Failed to start $service_name"
+        print_error "Failed to start $service_name Docker container"
         return 1
     fi
 }
@@ -191,7 +190,7 @@ main() {
     declare -a SERVICES=(
         "config-server:config-server:8888:15"
         "eureka-server:eureka-server:8761:20"
-        "zipkin-server:zipkin-server:9411:10"
+        "zipkin-server:zipkin-docker:9411:10"
         "gateway-service:gateway-service:8080:15"
     )
 
@@ -207,14 +206,14 @@ main() {
         print_status "Port: $port"
         print_status "========================================="
 
-        # Handle zipkin-server specially (uses standalone jar)
+        # Handle zipkin-server specially (uses Docker)
         if [ "$service_name" = "zipkin-server" ]; then
             if start_zipkin_service; then
                 success_count=$((success_count + 1))
                 print_success "✅ $service_name started successfully"
             else
                 print_error "❌ Failed to start $service_name"
-                print_warning "Check logs at: $INFRA_DIR/$service_dir/logs/${service_name}.log"
+                print_warning "Check Docker logs: docker logs modern-reservation-zipkin"
             fi
         else
             if start_service "$service_name" "$service_dir" "$port" "$wait_time"; then
@@ -241,7 +240,7 @@ main() {
         print_status "Service URLs:"
         print_status "  • Config Server:  http://localhost:8888"
         print_status "  • Eureka Server:  http://localhost:8761"
-        print_status "  • Zipkin Server:  http://localhost:9411"
+        print_status "  • Zipkin Server:  http://localhost:9411 (Docker)"
         print_status "  • Gateway Service: http://localhost:8080"
     else
         print_warning "⚠️  Some services failed to start. Check the logs for details."
