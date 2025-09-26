@@ -1,6 +1,7 @@
 package com.modernreservation.reservationengine.repository;
 
 import com.modernreservation.reservationengine.entity.ReservationAudit;
+import com.modernreservation.reservationengine.enums.ReservationStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -24,38 +25,38 @@ public interface ReservationAuditRepository extends JpaRepository<ReservationAud
     /**
      * Find audit records for a specific reservation
      */
-    @Query("SELECT ra FROM ReservationAudit ra WHERE ra.reservation.id = :reservationId ORDER BY ra.createdAt DESC")
+    @Query("SELECT ra FROM ReservationAudit ra WHERE ra.reservation.id = :reservationId ORDER BY ra.changedAt DESC")
     List<ReservationAudit> findByReservationId(@Param("reservationId") UUID reservationId);
 
     /**
      * Find audit records for a specific reservation with pagination
      */
-    @Query("SELECT ra FROM ReservationAudit ra WHERE ra.reservation.id = :reservationId ORDER BY ra.createdAt DESC")
+    @Query("SELECT ra FROM ReservationAudit ra WHERE ra.reservation.id = :reservationId ORDER BY ra.changedAt DESC")
     Page<ReservationAudit> findByReservationId(@Param("reservationId") UUID reservationId, Pageable pageable);
 
     /**
-     * Find audit records by action
+     * Find audit records by status change (old status to new status)
      */
-    @Query("SELECT ra FROM ReservationAudit ra WHERE ra.action = :action ORDER BY ra.createdAt DESC")
-    List<ReservationAudit> findByAction(@Param("action") String action);
+    @Query("SELECT ra FROM ReservationAudit ra WHERE ra.oldStatus = :oldStatus AND ra.newStatus = :newStatus ORDER BY ra.changedAt DESC")
+    List<ReservationAudit> findByStatusChange(@Param("oldStatus") ReservationStatus oldStatus, @Param("newStatus") ReservationStatus newStatus);
 
     /**
      * Find audit records by date range
      */
-    @Query("SELECT ra FROM ReservationAudit ra WHERE ra.createdAt BETWEEN :startDate AND :endDate ORDER BY ra.createdAt DESC")
+    @Query("SELECT ra FROM ReservationAudit ra WHERE ra.changedAt BETWEEN :startDate AND :endDate ORDER BY ra.changedAt DESC")
     List<ReservationAudit> findByDateRange(@Param("startDate") LocalDateTime startDate,
                                           @Param("endDate") LocalDateTime endDate);
 
     /**
      * Find audit records by user
      */
-    @Query("SELECT ra FROM ReservationAudit ra WHERE ra.performedBy = :performedBy ORDER BY ra.createdAt DESC")
-    List<ReservationAudit> findByPerformedBy(@Param("performedBy") String performedBy);
+    @Query("SELECT ra FROM ReservationAudit ra WHERE ra.changedBy = :changedBy ORDER BY ra.changedAt DESC")
+    List<ReservationAudit> findByChangedBy(@Param("changedBy") UUID changedBy);
 
     /**
      * Find recent audit activities
      */
-    @Query("SELECT ra FROM ReservationAudit ra ORDER BY ra.createdAt DESC")
+    @Query("SELECT ra FROM ReservationAudit ra ORDER BY ra.changedAt DESC")
     Page<ReservationAudit> findRecentAudits(Pageable pageable);
 
     /**
@@ -67,18 +68,18 @@ public interface ReservationAuditRepository extends JpaRepository<ReservationAud
     /**
      * Find audit records by property (through reservation)
      */
-    @Query("SELECT ra FROM ReservationAudit ra WHERE ra.reservation.propertyId = :propertyId ORDER BY ra.createdAt DESC")
+    @Query("SELECT ra FROM ReservationAudit ra WHERE ra.reservation.propertyId = :propertyId ORDER BY ra.changedAt DESC")
     List<ReservationAudit> findByPropertyId(@Param("propertyId") UUID propertyId);
 
     /**
      * Find audit records by multiple actions
      */
-    @Query("SELECT ra FROM ReservationAudit ra WHERE ra.action IN :actions ORDER BY ra.createdAt DESC")
-    List<ReservationAudit> findByActionIn(@Param("actions") List<String> actions);
+    @Query("SELECT ra FROM ReservationAudit ra WHERE ra.oldStatus IN :statuses OR ra.newStatus IN :statuses ORDER BY ra.changedAt DESC")
+    List<ReservationAudit> findByStatusIn(@Param("statuses") List<ReservationStatus> statuses);
 
     /**
      * Delete old audit records before a specific date
      */
-    @Query("DELETE FROM ReservationAudit ra WHERE ra.createdAt < :cutoffDate")
+    @Query("DELETE FROM ReservationAudit ra WHERE ra.changedAt < :cutoffDate")
     void deleteOldAudits(@Param("cutoffDate") LocalDateTime cutoffDate);
 }
