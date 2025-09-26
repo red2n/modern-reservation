@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -201,6 +202,21 @@ public class ReportResponseDTO {
     private GenerationMetadataDTO metadata;
 
     /**
+     * Report content
+     */
+    private ReportContentDTO content;
+
+    /**
+     * Exported files map (format -> file path/URL)
+     */
+    private Map<String, String> exportedFiles;
+
+    /**
+     * Success/info message
+     */
+    private String message;
+
+    /**
      * Related reports or drill-down options
      */
     private List<RelatedReportDTO> relatedReports;
@@ -234,6 +250,48 @@ public class ReportResponseDTO {
      * Report version
      */
     private Integer version;
+
+    /**
+     * Dashboard DTO
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DashboardDTO {
+        private List<KpiDTO> kpis;
+        private List<String> charts;
+        private Map<String, Object> metadata;
+
+        @Data
+        @Builder
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public static class KpiDTO {
+            private String name;
+            private Object value;
+            private String unit;
+            private String trend;
+        }
+    }
+
+    /**
+     * Report Metadata DTO
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ReportMetadataDTO {
+        private LocalDateTime generationStartedAt;
+        private LocalDateTime generationCompletedAt;
+        private Long generationDurationMs;
+        private Long fileSizeBytes;
+        private List<String> outputFormats;
+        private String accessLevel;
+        private Boolean isScheduled;
+        private String recurringSchedule;
+    }
 
     /**
      * Executive Summary DTO
@@ -427,7 +485,7 @@ public class ReportResponseDTO {
 
         int successful = successfulMetricsCount != null ? successfulMetricsCount : 0;
         return BigDecimal.valueOf(successful)
-                         .divide(BigDecimal.valueOf(totalMetricsCount), 4, BigDecimal.ROUND_HALF_UP)
+                         .divide(BigDecimal.valueOf(totalMetricsCount), 4, RoundingMode.HALF_UP)
                          .multiply(BigDecimal.valueOf(100));
     }
 
@@ -632,6 +690,13 @@ public class ReportResponseDTO {
         private String reportPeriod;
         private List<String> insights;
         private AnalyticsResponseDTO analyticsData;
+        
+        public static class ReportContentDTOBuilder {
+            public ReportContentDTOBuilder dashboardData(DashboardDTO dashboardData) {
+                // Dashboard data integration can be handled here
+                return this;
+            }
+        }
     }
 
     /**

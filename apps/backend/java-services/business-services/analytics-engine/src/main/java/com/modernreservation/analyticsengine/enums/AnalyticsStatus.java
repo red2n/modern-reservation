@@ -57,6 +57,17 @@ public enum AnalyticsStatus {
     ),
 
     /**
+     * Calculation/Report encountered a critical error
+     */
+    ERROR(
+        "Error",
+        "Critical error occurred during processing",
+        true,
+        true,
+        0
+    ),
+
+    /**
      * Calculation/Report was cancelled by user or system
      */
     CANCELLED(
@@ -311,7 +322,7 @@ public enum AnalyticsStatus {
         return switch (this) {
             case COMPLETED -> "#28a745";                    // Green
             case COMPLETED_WITH_WARNINGS -> "#ffc107";      // Yellow
-            case FAILED, TIMEOUT, INSUFFICIENT_DATA -> "#dc3545"; // Red
+            case FAILED, ERROR, TIMEOUT, INSUFFICIENT_DATA -> "#dc3545"; // Red
             case CANCELLED, EXPIRED -> "#6c757d";           // Gray
             case PROCESSING, CALCULATING, GENERATING -> "#007bff"; // Blue
             case VALIDATING, AGGREGATING, FINALIZING -> "#17a2b8"; // Cyan
@@ -327,7 +338,7 @@ public enum AnalyticsStatus {
         return switch (this) {
             case COMPLETED -> "✓";
             case COMPLETED_WITH_WARNINGS -> "⚠";
-            case FAILED -> "✗";
+            case FAILED, ERROR -> "✗";
             case CANCELLED -> "⊘";
             case TIMEOUT -> "⏱";
             case INSUFFICIENT_DATA -> "📊";

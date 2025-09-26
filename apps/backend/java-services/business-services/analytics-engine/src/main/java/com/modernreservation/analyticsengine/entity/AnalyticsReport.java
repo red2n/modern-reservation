@@ -13,6 +13,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -96,8 +97,14 @@ public class AnalyticsReport {
     @Builder.Default
     private AnalyticsStatus status = AnalyticsStatus.PENDING;
 
+    @Column(name = "generation_started_at")
+    private LocalDateTime generationStartedAt;
+
     @Column(name = "generated_at")
     private LocalDateTime generatedAt;
+
+    @Column(name = "generation_completed_at")
+    private LocalDateTime generationCompletedAt;
 
     @Column(name = "scheduled_at")
     private LocalDateTime scheduledAt;
@@ -168,6 +175,9 @@ public class AnalyticsReport {
     @Column(name = "report_size_bytes")
     private Long reportSizeBytes;
 
+    @Column(name = "file_size_bytes")
+    private Long fileSizeBytes;
+
     @Column(name = "file_path", length = 500)
     private String filePath;
 
@@ -197,6 +207,9 @@ public class AnalyticsReport {
     @Column(name = "recurrence_pattern", length = 50)
     private String recurrencePattern; // DAILY, WEEKLY, MONTHLY, QUARTERLY
 
+    @Column(name = "recurring_schedule", length = 100)
+    private String recurringSchedule;
+
     @ElementCollection
     @CollectionTable(
         name = "report_recipients",
@@ -211,6 +224,9 @@ public class AnalyticsReport {
 
     @Column(name = "access_token", length = 100)
     private String accessToken;
+
+    @Column(name = "access_level", length = 20)
+    private String accessLevel;
 
     @Column(name = "template_id")
     private UUID templateId;
@@ -247,6 +263,14 @@ public class AnalyticsReport {
 
     @Column(name = "tags", length = 500)
     private String tags;
+
+    @ElementCollection
+    @CollectionTable(
+        name = "report_output_formats",
+        joinColumns = @JoinColumn(name = "report_id")
+    )
+    @Column(name = "output_format", length = 20)
+    private List<String> outputFormats;
 
     @Column(name = "priority_level")
     @Min(value = 1, message = "Priority level must be at least 1")
@@ -307,7 +331,7 @@ public class AnalyticsReport {
 
         int successful = successfulMetricsCount != null ? successfulMetricsCount : 0;
         return BigDecimal.valueOf(successful)
-                         .divide(BigDecimal.valueOf(totalMetricsCount), 4, BigDecimal.ROUND_HALF_UP)
+                         .divide(BigDecimal.valueOf(totalMetricsCount), 4, RoundingMode.HALF_UP)
                          .multiply(BigDecimal.valueOf(100));
     }
 

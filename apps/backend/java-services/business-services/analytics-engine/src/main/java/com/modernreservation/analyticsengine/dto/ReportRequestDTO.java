@@ -248,6 +248,26 @@ public class ReportRequestDTO {
     private Map<String, String> metadata;
 
     /**
+     * Report description
+     */
+    private String description;
+
+    /**
+     * Output formats for the report
+     */
+    private List<String> outputFormats;
+
+    /**
+     * Whether to include dashboard view
+     */
+    @Builder.Default
+    private Boolean includeDashboard = false;
+
+    /**
+     * Business validation methods
+     */
+
+    /**
      * Visualization Configuration DTO
      */
     @Data
