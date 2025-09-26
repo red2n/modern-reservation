@@ -192,8 +192,8 @@ CREATE INDEX idx_reviews_rating ON reviews(overall_rating);
 CREATE INDEX idx_reviews_published ON reviews(is_published) WHERE is_published = true;
 CREATE INDEX idx_reviews_created_at ON reviews(created_at);
 
--- Unique constraints
-ALTER TABLE reservations ADD CONSTRAINT uq_reservations_confirmation_number UNIQUE(confirmation_number);
+-- Unique constraints (must include partitioning column for partitioned tables)
+ALTER TABLE reservations ADD CONSTRAINT uq_reservations_confirmation_number UNIQUE(confirmation_number, check_in_date);
 
 -- Check constraints
 ALTER TABLE reservations ADD CONSTRAINT chk_reservations_check_dates CHECK (check_out_date > check_in_date);

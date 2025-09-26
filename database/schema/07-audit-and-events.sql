@@ -9,8 +9,8 @@
 
 -- Audit Events (Immutable Event Store)
 CREATE TABLE audit_events (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    event_id UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    id UUID NOT NULL DEFAULT gen_random_uuid(),
+    event_id UUID NOT NULL DEFAULT gen_random_uuid(),
 
     -- Event Metadata
     event_type VARCHAR(100) NOT NULL, -- reservation.created, payment.processed, etc.
@@ -44,7 +44,8 @@ CREATE TABLE audit_events (
     retention_until DATE, -- GDPR/legal retention requirements
     is_sensitive BOOLEAN DEFAULT FALSE, -- Contains PII/sensitive data
 
-    CONSTRAINT audit_events_valid_timestamp CHECK (event_timestamp <= CURRENT_TIMESTAMP)
+    CONSTRAINT audit_events_valid_timestamp CHECK (event_timestamp <= CURRENT_TIMESTAMP),
+    UNIQUE(id, created_at)
 ) PARTITION BY RANGE (created_at);
 
 -- Create monthly partitions for audit events

@@ -16,7 +16,7 @@ import java.util.UUID;
  * for compliance, debugging, and business intelligence purposes.
  */
 @Entity
-@Table(name = "reservation_audit")
+@Table(name = "audit_events")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter

@@ -37,24 +37,24 @@ print_warning() {
 
 # Function to check if PostgreSQL is running
 check_postgresql() {
-    print_status "Checking PostgreSQL service..."
-    if sudo systemctl is-active --quiet postgresql; then
-        print_success "PostgreSQL service is running"
+    print_status "Checking PostgreSQL Docker container..."
+    if docker ps --filter "name=modern-reservation-postgres" --filter "status=running" | grep -q "modern-reservation-postgres"; then
+        print_success "PostgreSQL Docker container is running"
         return 0
     else
-        print_error "PostgreSQL service is not running"
+        print_error "PostgreSQL Docker container is not running"
         return 1
     fi
 }
 
 # Function to check if Redis is running
 check_redis() {
-    print_status "Checking Redis service..."
-    if sudo systemctl is-active --quiet redis-server; then
-        print_success "Redis service is running"
+    print_status "Checking Redis Docker container..."
+    if docker ps --filter "name=modern-reservation-redis" --filter "status=running" | grep -q "modern-reservation-redis"; then
+        print_success "Redis Docker container is running"
         return 0
     else
-        print_error "Redis service is not running"
+        print_error "Redis Docker container is not running"
         return 1
     fi
 }
@@ -62,7 +62,7 @@ check_redis() {
 # Function to check database connectivity
 check_db_connectivity() {
     print_status "Testing database connectivity..."
-    if sudo -u postgres psql -d postgres -c "SELECT version();" > /dev/null 2>&1; then
+    if docker exec modern-reservation-postgres psql -U postgres -d postgres -c "SELECT version();" > /dev/null 2>&1; then
         print_success "Database connectivity confirmed"
         return 0
     else
@@ -74,13 +74,13 @@ check_db_connectivity() {
 # Function to check if database exists
 database_exists() {
     local db_name=$1
-    sudo -u postgres psql -lqt | cut -d \| -f 1 | grep -qw "$db_name"
+    docker exec modern-reservation-postgres psql -U postgres -lqt | cut -d \| -f 1 | grep -qw "$db_name"
 }
 
 # Function to check if user exists
 user_exists() {
     local username=$1
-    sudo -u postgres psql -t -c "SELECT 1 FROM pg_roles WHERE rolname='$username';" | grep -q 1
+    docker exec modern-reservation-postgres psql -U postgres -t -c "SELECT 1 FROM pg_roles WHERE rolname='$username';" | grep -q 1
 }
 
 # Function to create database and user
@@ -96,7 +96,7 @@ setup_database() {
         print_warning "User $username already exists"
     else
         print_status "Creating user: $username"
-        sudo -u postgres psql -c "CREATE USER $username WITH PASSWORD '$password';"
+        docker exec modern-reservation-postgres psql -U postgres -c "CREATE USER $username WITH PASSWORD '$password';"
         print_success "User $username created"
     fi
 
@@ -105,13 +105,13 @@ setup_database() {
         print_warning "Database $db_name already exists"
     else
         print_status "Creating database: $db_name"
-        sudo -u postgres createdb -O "$username" "$db_name"
+        docker exec modern-reservation-postgres createdb -U postgres -O "$username" "$db_name"
         print_success "Database $db_name created"
     fi
 
     # Grant privileges
     print_status "Granting privileges to $username on $db_name"
-    sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $db_name TO $username;"
+    docker exec modern-reservation-postgres psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE $db_name TO $username;"
     print_success "Privileges granted"
 }
 
@@ -132,7 +132,7 @@ execute_schema_file() {
     local temp_output=$(mktemp)
 
     # Use non-interactive mode with longer timeout and capture output
-    if sudo -u postgres psql -d "$db_name" -f "$file_path" > "$temp_output" 2>&1; then
+    if docker exec -i modern-reservation-postgres psql -U postgres -d "$db_name" < "$file_path" > "$temp_output" 2>&1; then
         print_success "Schema file executed: $schema_file"
         rm -f "$temp_output"
         return 0
@@ -149,7 +149,7 @@ execute_schema_file() {
 table_exists() {
     local db_name=$1
     local table_name=$2
-    sudo -u postgres psql -d "$db_name" -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = '$table_name';" | grep -q 1
+    docker exec modern-reservation-postgres psql -U postgres -d "$db_name" -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = '$table_name';" | grep -q 1
 }
 
 # Function to execute schema migration
@@ -217,8 +217,190 @@ verify_schema() {
     fi
 }
 
+# Function to validate database setup
+validate_database() {
+    local db_name=$1
+
+    print_status "========================================="
+    print_status "DATABASE VALIDATION REPORT for: $db_name"
+    print_status "========================================="
+
+    # 1. Show all tables
+    print_status "📋 All Tables in $db_name:"
+    docker exec modern-reservation-postgres psql -U postgres -d "$db_name" -c "
+        SELECT
+            schemaname as schema,
+            tablename as table_name,
+            tableowner as owner,
+            CASE
+                WHEN tablename LIKE '%_2%' THEN 'Partition'
+                ELSE 'Regular'
+            END as table_type
+        FROM pg_tables
+        WHERE schemaname = 'public'
+        ORDER BY
+            CASE WHEN tablename LIKE '%_2%' THEN 1 ELSE 0 END,
+            tablename;
+    "
+
+    # 2. Table count summary
+    print_status "📊 Table Statistics:"
+    docker exec modern-reservation-postgres psql -U postgres -d "$db_name" -c "
+        SELECT
+            'Total Tables' as metric,
+            COUNT(*) as count
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+        UNION ALL
+        SELECT
+            'Partitioned Tables' as metric,
+            COUNT(*) as count
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+        AND table_name LIKE '%_2%'
+        UNION ALL
+        SELECT
+            'Regular Tables' as metric,
+            COUNT(*) as count
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+        AND table_name NOT LIKE '%_2%';
+    "
+
+    # 3. Foreign Key Relationships
+    print_status "🔗 Foreign Key Relationships:"
+    docker exec modern-reservation-postgres psql -U postgres -d "$db_name" -c "
+        SELECT
+            tc.table_name as from_table,
+            kcu.column_name as from_column,
+            ccu.table_name as to_table,
+            ccu.column_name as to_column,
+            tc.constraint_name
+        FROM information_schema.table_constraints AS tc
+        JOIN information_schema.key_column_usage AS kcu
+            ON tc.constraint_name = kcu.constraint_name
+            AND tc.table_schema = kcu.table_schema
+        JOIN information_schema.constraint_column_usage AS ccu
+            ON ccu.constraint_name = tc.constraint_name
+            AND ccu.table_schema = tc.table_schema
+        WHERE tc.constraint_type = 'FOREIGN KEY'
+        AND tc.table_schema = 'public'
+        ORDER BY tc.table_name, kcu.column_name;
+    "
+
+    # 4. Index Summary
+    print_status "📚 Index Summary:"
+    docker exec modern-reservation-postgres psql -U postgres -d "$db_name" -c "
+        SELECT
+            schemaname as schema,
+            tablename as table_name,
+            indexname as index_name,
+            indexdef as index_definition
+        FROM pg_indexes
+        WHERE schemaname = 'public'
+        AND indexname NOT LIKE '%pkey'
+        ORDER BY tablename, indexname
+        LIMIT 20;
+    "
+
+    # 5. Extensions and Types
+    print_status "🔧 Extensions and Custom Types:"
+    docker exec modern-reservation-postgres psql -U postgres -d "$db_name" -c "
+        SELECT
+            'Extensions' as category,
+            extname as name,
+            extversion as version
+        FROM pg_extension
+        WHERE extname NOT IN ('plpgsql')
+        UNION ALL
+        SELECT
+            'Custom Types' as category,
+            typname as name,
+            '' as version
+        FROM pg_type
+        WHERE typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'public')
+        AND typtype = 'e'
+        ORDER BY category, name;
+    "
+
+    # 6. Partitioned Tables Details
+    print_status "🗂️  Partitioned Tables Details:"
+    docker exec modern-reservation-postgres psql -U postgres -d "$db_name" -c "
+        SELECT
+            schemaname,
+            tablename as partition_name,
+            pg_get_expr(c.relpartbound, c.oid) as partition_expression
+        FROM pg_tables pt
+        JOIN pg_class c ON c.relname = pt.tablename
+        WHERE schemaname = 'public'
+        AND tablename LIKE '%_2%'
+        ORDER BY tablename;
+    "
+
+    print_status "✅ Database validation completed for: $db_name"
+    print_status "========================================="
+}
+
+# Function to show help
+show_help() {
+    echo "Modern Reservation Database Setup Script"
+    echo ""
+    echo "Usage: $0 [OPTIONS]"
+    echo ""
+    echo "Options:"
+    echo "  -h, --help        Show this help message"
+    echo "  -v, --validate    Only validate existing databases (no setup)"
+    echo "  -d, --database    Specify database to validate (default: modern_reservation)"
+    echo ""
+    echo "Examples:"
+    echo "  $0                           # Full database setup"
+    echo "  $0 --validate                # Validate main database"
+    echo "  $0 --validate -d modern_reservation_dev  # Validate dev database"
+    echo ""
+}
+
 # Main function
 main() {
+    local validate_only=false
+    local target_database="modern_reservation"
+
+    # Parse command line arguments
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+            -v|--validate)
+                validate_only=true
+                shift
+                ;;
+            -d|--database)
+                target_database="$2"
+                shift 2
+                ;;
+            *)
+                print_error "Unknown option: $1"
+                show_help
+                exit 1
+                ;;
+        esac
+    done
+
+    if [ "$validate_only" = true ]; then
+        print_status "Running Database Validation Only"
+        print_status "================================="
+
+        # Check prerequisites
+        if ! check_postgresql || ! check_db_connectivity; then
+            print_error "Prerequisites check failed"
+            exit 1
+        fi
+
+        validate_database "$target_database"
+        exit 0
+    fi
+
     print_status "Starting Modern Reservation Database Setup"
     print_status "========================================="
 
@@ -244,6 +426,8 @@ main() {
     # Execute schema migrations
     if execute_schema_migration "modern_reservation"; then
         verify_schema "modern_reservation"
+        print_status ""
+        validate_database "modern_reservation"
     fi
 
     if execute_schema_migration "modern_reservation_dev"; then
@@ -267,6 +451,10 @@ main() {
     print_status "PostgreSQL:   Running on localhost:5432"
     print_status ""
     print_success "Your business services should now be able to connect to the databases!"
+    print_status ""
+    print_status "💡 To validate databases later, run:"
+    print_status "   $0 --validate                    # Validate main database"
+    print_status "   $0 --validate -d <database_name> # Validate specific database"
 }
 
 # Trap to handle script interruption

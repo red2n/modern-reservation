@@ -29,12 +29,9 @@ services:
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_DB=modern_reservation
-      - POSTGRES_USER=dev_user
-      - POSTGRES_PASSWORD=dev_password123
+      - POSTGRES_PASSWORD=postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ../../database/schema:/docker-entrypoint-initdb.d
     networks:
       - modern-reservation-network
     restart: unless-stopped
@@ -45,12 +42,9 @@ services:
     container_name: modern-reservation-redis
     ports:
       - "6379:6379"
-    volumes:
-      - redis_data:/data
     networks:
       - modern-reservation-network
     restart: unless-stopped
-    command: redis-server --appendonly yes
 
   # Service Discovery (Alternative to your Java Eureka)
   consul:

@@ -90,7 +90,7 @@ CREATE TABLE notification_queue (
 
 -- Notification History (for tracking sent notifications)
 CREATE TABLE notification_history (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT gen_random_uuid(),
 
     -- Reference to original notification
     notification_queue_id UUID REFERENCES notification_queue(id),
@@ -119,7 +119,9 @@ CREATE TABLE notification_history (
     property_id UUID,
     reservation_id UUID,
 
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE(id, created_at)
 ) PARTITION BY RANGE (created_at);
 
 -- Create monthly partitions for notification history
