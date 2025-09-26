@@ -96,13 +96,20 @@ check_infrastructure() {
 # Function to wait for service registration with Eureka (Service Discovery)
 wait_for_eureka_registration() {
     local service_name=$1
-    local max_attempts=${2:-15}
+    local max_attempts=${2:-30}  # Increased timeout to 30 attempts (90 seconds)
     local attempt=1
 
     print_status "Waiting for $service_name to register with Eureka Discovery Server..."
 
     while [ $attempt -le $max_attempts ]; do
+        # Try multiple approaches to check registration
         if curl -s "http://localhost:8761/eureka/apps" | grep -i "$service_name" > /dev/null 2>&1; then
+            print_success "$service_name registered with Eureka! 🎯"
+            return 0
+        fi
+
+        # Alternative check: Look for service in Eureka instances
+        if curl -s "http://localhost:8761/eureka/apps/${service_name^^}" | grep -i "instance" > /dev/null 2>&1; then
             print_success "$service_name registered with Eureka! 🎯"
             return 0
         fi
@@ -116,6 +123,25 @@ wait_for_eureka_registration() {
     print_warning "$service_name not registered with Eureka within $((max_attempts * 3)) seconds"
     print_status "Service may still be starting up. Check Eureka dashboard: http://localhost:8761"
     return 1
+}
+
+# Function to build parent Maven project
+build_parent_project() {
+    print_status "Building parent Maven project..."
+    cd "$BASE_DIR/apps/backend/java-services"
+
+    # Create logs directory
+    mkdir -p logs
+
+    # Build the parent project (compile all modules)
+    if mvn clean compile -q > logs/parent-build.log 2>&1; then
+        print_success "Parent Maven project built successfully"
+        return 0
+    else
+        print_error "Failed to build parent Maven project. Check $BASE_DIR/apps/backend/java-services/logs/parent-build.log for details"
+        print_error "❌ Failed to build parent Maven project. Cannot proceed with service startup."
+        return 1
+    fi
 }
 
 # Function to start a business service
@@ -147,6 +173,15 @@ start_business_service() {
 
     # Create logs directory if it doesn't exist
     mkdir -p logs
+
+    # Ensure service is compiled
+    print_status "Ensuring $service_name is compiled..."
+    if mvn compile -q > "logs/${service_name}-compile.log" 2>&1; then
+        print_success "$service_name compilation verified"
+    else
+        print_error "Failed to compile $service_name. Check logs/${service_name}-compile.log for details"
+        return 1
+    fi
 
     print_status "Starting $service_name..."
     print_status "Executing: mvn spring-boot:run for $service_name"
@@ -181,6 +216,11 @@ main() {
 
     # Check infrastructure prerequisites
     if ! check_infrastructure; then
+        exit 1
+    fi
+
+    # Build parent Maven project first
+    if ! build_parent_project; then
         exit 1
     fi
 

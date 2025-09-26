@@ -12,8 +12,8 @@ spring:
 
   datasource:
     url: jdbc:postgresql://localhost:5432/modern_reservation_dev
-    username: dev_user
-    password: dev_password
+    username: reservation_user
+    password: reservation_pass
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 20

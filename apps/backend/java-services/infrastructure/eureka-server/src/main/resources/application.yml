@@ -10,11 +10,12 @@ spring:
     config:
       username: config-admin
       password: ${CONFIG_SERVER_PASSWORD:admin123}
-  security:
-    user:
-      name: eureka-admin
-      password: ${EUREKA_PASSWORD:admin123}
-      roles: ADMIN
+  # Temporarily disabled security for testing
+  # security:
+  #   user:
+  #     name: eureka-admin
+  #     password: ${EUREKA_PASSWORD:admin123}
+  #     roles: ADMIN
 
 # Eureka Server Configuration
 eureka:

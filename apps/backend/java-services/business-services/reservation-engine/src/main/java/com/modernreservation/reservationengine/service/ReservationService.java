@@ -346,11 +346,11 @@ public class ReservationService {
                                  String reason, String performedBy) {
         ReservationAudit audit = ReservationAudit.builder()
                 .reservation(reservation)
-                .action(action)
                 .oldStatus(oldStatus)
                 .newStatus(newStatus)
                 .reason(reason)
-                .performedBy(performedBy)
+                .notes(action + " - Performed by: " + performedBy)
+                .changedAt(LocalDateTime.now())
                 .build();
 
         auditRepository.save(audit);

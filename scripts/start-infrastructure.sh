@@ -146,6 +146,28 @@ start_zipkin_service() {
     fi
 }
 
+# Function to build parent Maven project
+build_parent_project() {
+    local java_services_dir="$BASE_DIR/apps/backend/java-services"
+
+    print_status "Building parent Maven project..."
+
+    # Change to Java services directory
+    cd "$java_services_dir"
+
+    # Create logs directory if it doesn't exist
+    mkdir -p logs
+
+    # Build parent project
+    if mvn clean install -DskipTests > "logs/parent-build.log" 2>&1; then
+        print_success "Parent Maven project built successfully"
+        return 0
+    else
+        print_error "Failed to build parent Maven project. Check $java_services_dir/logs/parent-build.log for details"
+        return 1
+    fi
+}
+
 # Function to start a service
 start_service() {
     local service_name=$1
@@ -172,6 +194,15 @@ start_service() {
 
     # Create logs directory if it doesn't exist
     mkdir -p logs
+
+    # Ensure service is compiled (quick check)
+    print_status "Ensuring $service_name is compiled..."
+    if mvn compile -q > "logs/${service_name}-compile.log" 2>&1; then
+        print_success "$service_name compilation verified"
+    else
+        print_error "Failed to compile $service_name. Check logs/${service_name}-compile.log for details"
+        return 1
+    fi
 
     # Start the service in background
     print_status "Executing: mvn spring-boot:run for $service_name"
@@ -214,6 +245,12 @@ main() {
     print_status "Cleaning up old PID files..."
     cd "$BASE_DIR"
     rm -f *.pid
+
+    # Build parent Maven project first
+    if ! build_parent_project; then
+        print_error "❌ Failed to build parent Maven project. Cannot proceed with service startup."
+        exit 1
+    fi
 
     # Service startup order (dependencies first)
     declare -a SERVICES=(

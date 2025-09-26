@@ -18,8 +18,8 @@ spring:
   # Database Configuration (using Docker PostgreSQL)
   datasource:
     url: jdbc:postgresql://localhost:5432/modern_reservation
-    username: postgres
-    password: postgres
+    username: reservation_user
+    password: reservation_pass
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -80,6 +80,11 @@ springdoc:
 
 # Eureka Configuration for localhost binding
 eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
   instance:
     hostname: localhost
     ip-address: 127.0.0.1
