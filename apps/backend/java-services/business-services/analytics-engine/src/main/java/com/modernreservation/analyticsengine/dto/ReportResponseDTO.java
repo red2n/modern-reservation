@@ -690,7 +690,7 @@ public class ReportResponseDTO {
         private String reportPeriod;
         private List<String> insights;
         private AnalyticsResponseDTO analyticsData;
-        
+
         public static class ReportContentDTOBuilder {
             public ReportContentDTOBuilder dashboardData(DashboardDTO dashboardData) {
                 // Dashboard data integration can be handled here
