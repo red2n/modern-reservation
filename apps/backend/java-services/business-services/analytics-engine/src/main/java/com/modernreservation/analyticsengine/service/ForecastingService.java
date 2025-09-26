@@ -132,13 +132,14 @@ public class ForecastingService {
             .metricType(metricType)
             .forecastedValues(forecastResult.forecastedValues)
             .confidenceIntervals(confidenceIntervals)
-            .accuracy(accuracy)
-            .confidence(forecastResult.confidence)
+            .accuracy(accuracy.doubleValue())
+            .confidence(forecastResult.confidence.doubleValue())
             .modelUsed(bestMethod.name())
             .seasonalityAdjusted(forecastResult.seasonalityAdjusted)
             .trendAdjusted(forecastResult.trendAdjusted)
-            .modelParameters(forecastResult.parameters)
-            .historicalDataPoints(values.size())
+            .modelParameters(forecastResult.parameters.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().doubleValue())))
+            .historicalDataPoints(new ArrayList<>(values))
             .forecastHorizon(forecastPeriods)
             .build();
     }
@@ -631,13 +632,13 @@ public class ForecastingService {
             .metricType(metricType)
             .forecastedValues(Collections.nCopies(periods, BigDecimal.ZERO))
             .confidenceIntervals(Collections.emptyList())
-            .accuracy(BigDecimal.ZERO)
-            .confidence(BigDecimal.ZERO)
+            .accuracy(0.0)
+            .confidence(0.0)
             .modelUsed("INSUFFICIENT_DATA")
             .seasonalityAdjusted(false)
             .trendAdjusted(false)
             .modelParameters(Collections.emptyMap())
-            .historicalDataPoints(0)
+            .historicalDataPoints(Collections.emptyList())
             .forecastHorizon(periods)
             .build();
     }
@@ -647,11 +648,14 @@ public class ForecastingService {
             return BigDecimal.ZERO;
         }
 
-        return forecasts.stream()
-            .filter(f -> f.getAccuracy() != null)
-            .map(AnalyticsResponseDTO.ForecastResultDTO.MetricForecastDTO::getAccuracy)
-            .reduce(BigDecimal.ZERO, BigDecimal::add)
-            .divide(BigDecimal.valueOf(forecasts.size()), 4, RoundingMode.HALF_UP);
+        return BigDecimal.valueOf(
+            forecasts.stream()
+                .filter(f -> f.getAccuracy() != null)
+                .map(AnalyticsResponseDTO.ForecastResultDTO.MetricForecastDTO::getAccuracy)
+                .mapToDouble(Double::doubleValue)
+                .average()
+                .orElse(0.0)
+        );
     }
 
     private BigDecimal calculateOverallConfidence(List<AnalyticsResponseDTO.ForecastResultDTO.MetricForecastDTO> forecasts) {
@@ -659,16 +663,19 @@ public class ForecastingService {
             return BigDecimal.ZERO;
         }
 
-        return forecasts.stream()
-            .filter(f -> f.getConfidence() != null)
-            .map(AnalyticsResponseDTO.ForecastResultDTO.MetricForecastDTO::getConfidence)
-            .reduce(BigDecimal.ZERO, BigDecimal::add)
-            .divide(BigDecimal.valueOf(forecasts.size()), 4, RoundingMode.HALF_UP);
+        return BigDecimal.valueOf(
+            forecasts.stream()
+                .filter(f -> f.getConfidence() != null)
+                .map(AnalyticsResponseDTO.ForecastResultDTO.MetricForecastDTO::getConfidence)
+                .mapToDouble(Double::doubleValue)
+                .average()
+                .orElse(0.0)
+        );
     }
 
     private int calculateTotalDataPoints(List<AnalyticsResponseDTO.ForecastResultDTO.MetricForecastDTO> forecasts) {
         return forecasts.stream()
-            .mapToInt(AnalyticsResponseDTO.ForecastResultDTO.MetricForecastDTO::getHistoricalDataPoints)
+            .mapToInt(forecast -> forecast.getHistoricalDataPoints() != null ? forecast.getHistoricalDataPoints().size() : 0)
             .sum();
     }
 

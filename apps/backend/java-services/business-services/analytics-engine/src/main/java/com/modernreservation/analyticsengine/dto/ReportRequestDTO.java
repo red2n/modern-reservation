@@ -333,6 +333,18 @@ public class ReportRequestDTO {
         private Integer retentionDays;
         private Boolean requiresAuthentication;
         private String accessToken;
+
+        /**
+         * Check if delivery options are empty/default
+         */
+        public boolean isEmpty() {
+            return (emailDelivery == null || !emailDelivery) &&
+                   (downloadLink == null || downloadLink) && // downloadLink defaults to true
+                   (dashboardView == null || !dashboardView) &&
+                   emailSubject == null &&
+                   emailBody == null &&
+                   callbackUrl == null;
+        }
     }
 
     // Validation and Business Logic Methods
@@ -541,5 +553,19 @@ public class ReportRequestDTO {
             case "JSON" -> "application/json";
             default -> "text/plain";
         };
+    }
+
+    /**
+     * Get the primary notification email
+     */
+    public String getNotificationEmail() {
+        return recipientEmails != null && !recipientEmails.isEmpty() ? recipientEmails.get(0) : null;
+    }
+
+    /**
+     * Get the access level
+     */
+    public String getAccessLevel() {
+        return isPublic != null && isPublic ? "PUBLIC" : "PRIVATE";
     }
 }

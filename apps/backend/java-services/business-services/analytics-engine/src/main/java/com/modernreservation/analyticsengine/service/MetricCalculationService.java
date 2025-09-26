@@ -77,7 +77,7 @@ public class MetricCalculationService {
                 .confidenceScore(confidenceScore)
                 .calculatedAt(LocalDateTime.now())
                 .calculationMethod(getCalculationMethod(metricType))
-                .dataPoints(baseMetrics.size())
+                .dataPointsCount(baseMetrics.size())
                 .notes(generateCalculationNotes(metricType, baseMetrics))
                 .build();
 
@@ -147,7 +147,7 @@ public class MetricCalculationService {
                         .confidenceScore(calculateConfidenceScore(allMetrics, metricType, aggregatedValue))
                         .calculatedAt(LocalDateTime.now())
                         .calculationMethod("AGGREGATED_" + aggregationType.toUpperCase())
-                        .dataPoints(allMetrics.size())
+                        .dataPointsCount(allMetrics.size())
                         .notes("Aggregated from " + propertyIds.size() + " properties using " + aggregationType)
                         .build();
 
@@ -198,7 +198,7 @@ public class MetricCalculationService {
                 .unit(getMetricUnit(metricType))
                 .calculatedAt(LocalDateTime.now())
                 .calculationMethod("MOVING_AVERAGE_" + windowSize)
-                .dataPoints(window.size())
+                .dataPointsCount(window.size())
                 .notes("Moving average over " + windowSize + " periods")
                 .build();
 
@@ -211,7 +211,7 @@ public class MetricCalculationService {
     /**
      * Calculate variance and standard deviation for metrics
      */
-    public AnalyticsResponseDTO.StatisticalAnalysisDTO calculateStatisticalAnalysis(
+    public AnalyticsResponseDTO.StatisticalSummaryDTO calculateStatisticalAnalysis(
             MetricType metricType, UUID propertyId,
             LocalDateTime periodStart, LocalDateTime periodEnd,
             TimeGranularity granularity) {
@@ -225,7 +225,7 @@ public class MetricCalculationService {
         .collect(Collectors.toList());
 
         if (metrics.isEmpty()) {
-            return AnalyticsResponseDTO.StatisticalAnalysisDTO.builder()
+            return AnalyticsResponseDTO.StatisticalSummaryDTO.builder()
                 .sampleSize(0)
                 .build();
         }
@@ -253,26 +253,21 @@ public class MetricCalculationService {
         BigDecimal skewness = calculateSkewness(values, mean, standardDeviation);
         BigDecimal kurtosis = calculateKurtosis(values, mean, standardDeviation);
 
-        return AnalyticsResponseDTO.StatisticalAnalysisDTO.builder()
+        return AnalyticsResponseDTO.StatisticalSummaryDTO.builder()
             .sampleSize(values.size())
             .mean(mean)
             .median(median)
             .mode(mode)
             .variance(variance)
             .standardDeviation(standardDeviation)
-            .min(min)
-            .max(max)
+            .minimum(min)
+            .maximum(max)
             .range(range)
             .q1(q1)
             .q3(q3)
             .iqr(iqr)
             .skewness(skewness)
             .kurtosis(kurtosis)
-            .coefficientOfVariation(
-                mean.compareTo(BigDecimal.ZERO) != 0 ?
-                standardDeviation.divide(mean, 4, RoundingMode.HALF_UP) :
-                BigDecimal.ZERO
-            )
             .calculatedAt(LocalDateTime.now())
             .build();
     }
@@ -780,13 +775,14 @@ public class MetricCalculationService {
     }
 
     private String getMetricUnit(MetricType metricType) {
-        return switch (metricType.getCategory()) {
-            case MetricType.MetricCategory.REVENUE, MetricType.MetricCategory.FINANCIAL -> "USD";
-            case MetricType.MetricCategory.OCCUPANCY -> "%";
-            case MetricType.MetricCategory.BOOKING -> "count";
-            case MetricType.MetricCategory.CUSTOMER -> "score";
-            case MetricType.MetricCategory.CHANNEL -> "count";
-            case MetricType.MetricCategory.MARKET -> "index";
+        String category = metricType.getCategory();
+        return switch (category) {
+            case "REVENUE", "FINANCIAL" -> "USD";
+            case "OCCUPANCY" -> "%";
+            case "BOOKING" -> "count";
+            case "CUSTOMER" -> "score";
+            case "CHANNEL" -> "count";
+            case "MARKET" -> "index";
             default -> "value";
         };
     }
@@ -796,11 +792,12 @@ public class MetricCalculationService {
             return "N/A";
         }
 
-        return switch (metricType.getCategory()) {
-            case MetricType.MetricCategory.REVENUE, MetricType.MetricCategory.FINANCIAL -> String.format("$%,.2f", value);
-            case MetricType.MetricCategory.OCCUPANCY -> String.format("%.1f%%", value);
-            case MetricType.MetricCategory.BOOKING, MetricType.MetricCategory.CUSTOMER, MetricType.MetricCategory.CHANNEL -> String.format("%,d", value.intValue());
-            case MetricType.MetricCategory.MARKET -> String.format("%.2f", value);
+        String category = metricType.getCategory();
+        return switch (category) {
+            case "REVENUE", "FINANCIAL" -> String.format("$%,.2f", value);
+            case "OCCUPANCY" -> String.format("%.1f%%", value);
+            case "BOOKING", "CUSTOMER", "CHANNEL" -> String.format("%,d", value.intValue());
+            case "MARKET" -> String.format("%.2f", value);
             default -> value.toString();
         };
     }
@@ -831,7 +828,7 @@ public class MetricCalculationService {
             .confidenceScore(BigDecimal.ZERO)
             .calculatedAt(LocalDateTime.now())
             .calculationMethod("ERROR")
-            .dataPoints(0)
+            .dataPointsCount(0)
             .notes(errorMessage)
             .build();
     }
@@ -855,7 +852,7 @@ public class MetricCalculationService {
                 .confidenceScore(result.getConfidenceScore())
                 .formattedValue(result.getFormattedValue())
                 .calculationMethod(result.getCalculationMethod())
-                .dataPoints(result.getDataPoints())
+                .dataPointsCount(result.getDataPoints() != null ? result.getDataPoints().size() : 0)
                 .notes(result.getNotes())
                 .build();
 

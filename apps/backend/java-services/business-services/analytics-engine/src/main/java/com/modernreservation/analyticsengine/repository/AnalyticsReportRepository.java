@@ -15,6 +15,7 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -472,4 +473,46 @@ public interface AnalyticsReportRepository extends JpaRepository<AnalyticsReport
         @Param("periodEnd") LocalDateTime periodEnd,
         @Param("propertyId") UUID propertyId
     );
+
+    /**
+     * Get usage statistics for a specific report
+     */
+    @Query("SELECT new map(" +
+           "COUNT(*) as totalViews, " +
+           "COUNT(DISTINCT ar.createdBy) as uniqueViewers, " +
+           "0 as totalDownloads, " +
+           "COALESCE(AVG(ar.generationDurationMs), 0) as avgGenerationTime " +
+           ") FROM AnalyticsReport ar WHERE ar.reportId = :reportId")
+    Map<String, Object> getReportUsageStatistics(@Param("reportId") UUID reportId);
+
+    /**
+     * Find scheduled reports that are due
+     */
+    @Query("SELECT ar FROM AnalyticsReport ar WHERE ar.status = 'SCHEDULED' " +
+           "AND ar.nextRunAt <= :currentTime")
+    List<AnalyticsReport> findDueScheduledReports(@Param("currentTime") LocalDateTime currentTime);
+
+    /**
+     * Find old reports for cleanup
+     */
+    @Query("SELECT ar FROM AnalyticsReport ar WHERE ar.createdAt < :cutoffDate " +
+           "AND ar.status IN ('COMPLETED', 'FAILED')")
+    List<AnalyticsReport> findOldReports(@Param("cutoffDate") LocalDateTime cutoffDate);
+
+    /**
+     * Get top viewers for a report
+     */
+    @Query("SELECT ar.createdBy FROM AnalyticsReport ar WHERE ar.reportId = :reportId " +
+           "GROUP BY ar.createdBy ORDER BY COUNT(*) DESC")
+    List<String> getTopViewers(@Param("reportId") UUID reportId);
+
+    /**
+     * Get access patterns for a report
+     */
+    @Query("SELECT new map(" +
+           "ar.createdAt as accessTime, " +
+           "ar.createdBy as userId " +
+           ") FROM AnalyticsReport ar WHERE ar.reportId = :reportId " +
+           "ORDER BY ar.createdAt DESC")
+    Map<String, Object> getAccessPatterns(@Param("reportId") UUID reportId);
 }

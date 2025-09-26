@@ -76,15 +76,12 @@ public class ValidationService {
     private boolean isReasonableValue(BigDecimal value, com.modernreservation.analyticsengine.enums.MetricType metricType) {
         // Check for negative values where they shouldn't exist
         if (value.compareTo(BigDecimal.ZERO) < 0) {
-            return switch (metricType.getCategory()) {
-                case MetricType.MetricCategory.REVENUE, MetricType.MetricCategory.BOOKING, MetricType.MetricCategory.CUSTOMER -> false; // These should not be negative
-                case MetricType.MetricCategory.OCCUPANCY -> false; // Occupancy rates should not be negative
-                default -> true; // Other metrics might have negative values
-            };
+            String category = metricType.getCategory();
+            return !"REVENUE".equals(category) && !"BOOKING".equals(category) && !"CUSTOMER".equals(category) && !"OCCUPANCY".equals(category);
         }
 
         // Check for percentage values
-        if (metricType.getCategory() == com.modernreservation.analyticsengine.enums.MetricType.MetricCategory.OCCUPANCY) {
+        if ("OCCUPANCY".equals(metricType.getCategory())) {
             return value.compareTo(BigDecimal.valueOf(100)) <= 0; // Should not exceed 100%
         }
 

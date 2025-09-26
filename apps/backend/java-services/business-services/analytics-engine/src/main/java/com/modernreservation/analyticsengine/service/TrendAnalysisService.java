@@ -97,8 +97,8 @@ public class TrendAnalysisService {
             return AnalyticsResponseDTO.TrendAnalysisDTO.MetricTrendDTO.builder()
                 .metricType(metricType)
                 .trendDirection("INSUFFICIENT_DATA")
-                .trendStrength(BigDecimal.ZERO)
-                .significance(BigDecimal.ZERO)
+                .trendStrength(0.0)
+                .significance(0.0)
                 .build();
         }
 
@@ -112,8 +112,8 @@ public class TrendAnalysisService {
             return AnalyticsResponseDTO.TrendAnalysisDTO.MetricTrendDTO.builder()
                 .metricType(metricType)
                 .trendDirection("NO_DATA")
-                .trendStrength(BigDecimal.ZERO)
-                .significance(BigDecimal.ZERO)
+                .trendStrength(0.0)
+                .significance(0.0)
                 .build();
         }
 
@@ -147,19 +147,19 @@ public class TrendAnalysisService {
         return AnalyticsResponseDTO.TrendAnalysisDTO.MetricTrendDTO.builder()
             .metricType(metricType)
             .trendDirection(trendDirection)
-            .trendStrength(trendStrength)
-            .slope(regression.slope)
-            .intercept(regression.intercept)
-            .rSquared(regression.rSquared)
-            .significance(significance)
+            .trendStrength(trendStrength.doubleValue())
+            .slope(regression.slope.doubleValue())
+            .intercept(regression.intercept.doubleValue())
+            .rSquared(regression.rSquared.doubleValue())
+            .significance(significance.doubleValue())
             .percentageChange(percentageChange)
-            .averageValue(calculateMean(values))
-            .volatility(calculateVolatility(values))
+            .averageValue(calculateMean(values).doubleValue())
+            .volatility(calculateVolatility(values).doubleValue())
             .seasonalityDetected(seasonality.detected)
-            .seasonalityStrength(seasonality.strength)
+            .seasonalityStrength(seasonality.strength.doubleValue())
             .outliersCount(outlierIndices.size())
-            .dataPoints(values.size())
-            .confidenceInterval(calculateConfidenceInterval(regression, values))
+            .dataPoints(new ArrayList<>(values))
+            .confidenceInterval(calculateConfidenceInterval(regression, values).get(0).doubleValue())
             .build();
     }
 
@@ -400,11 +400,14 @@ public class TrendAnalysisService {
             return BigDecimal.ZERO;
         }
 
-        return metricTrends.stream()
-            .filter(trend -> trend.getTrendStrength() != null)
-            .map(AnalyticsResponseDTO.TrendAnalysisDTO.MetricTrendDTO::getTrendStrength)
-            .reduce(BigDecimal.ZERO, BigDecimal::add)
-            .divide(BigDecimal.valueOf(metricTrends.size()), 4, RoundingMode.HALF_UP);
+        return BigDecimal.valueOf(
+            metricTrends.stream()
+                .filter(trend -> trend.getTrendStrength() != null)
+                .map(AnalyticsResponseDTO.TrendAnalysisDTO.MetricTrendDTO::getTrendStrength)
+                .mapToDouble(Double::doubleValue)
+                .average()
+                .orElse(0.0)
+        );
     }
 
     /**
@@ -415,11 +418,14 @@ public class TrendAnalysisService {
             return BigDecimal.ZERO;
         }
 
-        return metricTrends.stream()
-            .filter(trend -> trend.getSignificance() != null)
-            .map(AnalyticsResponseDTO.TrendAnalysisDTO.MetricTrendDTO::getSignificance)
-            .reduce(BigDecimal.ZERO, BigDecimal::add)
-            .divide(BigDecimal.valueOf(metricTrends.size()), 4, RoundingMode.HALF_UP);
+        return BigDecimal.valueOf(
+            metricTrends.stream()
+                .filter(trend -> trend.getSignificance() != null)
+                .map(AnalyticsResponseDTO.TrendAnalysisDTO.MetricTrendDTO::getSignificance)
+                .mapToDouble(Double::doubleValue)
+                .average()
+                .orElse(0.0)
+        );
     }
 
     /**
@@ -431,23 +437,23 @@ public class TrendAnalysisService {
         // Find strongest trends
         metricTrends.stream()
             .filter(trend -> trend.getTrendStrength() != null)
-            .filter(trend -> trend.getTrendStrength().compareTo(BigDecimal.valueOf(0.7)) > 0)
+            .filter(trend -> trend.getTrendStrength() > 0.7)
             .forEach(trend -> {
                 insights.add(String.format("%s shows a strong %s trend with R² = %.2f",
                     trend.getMetricType().name(),
                     trend.getTrendDirection().toLowerCase(),
-                    trend.getTrendStrength().doubleValue()
+                    trend.getTrendStrength()
                 ));
             });
 
         // Find metrics with high volatility
         metricTrends.stream()
             .filter(trend -> trend.getVolatility() != null)
-            .filter(trend -> trend.getVolatility().compareTo(BigDecimal.valueOf(0.3)) > 0)
+            .filter(trend -> trend.getVolatility() > 0.3)
             .forEach(trend -> {
                 insights.add(String.format("%s shows high volatility (σ = %.2f)",
                     trend.getMetricType().name(),
-                    trend.getVolatility().doubleValue()
+                    trend.getVolatility()
                 ));
             });
 

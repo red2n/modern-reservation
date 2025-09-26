@@ -13,6 +13,17 @@ package com.modernreservation.analyticsengine.enums;
 public enum AnalyticsStatus {
 
     /**
+     * Report has been created but not yet started
+     */
+    CREATED(
+        "Created",
+        "Report has been created",
+        false,
+        false,
+        0
+    ),
+
+    /**
      * Calculation/Report is queued for processing
      */
     PENDING(
@@ -328,6 +339,7 @@ public enum AnalyticsStatus {
             case VALIDATING, AGGREGATING, FINALIZING -> "#17a2b8"; // Cyan
             case RETRYING -> "#fd7e14";                     // Orange
             case PENDING, SCHEDULED -> "#6f42c1";           // Purple
+            case CREATED -> "#e9ecef";                      // Light Gray
         };
     }
 
@@ -348,6 +360,7 @@ public enum AnalyticsStatus {
             case RETRYING -> "↻";
             case PENDING -> "⋯";
             case SCHEDULED -> "📅";
+            case CREATED -> "📝";
         };
     }
 

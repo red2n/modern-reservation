@@ -228,7 +228,7 @@ main() {
     print_status "Cleaning up old business service PID files..."
     cd "$BASE_DIR"
     rm -f reservation-engine.pid availability-calculator.pid payment-processor.pid rate-management.pid
-    # analytics-engine.pid # Temporarily excluded due to compilation errors
+    analytics-engine.pid
 
     # Business services startup order (dependencies first)
     # Format: "service-name:directory:port:startup-wait:context-path"
@@ -237,7 +237,7 @@ main() {
         "availability-calculator:availability-calculator:8083:40:/availability-calculator"
         "payment-processor:payment-processor:8084:35:/payment-processor"
         "rate-management:rate-management:8085:35:/rate-management"
-        # "analytics-engine:analytics-engine:8086:45:/analytics-engine"  # Temporarily disabled due to compilation errors
+analytics-engine:analytics-engine:8086:45:/analytics-engine
     )
 
     local success_count=0

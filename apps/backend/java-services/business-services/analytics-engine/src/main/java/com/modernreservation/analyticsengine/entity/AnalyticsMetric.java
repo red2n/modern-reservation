@@ -177,6 +177,9 @@ public class AnalyticsMetric {
     @Column(name = "tags", length = 500)
     private String tags;
 
+    @Column(name = "notes", length = 1000)
+    private String notes;
+
     @Column(name = "version", nullable = false)
     @NotNull(message = "Version is required")
     @Builder.Default

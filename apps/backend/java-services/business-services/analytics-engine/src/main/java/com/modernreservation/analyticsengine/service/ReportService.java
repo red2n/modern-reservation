@@ -377,7 +377,7 @@ public class ReportService {
             });
 
             ReportResponseDTO errorResponse = ReportResponseDTO.createErrorResponse(
-                reportId, "Async report generation failed: " + e.getMessage()
+                reportId, "Analytics Report", "Async report generation failed: " + e.getMessage()
             );
             return CompletableFuture.completedFuture(errorResponse);
         }
@@ -391,7 +391,7 @@ public class ReportService {
 
         return templateService.getAvailableTemplates().stream()
             .map(template -> ReportResponseDTO.ReportTemplateDTO.builder()
-                .templateId(template.getId())
+                .templateId(UUID.fromString(template.getId()))
                 .templateName(template.getName())
                 .templateType(template.getType())
                 .description(template.getDescription())
@@ -443,14 +443,14 @@ public class ReportService {
             .reportId(UUID.randomUUID())
             .reportName(request.getReportName())
             .reportType(request.getReportType())
-            .propertyId(request.getPropertyId().iterator().next()) // Use first property
-            .description(request.getDescription())
+            .propertyId(request.getEffectivePropertyId())
+            .reportDescription(request.getDescription())
             .status(AnalyticsStatus.CREATED)
             .createdAt(LocalDateTime.now())
             .updatedAt(LocalDateTime.now())
-            .parameters(convertParametersToJson(request))
+            .parameters(Collections.emptyMap())
             .templateId(request.getTemplateId())
-            .outputFormats(String.join(",", request.getOutputFormats()))
+            .outputFormats(request.getOutputFormats())
             .isScheduled(request.getScheduleTime() != null)
             .deliveryOptions(convertDeliveryOptionsToJson(request))
             .accessLevel(request.getAccessLevel() != null ? request.getAccessLevel() : "PRIVATE")
@@ -471,7 +471,7 @@ public class ReportService {
 
             // Apply template if specified
             if (request.getTemplateId() != null) {
-                content = templateService.applyTemplate(content, request.getTemplateId(), request.getBrandingOptions());
+                content = templateService.applyTemplate(content, request.getTemplateId().toString(), Collections.emptyMap());
             }
 
             // Export in requested formats
@@ -527,7 +527,7 @@ public class ReportService {
         if (request.getIncludeDashboard()) {
             dashboardData = analyticsService.getDashboardData(
                 request.getReportType(),
-                request.getPropertyId().iterator().next(),
+                request.getEffectivePropertyId(),
                 5 // 5 minute refresh
             );
         }
@@ -540,9 +540,9 @@ public class ReportService {
             .subtitle(generateSubtitle(request))
             .executiveSummary(executiveSummary)
             .analyticsData(analyticsResponse)
-            .dashboardData(dashboardData)
+            .dashboardData(null) // TODO: Convert DashboardDTO types
             .insights(analyticsService.getAnalyticsInsights(
-                request.getPropertyId().iterator().next(),
+                request.getEffectivePropertyId(),
                 request.getPeriodStart(),
                 request.getPeriodEnd()
             ))
@@ -598,12 +598,12 @@ public class ReportService {
             .fileUrl(report.getFileUrl())
             .fileSizeBytes(report.getFileSizeBytes())
             .outputFormats(report.getOutputFormats() != null ?
-                Arrays.asList(report.getOutputFormats().split(",")) : Collections.emptyList())
+                report.getOutputFormats() : Collections.emptyList())
             .isScheduled(report.isScheduled())
             .scheduledAt(report.getScheduledAt())
             .accessLevel(report.getAccessLevel())
             .shareUrl(generateShareUrl(report))
-            .metadata(ReportResponseDTO.ReportMetadataDTO.builder()
+            .metadata(ReportResponseDTO.GenerationMetadataDTO.builder()
                 .version("3.2.0")
                 .category(report.getReportType())
                 .tags(Collections.emptyList())
@@ -656,7 +656,7 @@ public class ReportService {
     private com.modernreservation.analyticsengine.dto.AnalyticsRequestDTO createAnalyticsRequest(ReportRequestDTO request) {
         // Convert report request to analytics request
         return com.modernreservation.analyticsengine.dto.AnalyticsRequestDTO.builder()
-            .sessionId(UUID.randomUUID())
+            .sessionId(UUID.randomUUID().toString())
             .periodStart(request.getPeriodStart())
             .periodEnd(request.getPeriodEnd())
             .timeGranularity(request.getTimeGranularity())
@@ -678,7 +678,8 @@ public class ReportService {
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("reportType", request.getReportType());
         metadata.put("generatedAt", LocalDateTime.now());
-        metadata.put("properties", request.getPropertyId().size());
+        metadata.put("properties", request.getPropertyIds() != null ? request.getPropertyIds().size() :
+                     (request.getPropertyId() != null ? 1 : 0));
         return metadata;
     }
 

@@ -197,6 +197,7 @@ public class AnalyticsResponseDTO {
         private String description;
         private String calculationMethod;
         private List<Object> dataPoints;
+        private Integer dataPointsCount;
         private String notes;
     }
 
@@ -238,6 +239,7 @@ public class AnalyticsResponseDTO {
     @AllArgsConstructor
     public static class TrendAnalysisDTO {
         private UUID analysisId;
+        private LocalDateTime analysisDate;
         private List<TrendPointDTO> trendPoints;
         private String overallTrend;
         private BigDecimal trendStrength;
@@ -245,6 +247,9 @@ public class AnalyticsResponseDTO {
         private String seasonalityPattern;
         private List<String> insights;
         private List<MetricTrendDTO> metricTrends;
+        private Long periodCovered;
+        private TimeGranularity granularity;
+        private BigDecimal confidence;
 
         @Data
         @Builder
@@ -267,13 +272,20 @@ public class AnalyticsResponseDTO {
             private Double trendValue;
             private String trendDirection;
             private Double slope;
+            private Double intercept;
+            private Double rSquared;
             private Double correlation;
             private LocalDateTime timestamp;
             private Double trendStrength;
             private Double significance;
             private Double volatility;
             private Boolean seasonalityDetected;
+            private Double seasonalityStrength;
             private Integer outliersCount;
+            private List<Object> dataPoints;
+            private BigDecimal percentageChange;
+            private Double averageValue;
+            private Double confidenceInterval;
         }
     }
 
@@ -286,6 +298,7 @@ public class AnalyticsResponseDTO {
     @AllArgsConstructor
     public static class ForecastResultDTO {
         private UUID forecastId;
+        private Integer forecastPeriods;
         private List<ForecastPointDTO> forecastPoints;
         private String forecastMethod;
         private BigDecimal accuracy;
@@ -294,6 +307,14 @@ public class AnalyticsResponseDTO {
         private List<String> assumptions;
         private List<MetricForecastDTO> metricForecasts;
         private ConfidenceIntervalDTO confidenceIntervals;
+        private Integer dataPoints;
+        private LocalDateTime forecastStart;
+        private LocalDateTime forecastEnd;
+        private BigDecimal overallAccuracy;
+        private BigDecimal overallConfidence;
+        private String modelUsed;
+        private LocalDateTime generatedAt;
+        private List<String> limitations;
 
         @Data
         @Builder
@@ -319,8 +340,15 @@ public class AnalyticsResponseDTO {
             private Double confidence;
             private Double accuracy;
             private String forecastMethod;
+            private String modelUsed;
+            private Boolean seasonalityAdjusted;
+            private Boolean trendAdjusted;
             private Map<String, Object> forecastMetadata;
+            private Map<Object, Object> modelParameters;
             private List<Object> historicalDataPoints;
+            private List<BigDecimal> forecastedValues;
+            private List<ConfidenceIntervalDTO> confidenceIntervals;
+            private Integer forecastHorizon;
         }
 
         @Data
@@ -333,6 +361,11 @@ public class AnalyticsResponseDTO {
             private Double confidence;
             private String intervalType;
             private Integer period;
+            private BigDecimal forecastValue;
+            private BigDecimal confidence80Lower;
+            private BigDecimal confidence80Upper;
+            private BigDecimal confidence95Lower;
+            private BigDecimal confidence95Upper;
         }
     }
 
@@ -359,6 +392,7 @@ public class AnalyticsResponseDTO {
         private BigDecimal iqr;
         private List<BigDecimal> outliers;
         private Integer sampleSize;
+        private LocalDateTime calculatedAt;
     }
 
     /**

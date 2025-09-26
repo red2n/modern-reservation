@@ -269,8 +269,11 @@ public class AnalyticsReport {
         name = "report_output_formats",
         joinColumns = @JoinColumn(name = "report_id")
     )
-    @Column(name = "output_format", length = 20)
+    @Column(name = "output_format", length = 255)
     private List<String> outputFormats;
+
+    @Column(name = "delivery_options", length = 1000)
+    private String deliveryOptions;
 
     @Column(name = "priority_level")
     @Min(value = 1, message = "Priority level must be at least 1")
@@ -516,5 +519,35 @@ public class AnalyticsReport {
             case 5 -> "Very High";
             default -> "Medium";
         };
+    }
+
+    /**
+     * Check if the report is archivable
+     */
+    public boolean isArchivable() {
+        return status == AnalyticsStatus.COMPLETED &&
+               generatedAt != null &&
+               generatedAt.isBefore(LocalDateTime.now().minusDays(30));
+    }
+
+    /**
+     * Check if the report is scheduled
+     */
+    public boolean isScheduled() {
+        return scheduledAt != null && status == AnalyticsStatus.SCHEDULED;
+    }
+
+    /**
+     * Get the report description
+     */
+    public String description() {
+        return this.reportDescription;
+    }
+
+    /**
+     * Set the report description
+     */
+    public void setDescription(String description) {
+        this.reportDescription = description;
     }
 }

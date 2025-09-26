@@ -77,6 +77,16 @@ public class ReportResponseDTO {
     private LocalDateTime generatedAt;
 
     /**
+     * Timestamp when report generation started
+     */
+    private LocalDateTime generationStartedAt;
+
+    /**
+     * Timestamp when report generation completed
+     */
+    private LocalDateTime generationCompletedAt;
+
+    /**
      * Report generation duration in milliseconds
      */
     private Long generationDurationMs;
@@ -90,6 +100,11 @@ public class ReportResponseDTO {
      * Report file size in bytes
      */
     private Long reportSizeBytes;
+
+    /**
+     * Report file size in bytes (alias)
+     */
+    private Long fileSizeBytes;
 
     /**
      * Download URL for the report
@@ -107,9 +122,19 @@ public class ReportResponseDTO {
     private String previewUrl;
 
     /**
+     * Report file URL
+     */
+    private String fileUrl;
+
+    /**
      * Whether report is publicly accessible
      */
     private Boolean isPublic;
+
+    /**
+     * Whether report is scheduled
+     */
+    private Boolean isScheduled;
 
     /**
      * Access token for secure access
@@ -120,6 +145,26 @@ public class ReportResponseDTO {
      * Report expiration timestamp
      */
     private LocalDateTime expiresAt;
+
+    /**
+     * Report scheduled timestamp
+     */
+    private LocalDateTime scheduledAt;
+
+    /**
+     * Output formats for the report
+     */
+    private List<String> outputFormats;
+
+    /**
+     * Access level for the report
+     */
+    private String accessLevel;
+
+    /**
+     * Share URL for the report
+     */
+    private String shareUrl;
 
     /**
      * Total number of metrics included
@@ -291,6 +336,10 @@ public class ReportResponseDTO {
         private String accessLevel;
         private Boolean isScheduled;
         private String recurringSchedule;
+        private String version;
+        private String category;
+        private List<Object> tags;
+        private String createdBy;
     }
 
     /**
@@ -403,6 +452,7 @@ public class ReportResponseDTO {
     @AllArgsConstructor
     public static class GenerationMetadataDTO {
         private String version;
+        private String category;
         private String environment;
         private List<String> dataSources;
         private LocalDateTime dataAsOfTime;
@@ -410,6 +460,8 @@ public class ReportResponseDTO {
         private Long memoryUsedMb;
         private Integer cpuCores;
         private Map<String, String> parameters;
+        private List<String> tags;
+        private String createdBy;
     }
 
     /**
@@ -690,6 +742,7 @@ public class ReportResponseDTO {
         private String reportPeriod;
         private List<String> insights;
         private AnalyticsResponseDTO analyticsData;
+        private Map<String, Object> metadata;
 
         public static class ReportContentDTOBuilder {
             public ReportContentDTOBuilder dashboardData(DashboardDTO dashboardData) {
@@ -707,12 +760,18 @@ public class ReportResponseDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ReportAnalyticsDTO {
+        private UUID reportId;
         private Long viewCount;
         private Long downloadCount;
         private Double averageViewDuration;
         private Map<String, Integer> deviceStats;
         private Map<String, Integer> locationStats;
         private LocalDateTime lastAccessed;
+        private Long totalViews;
+        private Long uniqueViewers;
+        private Long totalDownloads;
+        private List<String> topViewers;
+        private Map<String, Object> accessPatterns;
     }
 
     /**
@@ -725,7 +784,12 @@ public class ReportResponseDTO {
     public static class ReportTemplateDTO {
         private UUID templateId;
         private String templateName;
+        private String templateType;
         private String templateVersion;
+        private String description;
+        private List<String> supportedFormats;
+        private List<String> requiredParameters;
+        private String previewUrl;
         private Map<String, Object> templateConfig;
         private String templateDescription;
         private LocalDateTime lastModified;
