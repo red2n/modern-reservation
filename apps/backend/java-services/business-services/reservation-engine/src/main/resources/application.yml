@@ -1,5 +1,6 @@
 server:
   port: 8081
+  address: 127.0.0.1  # Bind only to localhost - not accessible externally
 
 spring:
   application:
@@ -76,6 +77,16 @@ springdoc:
     version: 2.0.0
     contact:
       name: Modern Reservation Team
+
+# Eureka Configuration for localhost binding
+eureka:
+  instance:
+    hostname: localhost
+    ip-address: 127.0.0.1
+    instance-id: ${spring.application.name}:${server.port}
+    home-page-url: http://localhost:${server.port}/
+    status-page-url: http://localhost:${server.port}/actuator/info
+    health-check-url: http://localhost:${server.port}/actuator/health
 
 # External Service URLs (will be resolved via Eureka)
 services:

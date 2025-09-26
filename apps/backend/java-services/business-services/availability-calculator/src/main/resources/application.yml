@@ -3,6 +3,7 @@
 # Server Configuration
 server:
   port: 8083
+  address: 127.0.0.1  # Bind only to localhost - not accessible externally
   servlet:
     context-path: /availability-calculator
 
@@ -94,9 +95,15 @@ eureka:
     healthcheck:
       enabled: true
   instance:
-    prefer-ip-address: true
+    prefer-ip-address: false
+    hostname: localhost
+    ip-address: 127.0.0.1
+    instance-id: ${spring.application.name}:${server.port}
     lease-renewal-interval-in-seconds: 10
     lease-expiration-duration-in-seconds: 30
+    home-page-url: http://localhost:${server.port}/
+    status-page-url: http://localhost:${server.port}/actuator/info
+    health-check-url: http://localhost:${server.port}/actuator/health
     metadata-map:
       management.context-path: /actuator
 

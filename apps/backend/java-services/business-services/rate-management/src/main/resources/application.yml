@@ -1,5 +1,6 @@
 server:
   port: 8085
+  address: 127.0.0.1  # Bind only to localhost - not accessible externally
   servlet:
     context-path: /rate-management
 
@@ -68,8 +69,13 @@ eureka:
     register-with-eureka: true
     fetch-registry: true
   instance:
-    prefer-ip-address: true
-    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    prefer-ip-address: false
+    hostname: localhost
+    ip-address: 127.0.0.1
+    instance-id: ${spring.application.name}:${server.port}
+    home-page-url: http://localhost:${server.port}/
+    status-page-url: http://localhost:${server.port}/actuator/info
+    health-check-url: http://localhost:${server.port}/actuator/health
 
 management:
   endpoints:

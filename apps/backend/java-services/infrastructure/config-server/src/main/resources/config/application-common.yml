@@ -33,7 +33,9 @@ eureka:
     healthcheck:
       enabled: true
   instance:
-    prefer-ip-address: true
+    prefer-ip-address: false  # Use hostname instead of IP
+    hostname: localhost       # Explicit hostname for localhost binding
+    ip-address: 127.0.0.1    # Explicit IP address  
     lease-renewal-interval-in-seconds: 10
     lease-expiration-duration-in-seconds: 30
 
