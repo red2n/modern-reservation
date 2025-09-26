@@ -34,6 +34,19 @@ print_warning() {
     echo -e "${YELLOW}[$(date '+%Y-%m-%d %H:%M:%S')] ⚠️  $1${NC}"
 }
 
+# Get port for a service
+get_service_port() {
+    local service_name=$1
+    case "$service_name" in
+        "reservation-engine") echo "8081" ;;
+        "availability-calculator") echo "8083" ;;
+        "payment-processor") echo "8084" ;;
+        "rate-management") echo "8085" ;;
+        "analytics-engine") echo "8086" ;;
+        *) echo "" ;;
+    esac
+}
+
 # Function to stop a service by PID file
 stop_service() {
     local service_name=$1
@@ -41,7 +54,15 @@ stop_service() {
 
     if [ ! -f "$pid_file" ]; then
         print_warning "PID file for $service_name not found"
-        return 1
+        # Check if service is running on its expected port
+        local port=$(get_service_port "$service_name")
+        if [ ! -z "$port" ] && lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
+            print_warning "$service_name appears to be running on port $port but no PID file found"
+            return 1
+        else
+            # Service not running, consider it successfully "stopped"
+            return 0
+        fi
     fi
 
     local pid=$(cat "$pid_file")
@@ -56,7 +77,8 @@ stop_service() {
     if ! ps -p "$pid" > /dev/null 2>&1; then
         print_warning "$service_name (PID: $pid) is not running"
         rm -f "$pid_file"
-        return 1
+        # If process is not running, consider it successfully "stopped"
+        return 0
     fi
 
     print_status "Stopping $service_name (PID: $pid)..."
@@ -91,8 +113,8 @@ stop_service() {
 
 # Function to stop all services by port (fallback method)
 stop_services_by_port() {
-    local ports=("8081" "8083" "8084" "8085" "8086")
-    local service_names=("reservation-engine" "availability-calculator" "payment-processor" "rate-management" "analytics-engine")
+    local ports=("8081" "8083" "8084" "8085")
+    local service_names=("reservation-engine" "availability-calculator" "payment-processor" "rate-management")
 
     print_status "Attempting to stop services by port (fallback method)..."
 
@@ -131,7 +153,7 @@ main() {
 
     # Business services to stop (reverse order of startup for proper dependency shutdown)
     declare -a SERVICES=(
-        "analytics-engine"
+        # "analytics-engine"  # Temporarily excluded due to compilation errors
         "rate-management"
         "payment-processor"
         "availability-calculator"
@@ -168,30 +190,33 @@ main() {
 
     # Final verification
     local running_services=0
-    local ports=("8081" "8083" "8084" "8085" "8086")
-    local service_names=("reservation-engine" "availability-calculator" "payment-processor" "rate-management" "analytics-engine")
+    local ports=("8081" "8083" "8084" "8085")
+    local service_names=("reservation-engine" "availability-calculator" "payment-processor" "rate-management")
 
     for i in "${!ports[@]}"; do
         local port=${ports[$i]}
         local service_name=${service_names[$i]}
 
         if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
-            print_warning "$service_name is still running on port $port"
+            print_warning "$service_name is still running on localhost:$port"
             running_services=$((running_services + 1))
         else
-            print_success "$service_name stopped (port $port is free)"
+            print_success "$service_name stopped (localhost:$port is free)"
         fi
     done
 
     if [ $running_services -eq 0 ]; then
         print_success "All business services stopped successfully! 🎉"
         print_status ""
-        print_status "All business service ports are now free:"
-        print_status "  • Port 8081 (reservation-engine)"
-        print_status "  • Port 8083 (availability-calculator)"
-        print_status "  • Port 8084 (payment-processor)"
-        print_status "  • Port 8085 (rate-management)"
-        print_status "  • Port 8086 (analytics-engine)"
+        print_status "All localhost business service ports are now free:"
+        print_status "  • localhost:8081 (reservation-engine) - Network Isolated"
+        print_status "  • localhost:8083 (availability-calculator) - Network Isolated"
+        print_status "  • localhost:8084 (payment-processor) - Network Isolated"
+        print_status "  • localhost:8085 (rate-management) - Network Isolated"
+        print_status "  • localhost:8086 (analytics-engine) - Temporarily Disabled"
+        print_status ""
+        print_status "Note: Business services use network isolation (localhost binding)"
+        print_status "External access available only through Gateway: http://localhost:8080"
     else
         print_warning "$running_services business services are still running"
         print_warning "You may need to manually stop them using 'kill -9 <pid>'"

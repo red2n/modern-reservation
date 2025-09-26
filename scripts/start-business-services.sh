@@ -134,10 +134,10 @@ start_business_service() {
 
     # Check if port is already occupied
     if ! check_port $port; then
-        print_warning "$service_name port $port is already in use"
+        print_warning "$service_name localhost:$port is already in use"
         local existing_pid=$(lsof -ti :$port)
         if [ ! -z "$existing_pid" ]; then
-            print_warning "Process $existing_pid is using port $port"
+            print_warning "Process $existing_pid is using localhost:$port"
         fi
         return 1
     fi
@@ -161,7 +161,7 @@ start_business_service() {
 
     # Wait for service to be ready
     if wait_for_service "$service_name" "$port" "$startup_wait" "$context_path/actuator/health"; then
-        print_success "$service_name is healthy and ready to serve requests"
+        print_success "$service_name is healthy and ready on localhost:$port (Network Isolated)"
 
         # Wait for service to register with Eureka (Service Discovery)
         wait_for_eureka_registration "$service_name" 10
@@ -187,7 +187,8 @@ main() {
     # Clean up any existing business service PID files
     print_status "Cleaning up old business service PID files..."
     cd "$BASE_DIR"
-    rm -f reservation-engine.pid availability-calculator.pid payment-processor.pid rate-management.pid analytics-engine.pid
+    rm -f reservation-engine.pid availability-calculator.pid payment-processor.pid rate-management.pid
+    # analytics-engine.pid # Temporarily excluded due to compilation errors
 
     # Business services startup order (dependencies first)
     # Format: "service-name:directory:port:startup-wait:context-path"
@@ -196,7 +197,7 @@ main() {
         "availability-calculator:availability-calculator:8083:40:/availability-calculator"
         "payment-processor:payment-processor:8084:35:/payment-processor"
         "rate-management:rate-management:8085:35:/rate-management"
-        "analytics-engine:analytics-engine:8086:45:/analytics-engine"
+        # "analytics-engine:analytics-engine:8086:45:/analytics-engine"  # Temporarily disabled due to compilation errors
     )
 
     local success_count=0
