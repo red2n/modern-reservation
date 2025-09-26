@@ -41,6 +41,10 @@ show_usage() {
     echo -e "  ${RED}./infra.sh docker-infra-stop${NC}   - Stop external Docker services"
     echo -e "  ${BLUE}./infra.sh docker-infra-status${NC} - Check Docker infrastructure status"
     echo ""
+    echo -e "${YELLOW}Service Discovery Commands:${NC}"
+    echo -e "  ${BLUE}./infra.sh eureka${NC}          - Open Eureka Dashboard"
+    echo -e "  ${BLUE}./infra.sh discovery-status${NC} - Check service discovery status"
+    echo ""
     echo -e "${YELLOW}Other Commands:${NC}"
     echo -e "  ${YELLOW}./infra.sh help${NC}          - Show this help message"
     echo ""
@@ -120,6 +124,21 @@ case "${1:-help}" in
     "docker-infra-status")
         echo -e "${BLUE}🐳 Checking Docker infrastructure status...${NC}"
         exec "$SCRIPT_DIR/docker-infra.sh" health
+        ;;
+    "eureka")
+        echo -e "${CYAN}🔍 Opening Eureka Dashboard...${NC}"
+        echo -e "${BLUE}Eureka Dashboard: http://localhost:8761${NC}"
+        if command -v xdg-open > /dev/null; then
+            xdg-open http://localhost:8761
+        elif command -v open > /dev/null; then
+            open http://localhost:8761
+        else
+            echo -e "${YELLOW}Please open http://localhost:8761 in your browser${NC}"
+        fi
+        ;;
+    "discovery-status")
+        echo -e "${BLUE}🔍 Checking service discovery status...${NC}"
+        "$SCRIPTS_DIR/check-infrastructure.sh" | grep -A 20 "SERVICE DISCOVERY STATUS"
         ;;
     "help"|"-h"|"--help")
         show_usage

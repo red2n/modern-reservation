@@ -1,7 +1,10 @@
-# Common Database Configuration
+# Common Database Configuration (Docker PostgreSQL)
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/modern_reservation
+    username: dev_user
+    password: dev_password123
     hikari:
       maximum-pool-size: 20
       minimum-idle: 5

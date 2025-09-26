@@ -93,6 +93,31 @@ check_infrastructure() {
     return 0
 }
 
+# Function to wait for service registration with Eureka (Service Discovery)
+wait_for_eureka_registration() {
+    local service_name=$1
+    local max_attempts=${2:-15}
+    local attempt=1
+
+    print_status "Waiting for $service_name to register with Eureka Discovery Server..."
+
+    while [ $attempt -le $max_attempts ]; do
+        if curl -s "http://localhost:8761/eureka/apps" | grep -i "$service_name" > /dev/null 2>&1; then
+            print_success "$service_name registered with Eureka! 🎯"
+            return 0
+        fi
+
+        echo -n "."
+        sleep 3
+        ((attempt++))
+    done
+
+    echo ""
+    print_warning "$service_name not registered with Eureka within $((max_attempts * 3)) seconds"
+    print_status "Service may still be starting up. Check Eureka dashboard: http://localhost:8761"
+    return 1
+}
+
 # Function to start a business service
 start_business_service() {
     local service_name=$1
@@ -137,6 +162,10 @@ start_business_service() {
     # Wait for service to be ready
     if wait_for_service "$service_name" "$port" "$startup_wait" "$context_path/actuator/health"; then
         print_success "$service_name is healthy and ready to serve requests"
+
+        # Wait for service to register with Eureka (Service Discovery)
+        wait_for_eureka_registration "$service_name" 10
+
         return 0
     else
         print_error "$service_name failed to start properly"

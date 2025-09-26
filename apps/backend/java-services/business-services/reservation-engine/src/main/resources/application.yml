@@ -5,7 +5,9 @@ spring:
   application:
     name: reservation-engine
   config:
-    import: "configserver:http://localhost:8888/config"
+    import:
+      - "configserver:http://localhost:8888/config"
+      - "optional:configserver:http://localhost:8888/config/business-services-common.yml"
   cloud:
     config:
       username: config-admin

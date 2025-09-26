@@ -74,9 +74,12 @@ check_zipkin_docker() {
 
     # Check if Docker container is running
     if docker ps --filter "name=modern-reservation-zipkin" --format "{{.Names}}" | grep -q "modern-reservation-zipkin"; then
-        # Check if service is responding
-        if check_service_health "$service_name" "$port"; then
+        # Check Zipkin specific health endpoint
+        if curl -s -f "http://localhost:$port/health" >/dev/null 2>&1; then
             print_success "✅ $service_name is healthy (Docker container)"
+            return 0
+        elif curl -s -f "http://localhost:$port" >/dev/null 2>&1; then
+            print_success "✅ $service_name is accessible (Docker container)"
             return 0
         else
             print_warning "⚠️  $service_name Docker container is running but not responding on port $port"
@@ -174,15 +177,66 @@ show_service_urls() {
 
     for service in "${!SERVICE_URLS[@]}"; do
         local url="${SERVICE_URLS[$service]}"
-        if check_service_health "$service" "$(echo $url | cut -d':' -f3)"; then
-            print_success "$service: $url"
+
+        # Special handling for zipkin-server
+        if [ "$service" = "zipkin-server" ]; then
+            if docker ps --filter "name=modern-reservation-zipkin" --format "{{.Names}}" | grep -q "modern-reservation-zipkin"; then
+                if curl -s -f "http://localhost:9411/health" >/dev/null 2>&1; then
+                    print_success "$service: $url"
+                else
+                    print_error "$service: $url (NOT ACCESSIBLE)"
+                fi
+            else
+                print_error "$service: $url (CONTAINER NOT RUNNING)"
+            fi
         else
-            print_error "$service: $url (NOT ACCESSIBLE)"
+            local port=$(echo $url | grep -o ':[0-9]*' | cut -d':' -f2)
+            if check_service_health "$service" "$port"; then
+                print_success "$service: $url"
+            else
+                print_error "$service: $url (NOT ACCESSIBLE)"
+            fi
         fi
     done
 }
 
-# Main execution
+# Function to show service discovery status
+show_service_discovery_status() {
+    echo -e "\n${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${CYAN} 🔍 SERVICE DISCOVERY STATUS (Eureka Registry)${NC}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+
+    if curl -s http://localhost:8761/actuator/health > /dev/null 2>&1; then
+        print_info "Eureka Dashboard: http://localhost:8761"
+
+        # Get registered services from Eureka
+        local registered_services=$(curl -s "http://localhost:8761/eureka/apps" 2>/dev/null | grep -o '<name>[^<]*</name>' | sed 's/<[^>]*>//g' | sort -u)
+
+        if [ -z "$registered_services" ]; then
+            print_warning "No business services registered with Eureka yet"
+            echo -e "  ${YELLOW}• Run: ./scripts/start-business-services.sh to register services${NC}"
+        else
+            print_success "Registered Services in Eureka:"
+            echo "$registered_services" | while read service; do
+                if [ ! -z "$service" ]; then
+                    echo -e "  ${GREEN}• $service${NC}"
+                fi
+            done
+        fi
+
+        echo -e "\n${CYAN}Service Discovery Features Active:${NC}"
+        echo -e "  ${GREEN}✅ Automatic service registration${NC}"
+        echo -e "  ${GREEN}✅ Service health monitoring${NC}"
+        echo -e "  ${GREEN}✅ Load balancing capabilities${NC}"
+        echo -e "  ${GREEN}✅ Service-to-service communication${NC}"
+    else
+        print_error "Eureka Server not accessible - Service Discovery unavailable"
+    fi
+
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+}
+
+# Main function
 main() {
     print_status "Checking Modern Reservation Infrastructure Services Status"
 
@@ -215,6 +269,9 @@ main() {
 
     # Show service URLs
     show_service_urls
+
+    # Show Service Discovery Status (Eureka registered services)
+    show_service_discovery_status
 
     # Final status report
     echo -e "\n${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
