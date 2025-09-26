@@ -19,18 +19,33 @@ SCRIPTS_DIR="$SCRIPT_DIR/scripts"
 
 # Function to print usage
 show_usage() {
-    echo -e "${CYAN}Modern Reservation System - Infrastructure Management${NC}"
+    echo -e "${CYAN}Modern Reservation System - Complete Service Management${NC}"
     echo ""
-    echo -e "${YELLOW}Usage:${NC}"
-    echo -e "  ${GREEN}./infra.sh start${NC}   - Start all infrastructure services"
-    echo -e "  ${RED}./infra.sh stop${NC}    - Stop all infrastructure services"
-    echo -e "  ${BLUE}./infra.sh status${NC}  - Check status of all services"
-    echo -e "  ${YELLOW}./infra.sh help${NC}    - Show this help message"
+    echo -e "${YELLOW}Infrastructure Commands:${NC}"
+    echo -e "  ${GREEN}./infra.sh start${NC}          - Start all infrastructure services"
+    echo -e "  ${RED}./infra.sh stop${NC}           - Stop all infrastructure services"
+    echo -e "  ${BLUE}./infra.sh status${NC}         - Check infrastructure services status"
+    echo ""
+    echo -e "${YELLOW}Business Services Commands:${NC}"
+    echo -e "  ${GREEN}./infra.sh start-business${NC}  - Start all business services"
+    echo -e "  ${RED}./infra.sh stop-business${NC}   - Stop all business services"
+    echo -e "  ${BLUE}./infra.sh status-business${NC} - Check business services status"
+    echo ""
+    echo -e "${YELLOW}Complete System Commands:${NC}"
+    echo -e "  ${GREEN}./infra.sh start-all${NC}      - Start infrastructure + business services"
+    echo -e "  ${RED}./infra.sh stop-all${NC}       - Stop all services (business + infrastructure)"
+    echo -e "  ${BLUE}./infra.sh status-all${NC}     - Check status of all services"
+    echo ""
+    echo -e "${YELLOW}Other Commands:${NC}"
+    echo -e "  ${YELLOW}./infra.sh help${NC}          - Show this help message"
     echo ""
     echo -e "${CYAN}Direct script access:${NC}"
-    echo -e "  ${GREEN}scripts/start-infrastructure.sh${NC}"
-    echo -e "  ${RED}scripts/stop-infrastructure.sh${NC}"
-    echo -e "  ${BLUE}scripts/check-infrastructure.sh${NC}"
+    echo -e "  ${GREEN}scripts/start-infrastructure.sh${NC}    - Infrastructure startup"
+    echo -e "  ${GREEN}scripts/start-business-services.sh${NC}  - Business services startup"
+    echo -e "  ${RED}scripts/stop-infrastructure.sh${NC}     - Infrastructure shutdown"
+    echo -e "  ${RED}scripts/stop-business-services.sh${NC}   - Business services shutdown"
+    echo -e "  ${BLUE}scripts/check-infrastructure.sh${NC}    - Infrastructure status"
+    echo -e "  ${BLUE}scripts/check-business-services.sh${NC}  - Business services status"
     echo ""
 }
 
@@ -47,6 +62,46 @@ case "${1:-help}" in
     "status"|"check")
         echo -e "${BLUE}📊 Checking infrastructure services status...${NC}"
         exec "$SCRIPTS_DIR/check-infrastructure.sh"
+        ;;
+    "start-business")
+        echo -e "${GREEN}🚀 Starting business services...${NC}"
+        exec "$SCRIPTS_DIR/start-business-services.sh"
+        ;;
+    "stop-business")
+        echo -e "${RED}🛑 Stopping business services...${NC}"
+        exec "$SCRIPTS_DIR/stop-business-services.sh"
+        ;;
+    "status-business"|"check-business")
+        echo -e "${BLUE}📊 Checking business services status...${NC}"
+        exec "$SCRIPTS_DIR/check-business-services.sh"
+        ;;
+    "start-all")
+        echo -e "${GREEN}🚀 Starting all services (infrastructure + business)...${NC}"
+        echo -e "${BLUE}Step 1/2: Starting infrastructure services...${NC}"
+        "$SCRIPTS_DIR/start-infrastructure.sh"
+        if [ $? -eq 0 ]; then
+            echo -e "${BLUE}Step 2/2: Starting business services...${NC}"
+            exec "$SCRIPTS_DIR/start-business-services.sh"
+        else
+            echo -e "${RED}❌ Infrastructure startup failed. Skipping business services.${NC}"
+            exit 1
+        fi
+        ;;
+    "stop-all")
+        echo -e "${RED}🛑 Stopping all services (business + infrastructure)...${NC}"
+        echo -e "${BLUE}Step 1/2: Stopping business services...${NC}"
+        "$SCRIPTS_DIR/stop-business-services.sh" || true
+        echo -e "${BLUE}Step 2/2: Stopping infrastructure services...${NC}"
+        exec "$SCRIPTS_DIR/stop-infrastructure.sh"
+        ;;
+    "status-all"|"check-all")
+        echo -e "${BLUE}📊 Checking all services status...${NC}"
+        echo -e "${CYAN}=== INFRASTRUCTURE SERVICES ===${NC}"
+        "$SCRIPTS_DIR/check-infrastructure.sh"
+        echo ""
+        echo ""
+        echo -e "${CYAN}=== BUSINESS SERVICES ===${NC}"
+        exec "$SCRIPTS_DIR/check-business-services.sh"
         ;;
     "help"|"-h"|"--help")
         show_usage

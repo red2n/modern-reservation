@@ -6,11 +6,13 @@ server:
 spring:
   application:
     name: rate-management
+  config:
+    import: "optional:configserver:http://localhost:8888/config"
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/modern_reservation
-    username: reservation_user
-    password: reservation_pass
+    url: jdbc:postgresql://localhost:5432/modern_reservation_dev
+    username: dev_user
+    password: dev_password
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 20
@@ -20,7 +22,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
     show-sql: false
     properties:
       hibernate:

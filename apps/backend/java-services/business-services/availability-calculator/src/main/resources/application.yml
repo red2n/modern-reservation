@@ -15,9 +15,9 @@ spring:
 
   # Database Configuration
   datasource:
-    url: jdbc:postgresql://localhost:5432/modern_reservation
-    username: ${DB_USERNAME:reservation_user}
-    password: ${DB_PASSWORD:reservation_pass}
+    url: jdbc:postgresql://localhost:5432/modern_reservation_dev
+    username: ${DB_USERNAME:dev_user}
+    password: ${DB_PASSWORD:dev_password}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 20
@@ -31,7 +31,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
       naming:
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
     show-sql: false

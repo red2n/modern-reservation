@@ -27,7 +27,7 @@ import java.util.UUID;
  * Uses Lombok for cleaner, more maintainable code.
  */
 @Entity
-@Table(name = "reservations", schema = "reservation")
+@Table(name = "reservations")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
@@ -143,11 +143,11 @@ public class Reservation {    @Id
     @Column(name = "booking_date", nullable = false)
     private LocalDateTime bookingDate;
 
-    @Column(name = "arrival_time")
-    private String arrivalTime;
+    @Column(name = "actual_check_in_time")
+    private LocalDateTime actualCheckInTime;
 
-    @Column(name = "departure_time")
-    private String departureTime;
+    @Column(name = "actual_check_out_time")
+    private LocalDateTime actualCheckOutTime;
 
     // Cancellation
     @Column(name = "cancelled_at")
