@@ -18,6 +18,54 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
+# Function to print colored output
+print_success() {
+    echo -e "${GREEN}✅ $1${NC}"
+}
+
+print_error() {
+    echo -e "${RED}❌ $1${NC}"
+}
+
+print_warning() {
+    echo -e "${YELLOW}⚠️  $1${NC}"
+}
+
+print_info() {
+    echo -e "${CYAN}ℹ️  $1${NC}"
+}
+
+# Function to print table header
+print_table_header() {
+    printf "${CYAN}┌─────────────────────┬────────────┬─────────────┬────────────────────────────────┐${NC}\n"
+    printf "${CYAN}│ %-19s │ %-10s │ %-11s │ %-30s │${NC}\n" "Service" "Status" "Port" "Details"
+    printf "${CYAN}├─────────────────────┼────────────┼─────────────┼────────────────────────────────┤${NC}\n"
+}
+
+# Function to print table row
+print_table_row() {
+    local service=$1
+    local status=$2
+    local port=$3
+    local details=$4
+
+    # Determine color based on status
+    local color=$NC
+    case $status in
+        "HEALTHY") color=$GREEN ;;
+        "FAILED") color=$RED ;;
+        "WARNING") color=$YELLOW ;;
+        "RESPONDING") color=$YELLOW ;;
+    esac
+
+    printf "${color}│ %-19s │ %-10s │ %-11s │ %-30s │${NC}\n" "$service" "$status" "$port" "$details"
+}
+
+# Function to print table footer
+print_table_footer() {
+    printf "${CYAN}└─────────────────────┴────────────┴─────────────┴────────────────────────────────┘${NC}\n"
+}
+
 # Function to check service health endpoint
 check_health() {
     local service_name=$1
@@ -60,44 +108,53 @@ check_http_accessibility() {
     fi
 }
 
-# Function to check a single business service
+# Function to check a single business service and return status info
 check_business_service() {
     local service_name=$1
     local port=$2
     local context_path=$3
     local pid_file="$BASE_DIR/${service_name}.pid"
+    local timeout=5
 
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${CYAN} 🔍 Checking: $service_name${NC}"
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-
-    # Check PID file
+    # Check PID file and process
     if [ -f "$pid_file" ]; then
         local pid=$(cat "$pid_file")
         if [ ! -z "$pid" ] && ps -p "$pid" > /dev/null 2>&1; then
-            echo -e "${GREEN}✅ $service_name: Running (PID: $pid)${NC}"
-
             # Check if port is being used by this process
             local port_pid=$(lsof -ti :$port 2>/dev/null || echo "")
             if [ "$port_pid" = "$pid" ]; then
-                echo -e "${GREEN}✅ Port $port: Used by $service_name (PID: $pid)${NC}"
+                # Check health endpoint
+                local health_url="http://localhost:$port$context_path/actuator/health"
+                if curl -s --max-time $timeout "$health_url" >/dev/null 2>&1; then
+                    local health_status=$(curl -s --max-time $timeout "$health_url" | grep -o '"status":"[^"]*"' | cut -d'"' -f4 2>/dev/null || echo "UNKNOWN")
+                    if [ "$health_status" = "UP" ]; then
+                        echo "HEALTHY|PID: $pid, Health: UP"
+                        return 0
+                    else
+                        echo "RESPONDING|PID: $pid, Health: $health_status"
+                        return 1
+                    fi
+                else
+                    echo "WARNING|PID: $pid, Health check failed"
+                    return 1
+                fi
             else
-                echo -e "${YELLOW}⚠️  Port $port: Used by different process (PID: $port_pid)${NC}"
+                echo "WARNING|PID: $pid, Port used by different process"
+                return 1
             fi
         else
-            echo -e "${RED}❌ $service_name: PID file exists but process not running${NC}"
-            echo -e "ℹ️  Stale PID file: $pid_file"
+            rm -f "$pid_file"  # Clean up stale PID file
+            echo "FAILED|Stale PID file removed"
+            return 1
         fi
     else
-        echo -e "${RED}❌ $service_name: PID file not found${NC}"
-    fi
-
-    # Check port status
-    if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
-        local port_process=$(lsof -Pi :$port -sTCP:LISTEN 2>/dev/null | tail -n 1 | awk '{print $1, $2}' || echo "Unknown")
-        echo -e "${YELLOW}ℹ️  Port $port: OCCUPIED by $port_process${NC}"
-    else
-        echo -e "${BLUE}ℹ️  Port $port: FREE${NC}"
+        # Check if port is occupied by some other process
+        if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
+            echo "FAILED|Port occupied by other process"
+        else
+            echo "FAILED|Service not running"
+        fi
+        return 1
     fi
 
     # Check health endpoint if port is occupied
@@ -132,42 +189,69 @@ main() {
     local healthy_services=0
     local total_services=${#BUSINESS_SERVICES[@]}
 
-    # Check each business service
+    # Print table header
+    echo -e "${CYAN}🏢 BUSINESS SERVICES STATUS${NC}"
+    echo ""
+    print_table_header
+
+    # Check each business service and print table rows
     for service_config in "${BUSINESS_SERVICES[@]}"; do
         IFS=':' read -r service_name port context_path <<< "$service_config"
 
-        if check_business_service "$service_name" "$port" "$context_path"; then
+        local status_info
+        local service_healthy=0
+
+        set +e  # Temporarily disable exit on error
+        status_info=$(check_business_service "$service_name" "$port" "$context_path")
+        if [ $? -eq 0 ]; then
+            service_healthy=1
+        fi
+        set -e  # Re-enable exit on error
+
+        if [ $service_healthy -eq 1 ]; then
             healthy_services=$((healthy_services + 1))
         fi
-        echo ""
+
+        IFS='|' read -r status details <<< "$status_info"
+        print_table_row "$service_name" "$status" "$port" "$details"
     done
 
-    # Service URLs section
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${CYAN} 🌐 Service URLs${NC}"
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    print_table_footer
+
+    # Service URLs section in table format
+    echo -e "\n${CYAN}🌐 SERVICE URLS${NC}"
+    echo ""
+    printf "${CYAN}┌─────────────────────┬──────────────────────────────────────────────────────┐${NC}\n"
+    printf "${CYAN}│ %-19s │ %-52s │${NC}\n" "Service" "URL"
+    printf "${CYAN}├─────────────────────┼──────────────────────────────────────────────────────┤${NC}\n"
 
     for service_config in "${BUSINESS_SERVICES[@]}"; do
         IFS=':' read -r service_name port context_path <<< "$service_config"
-        check_http_accessibility "$service_name" "$port" "$context_path"
+        local url="http://localhost:$port$context_path"
+        local status_color=$RED
+        local status_icon="❌"
+
+        # Check accessibility
+        if curl -s --max-time 3 "$url" >/dev/null 2>&1; then
+            status_color=$GREEN
+            status_icon="✅"
+        fi
+
+        printf "${status_color}│ %-19s │ %s %-48s │${NC}\n" "$service_name" "$status_icon" "$url"
     done
 
-    echo ""
+    printf "${CYAN}└─────────────────────┴──────────────────────────────────────────────────────┘${NC}\n"
 
     # Overall status summary
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${CYAN} 📊 OVERALL STATUS${NC}"
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "\n${CYAN}📊 OVERALL STATUS${NC}"
+    echo ""
 
     if [ $healthy_services -eq $total_services ]; then
-        echo -e "${GREEN}✅ All business services are healthy: $healthy_services/$total_services${NC}"
-        echo -e "${GREEN}🎉 Business services are ready to serve requests!${NC}"
+        printf "${GREEN}🎉 All services healthy: %d/%d - Business layer ready!${NC}\n" $healthy_services $total_services
     elif [ $healthy_services -gt 0 ]; then
-        echo -e "${YELLOW}⚠️  Partially healthy: $healthy_services/$total_services services are running${NC}"
-        echo -e "${YELLOW}💥 Some business services need attention${NC}"
+        printf "${YELLOW}⚠️  Partial health: %d/%d services running${NC}\n" $healthy_services $total_services
     else
-        echo -e "${RED}❌ No services are healthy: $healthy_services/$total_services${NC}"
-        echo -e "${RED}💥 Business services need to be started${NC}"
+        printf "${RED}💥 No services running: %d/%d - Business layer down${NC}\n" $healthy_services $total_services
     fi
 
     echo ""

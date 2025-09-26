@@ -34,6 +34,35 @@ print_warning() {
     echo -e "${YELLOW}[$(date '+%Y-%m-%d %H:%M:%S')] ⚠️  $1${NC}"
 }
 
+# Function to print table header for startup summary
+print_summary_table_header() {
+    printf "${BLUE}┌─────────────────────┬────────────┬──────────────────────────────────────────────────────┐${NC}\n"
+    printf "${BLUE}│ %-19s │ %-10s │ %-52s │${NC}\n" "Service" "Status" "URL"
+    printf "${BLUE}├─────────────────────┼────────────┼──────────────────────────────────────────────────────┤${NC}\n"
+}
+
+# Function to print summary table row
+print_summary_table_row() {
+    local service=$1
+    local status=$2
+    local url=$3
+
+    # Determine color based on status
+    local color=$NC
+    case $status in
+        "STARTED") color=$GREEN ;;
+        "FAILED") color=$RED ;;
+        "SKIPPED") color=$YELLOW ;;
+    esac
+
+    printf "${color}│ %-19s │ %-10s │ %-52s │${NC}\n" "$service" "$status" "$url"
+}
+
+# Function to print summary table footer
+print_summary_table_footer() {
+    printf "${BLUE}└─────────────────────┴────────────┴──────────────────────────────────────────────────────┘${NC}\n"
+}
+
 # Function to check if a port is available
 check_port() {
     local port=$1
@@ -229,26 +258,61 @@ main() {
         sleep 2
     done
 
-    # Final status report
-    print_status "========================================="
-    print_status "INFRASTRUCTURE STARTUP SUMMARY"
-    print_status "========================================="
-    print_success "Successfully started: $success_count/$total_services services"
-
+    # Final status report in table format
+    echo ""
     if [ $success_count -eq $total_services ]; then
-        print_success "🎉 All infrastructure services are running!"
-        print_status "Service URLs:"
-        print_status "  • Config Server:  http://localhost:8888"
-        print_status "  • Eureka Server:  http://localhost:8761"
-        print_status "  • Zipkin Server:  http://localhost:9411 (Docker)"
-        print_status "  • Gateway Service: http://localhost:8080"
+        echo -e "${GREEN}🎉 INFRASTRUCTURE STARTUP COMPLETE${NC}"
     else
-        print_warning "⚠️  Some services failed to start. Check the logs for details."
+        echo -e "${YELLOW}⚠️  INFRASTRUCTURE STARTUP PARTIAL${NC}"
     fi
+    echo ""
 
-    print_status "========================================="
-    print_status "To stop all services, run: scripts/stop-infrastructure.sh"
-    print_status "To check service status, run: scripts/check-infrastructure.sh"
+    print_summary_table_header
+
+    # Display each service status
+    declare -A SERVICE_URLS=(
+        ["config-server"]="http://localhost:8888"
+        ["eureka-server"]="http://localhost:8761"
+        ["zipkin-server"]="http://localhost:9411 (Docker)"
+        ["gateway-service"]="http://localhost:8080"
+    )
+
+    for service in config-server eureka-server zipkin-server gateway-service; do
+        local url="${SERVICE_URLS[$service]}"
+
+        # Check if service was started successfully
+        local status="FAILED"
+        if [ "$service" = "zipkin-server" ]; then
+            # Special handling for Docker Zipkin
+            if docker ps --filter "name=modern-reservation-zipkin" --format "{{.Names}}" | grep -q "modern-reservation-zipkin"; then
+                status="STARTED"
+            fi
+        else
+            # Check if service is actually accessible (more reliable than PID files)
+            local port
+            case $service in
+                "config-server") port=8888 ;;
+                "eureka-server") port=8761 ;;
+                "gateway-service") port=8080 ;;
+            esac
+
+            if curl -s -f "http://localhost:$port/actuator/health" >/dev/null 2>&1; then
+                status="STARTED"
+            elif lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
+                status="STARTED"  # Port is occupied, assume service is running
+            fi
+        fi
+
+        print_summary_table_row "$service" "$status" "$url"
+    done
+
+    print_summary_table_footer
+
+    echo ""
+    printf "${GREEN}✅ Services started: %d/%d${NC}\n" $success_count $total_services
+    echo ""
+    echo -e "${BLUE}💡 NEXT STEPS${NC}"
+    printf "   Stop: ${RED}./scripts/stop-infrastructure.sh${NC}  |  Check: ${BLUE}./scripts/check-infrastructure.sh${NC}  |  Business: ${GREEN}./scripts/start-business-services.sh${NC}\n"
 }
 
 # Run main function

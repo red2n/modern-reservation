@@ -38,6 +38,37 @@ print_info() {
     echo -e "${CYAN}ℹ️  $1${NC}"
 }
 
+# Function to print table header
+print_table_header() {
+    printf "${CYAN}┌─────────────────────┬────────────┬─────────────┬────────────────────────────────┐${NC}\n"
+    printf "${CYAN}│ %-19s │ %-10s │ %-11s │ %-30s │${NC}\n" "Service" "Status" "Port" "Details"
+    printf "${CYAN}├─────────────────────┼────────────┼─────────────┼────────────────────────────────┤${NC}\n"
+}
+
+# Function to print table row
+print_table_row() {
+    local service=$1
+    local status=$2
+    local port=$3
+    local details=$4
+
+    # Determine color based on status
+    local color=$NC
+    case $status in
+        "HEALTHY") color=$GREEN ;;
+        "FAILED") color=$RED ;;
+        "WARNING") color=$YELLOW ;;
+        "DOCKER") color=$BLUE ;;
+    esac
+
+    printf "${color}│ %-19s │ %-10s │ %-11s │ %-30s │${NC}\n" "$service" "$status" "$port" "$details"
+}
+
+# Function to print table footer
+print_table_footer() {
+    printf "${CYAN}└─────────────────────┴────────────┴─────────────┴────────────────────────────────┘${NC}\n"
+}
+
 # Function to check service health
 check_service_health() {
     local service_name=$1
@@ -65,175 +96,198 @@ check_service_health() {
     return 1  # Not healthy
 }
 
-# Function to check Docker Zipkin service
+# Function to check Docker Zipkin service and return status info
 check_zipkin_docker() {
     local service_name="zipkin-server"
     local port=9411
-
-    print_status "Checking $service_name (Docker)..."
 
     # Check if Docker container is running
     if docker ps --filter "name=modern-reservation-zipkin" --format "{{.Names}}" | grep -q "modern-reservation-zipkin"; then
         # Check Zipkin specific health endpoint
         if curl -s -f "http://localhost:$port/health" >/dev/null 2>&1; then
-            print_success "✅ $service_name is healthy (Docker container)"
+            echo "DOCKER|Container healthy"
             return 0
         elif curl -s -f "http://localhost:$port" >/dev/null 2>&1; then
-            print_success "✅ $service_name is accessible (Docker container)"
+            echo "DOCKER|Container accessible"
             return 0
         else
-            print_warning "⚠️  $service_name Docker container is running but not responding on port $port"
+            echo "WARNING|Container not responding"
             return 1
         fi
     else
-        print_error "❌ $service_name Docker container is not running"
+        echo "FAILED|Container not running"
         return 1
     fi
 }
 
-# Function to check a single service
+# Function to check a single service and return status info
 check_service() {
     local service_name=$1
     local port=$2
     local pid_file="$BASE_DIR/${service_name}.pid"
 
-    echo -e "\n${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${CYAN} 🔍 Checking: $service_name${NC}"
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-
     # Check PID file
     if [ ! -f "$pid_file" ]; then
-        print_error "$service_name: PID file not found"
-        print_info "Port $port: $(if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then echo "OCCUPIED (by other process)"; else echo "FREE"; fi)"
+        if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
+            echo "FAILED|Port occupied by other process"
+        else
+            echo "FAILED|PID file not found"
+        fi
         return 1
     fi
 
     local pid=$(cat "$pid_file")
 
     if [ -z "$pid" ]; then
-        print_error "$service_name: Empty PID file"
         rm -f "$pid_file"
+        echo "FAILED|Empty PID file"
         return 1
     fi
 
     # Check if process is running
     if ! ps -p "$pid" > /dev/null 2>&1; then
-        print_error "$service_name: Process not running (PID: $pid)"
         rm -f "$pid_file"
-        print_info "Port $port: $(if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then echo "OCCUPIED (by other process)"; else echo "FREE"; fi)"
+        echo "FAILED|Process not running"
         return 1
     fi
 
-    # Get process info
-    local process_info=$(ps -p "$pid" -o pid,ppid,cmd --no-headers)
-    print_info "Process: $process_info"
-
     # Check port
     if ! lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
-        print_warning "$service_name: Process running but port $port not listening"
+        echo "WARNING|Port not listening"
         return 1
     fi
 
     local port_pid=$(lsof -Pi :$port -sTCP:LISTEN -t 2>/dev/null)
     if [ "$port_pid" != "$pid" ]; then
-        print_warning "$service_name: Port $port occupied by different process (PID: $port_pid)"
+        echo "WARNING|Port used by different process"
         return 1
     fi
 
     # Check service health
     if check_service_health "$service_name" "$port"; then
-        print_success "$service_name: HEALTHY (PID: $pid, Port: $port)"
-
-        # Try to get additional info
-        local health_url="http://localhost:${port}/actuator/health"
-        local info_url="http://localhost:${port}/actuator/info"
-
-        if curl -s -f "$health_url" >/dev/null 2>&1; then
-            local health_status=$(curl -s "$health_url" 2>/dev/null | grep -o '"status":"[^"]*' | cut -d'"' -f4)
-            if [ -n "$health_status" ]; then
-                print_info "Health Status: $health_status"
-            fi
-        fi
-
+        echo "HEALTHY|PID: $pid"
         return 0
     else
-        print_warning "$service_name: Process and port OK, but health check failed"
+        echo "WARNING|Health check failed"
         return 1
     fi
 }
 
-# Function to show service URLs
-show_service_urls() {
-    echo -e "\n${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${CYAN} 🌐 Service URLs${NC}"
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+# Function to show service URLs in table format
+show_service_urls_table() {
+    echo -e "\n${CYAN}🌐 SERVICE URLS${NC}"
+    echo ""
+    printf "${CYAN}┌─────────────────────┬──────────────────────────────────────────────────────┐${NC}\n"
+    printf "${CYAN}│ %-19s │ %-52s │${NC}\n" "Service" "URL"
+    printf "${CYAN}├─────────────────────┼──────────────────────────────────────────────────────┤${NC}\n"
 
     declare -A SERVICE_URLS=(
         ["config-server"]="http://localhost:8888"
         ["eureka-server"]="http://localhost:8761"
-        ["zipkin-server"]="http://localhost:9411 (Docker)"
+        ["zipkin-server"]="http://localhost:9411"
         ["gateway-service"]="http://localhost:8080"
     )
 
-    for service in "${!SERVICE_URLS[@]}"; do
+    for service in config-server eureka-server zipkin-server gateway-service; do
         local url="${SERVICE_URLS[$service]}"
+        local status_color=$RED
+        local status_icon="❌"
 
-        # Special handling for zipkin-server
+        # Check accessibility
         if [ "$service" = "zipkin-server" ]; then
             if docker ps --filter "name=modern-reservation-zipkin" --format "{{.Names}}" | grep -q "modern-reservation-zipkin"; then
                 if curl -s -f "http://localhost:9411/health" >/dev/null 2>&1; then
-                    print_success "$service: $url"
-                else
-                    print_error "$service: $url (NOT ACCESSIBLE)"
+                    status_color=$GREEN
+                    status_icon="✅"
                 fi
-            else
-                print_error "$service: $url (CONTAINER NOT RUNNING)"
             fi
         else
-            local port=$(echo $url | grep -o ':[0-9]*' | cut -d':' -f2)
+            local port=$(echo $url | grep -o '[0-9]*$')
+            set +e  # Temporarily disable exit on error
             if check_service_health "$service" "$port"; then
-                print_success "$service: $url"
-            else
-                print_error "$service: $url (NOT ACCESSIBLE)"
+                status_color=$GREEN
+                status_icon="✅"
             fi
+            set -e  # Re-enable exit on error
         fi
+
+        printf "${status_color}│ %-19s │ %s %-48s │${NC}\n" "$service" "$status_icon" "$url"
     done
+
+    printf "${CYAN}└─────────────────────┴──────────────────────────────────────────────────────┘${NC}\n"
 }
 
 # Function to show service discovery status
 show_service_discovery_status() {
-    echo -e "\n${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${CYAN} 🔍 SERVICE DISCOVERY STATUS (Eureka Registry)${NC}"
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "\n${CYAN}🔍 SERVICE DISCOVERY STATUS${NC}"
+    echo ""
 
     if curl -s http://localhost:8761/actuator/health > /dev/null 2>&1; then
-        print_info "Eureka Dashboard: http://localhost:8761"
+        printf "${GREEN}✅ Eureka Server: AVAILABLE${NC} - Dashboard: ${BLUE}http://localhost:8761${NC}\n"
 
         # Get registered services from Eureka
         local registered_services=$(curl -s "http://localhost:8761/eureka/apps" 2>/dev/null | grep -o '<name>[^<]*</name>' | sed 's/<[^>]*>//g' | sort -u)
 
         if [ -z "$registered_services" ]; then
-            print_warning "No business services registered with Eureka yet"
-            echo -e "  ${YELLOW}• Run: ./scripts/start-business-services.sh to register services${NC}"
+            printf "${YELLOW}⚠️  Business Services: NONE REGISTERED${NC}\n"
+            printf "   💡 Run: ${GREEN}./scripts/start-business-services.sh${NC} to register services\n"
         else
-            print_success "Registered Services in Eureka:"
-            echo "$registered_services" | while read service; do
-                if [ ! -z "$service" ]; then
-                    echo -e "  ${GREEN}• $service${NC}"
+            printf "${GREEN}✅ Business Services: REGISTERED${NC}\n"
+            while IFS= read -r service; do
+                if [ -n "$service" ]; then
+                    printf "   • %s\n" "$service"
                 fi
-            done
+            done <<< "$registered_services"
         fi
 
-        echo -e "\n${CYAN}Service Discovery Features Active:${NC}"
-        echo -e "  ${GREEN}✅ Automatic service registration${NC}"
-        echo -e "  ${GREEN}✅ Service health monitoring${NC}"
-        echo -e "  ${GREEN}✅ Load balancing capabilities${NC}"
-        echo -e "  ${GREEN}✅ Service-to-service communication${NC}"
+        printf "\n${CYAN}Service Discovery Features:${NC} ✅ Registration | ✅ Health Monitoring | ✅ Load Balancing | ✅ Communication\n"
     else
-        print_error "Eureka Server not accessible - Service Discovery unavailable"
+        printf "${RED}❌ Eureka Server: NOT AVAILABLE${NC} - Service discovery disabled\n"
+        printf "   💡 Start infrastructure: ${GREEN}./scripts/start-infrastructure.sh${NC}\n"
+    fi
+}
+
+# Function to show Docker services status
+show_docker_services_status() {
+    echo -e "\n${CYAN}🐳 DOCKER SERVICES STATUS${NC}"
+    echo ""
+    printf "${CYAN}┌─────────────────────┬────────────┬─────────────┬────────────────────────────────┐${NC}\n"
+    printf "${CYAN}│ %-19s │ %-10s │ %-11s │ %-30s │${NC}\n" "Service" "Status" "Port" "Details"
+    printf "${CYAN}├─────────────────────┼────────────┼─────────────┼────────────────────────────────┤${NC}\n"
+
+    # Check Zipkin Docker service
+    local status_info
+    set +e  # Temporarily disable exit on error
+    status_info=$(check_zipkin_docker)
+    set -e  # Re-enable exit on error
+
+    IFS='|' read -r status details <<< "$status_info"
+    print_table_row "zipkin-server" "$status" "9411" "$details"
+
+    # Check other Docker services (PostgreSQL, Redis)
+    # PostgreSQL
+    if docker ps --filter "name=modern-reservation-postgres" --format "{{.Names}}" | grep -q "modern-reservation-postgres"; then
+        if docker exec modern-reservation-postgres pg_isready -U postgres >/dev/null 2>&1; then
+            print_table_row "postgresql" "DOCKER" "5432" "Database ready"
+        else
+            print_table_row "postgresql" "WARNING" "5432" "Container running, DB not ready"
+        fi
+    else
+        print_table_row "postgresql" "FAILED" "5432" "Container not running"
     fi
 
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    # Redis
+    if docker ps --filter "name=modern-reservation-redis" --format "{{.Names}}" | grep -q "modern-reservation-redis"; then
+        if docker exec modern-reservation-redis redis-cli ping >/dev/null 2>&1; then
+            print_table_row "redis" "DOCKER" "6379" "Cache ready"
+        else
+            print_table_row "redis" "WARNING" "6379" "Container running, service not ready"
+        fi
+    else
+        print_table_row "redis" "FAILED" "6379" "Container not running"
+    fi
+
+    printf "${CYAN}└─────────────────────┴────────────┴─────────────┴────────────────────────────────┘${NC}\n"
 }
 
 # Main function
@@ -242,57 +296,68 @@ main() {
 
     cd "$BASE_DIR"
 
-    # Services to check
+    # Java Infrastructure Services to check
     declare -a SERVICES=(
         "config-server:8888"
         "eureka-server:8761"
-        "zipkin-server:9411"
         "gateway-service:8080"
     )
 
     local healthy_count=0
     local total_services=${#SERVICES[@]}
 
+    # Print header
+    echo -e "\n${CYAN}🔍 INFRASTRUCTURE SERVICES STATUS${NC}"
+    echo ""
+    print_table_header
+
+    # Check each Java infrastructure service and print table rows
     for service_config in "${SERVICES[@]}"; do
         IFS=':' read -r service_name port <<< "$service_config"
-        # Handle zipkin-server specially (Docker container)
-        if [ "$service_name" = "zipkin-server" ]; then
-            if check_zipkin_docker; then
-                healthy_count=$((healthy_count + 1))
-            fi
-        else
-            if check_service "$service_name" "$port"; then
-                healthy_count=$((healthy_count + 1))
-            fi
+
+        local status_info
+        local service_healthy=0
+
+        set +e  # Temporarily disable exit on error
+        status_info=$(check_service "$service_name" "$port")
+        if [ $? -eq 0 ]; then
+            service_healthy=1
         fi
+        set -e  # Re-enable exit on error
+
+        if [ $service_healthy -eq 1 ]; then
+            healthy_count=$((healthy_count + 1))
+        fi
+
+        IFS='|' read -r status details <<< "$status_info"
+        print_table_row "$service_name" "$status" "$port" "$details"
     done
 
-    # Show service URLs
-    show_service_urls
+    print_table_footer
 
-    # Show Service Discovery Status (Eureka registered services)
+    # Check Docker services separately
+    show_docker_services_status
+
+    # Show service URLs in table format
+    show_service_urls_table
+
+    # Show Service Discovery Status
     show_service_discovery_status
 
     # Final status report
-    echo -e "\n${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${CYAN} 📊 OVERALL STATUS${NC}"
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "\n${CYAN}📊 OVERALL STATUS${NC}"
+    echo ""
 
     if [ $healthy_count -eq $total_services ]; then
-        print_success "All infrastructure services are healthy! ($healthy_count/$total_services)"
-        echo -e "${GREEN}🎉 Infrastructure is ready for business services!${NC}"
+        printf "${GREEN}🎉 All services healthy: %d/%d - Infrastructure ready!${NC}\n" $healthy_count $total_services
     elif [ $healthy_count -gt 0 ]; then
-        print_warning "Some services are healthy: $healthy_count/$total_services"
-        echo -e "${YELLOW}⚠️  Check failed services and restart if needed${NC}"
+        printf "${YELLOW}⚠️  Partial health: %d/%d services running${NC}\n" $healthy_count $total_services
     else
-        print_error "No services are healthy: $healthy_count/$total_services"
-        echo -e "${RED}💥 Infrastructure needs to be started${NC}"
+        printf "${RED}💥 No services running: %d/%d - Infrastructure down${NC}\n" $healthy_count $total_services
     fi
 
-    echo -e "\n${CYAN}Commands:${NC}"
-    echo -e "  Start services: ${GREEN}scripts/start-infrastructure.sh${NC}"
-    echo -e "  Stop services:  ${RED}scripts/stop-infrastructure.sh${NC}"
-    echo -e "  Check status:   ${BLUE}scripts/check-infrastructure.sh${NC}"
+    echo -e "\n${CYAN}💡 COMMANDS${NC}"
+    printf "   Start: ${GREEN}./scripts/start-infrastructure.sh${NC}  |  Stop: ${RED}./scripts/stop-infrastructure.sh${NC}  |  Check: ${BLUE}./scripts/check-infrastructure.sh${NC}\n"
     echo ""
 }
 
