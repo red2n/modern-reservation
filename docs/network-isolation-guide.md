@@ -6,7 +6,7 @@
 ### ✅ What We've Done:
 1. **Business Services** → Bind to `127.0.0.1` (localhost only)
    - reservation-engine (8081) - Internal only
-   - availability-calculator (8083) - Internal only  
+   - availability-calculator (8083) - Internal only
    - payment-processor (8084) - Internal only
    - rate-management (8085) - Internal only
 
@@ -51,7 +51,7 @@ services:
       - internal
     ports:
       - "8080:8080"
-  
+
   reservation-engine:
     networks:
       - internal  # No public network
@@ -76,7 +76,7 @@ server {
     location / {
         proxy_pass http://backend;
     }
-    
+
     # Block direct service access
     location ~ ^/(reservation-engine|payment-processor|rate-management|availability-calculator) {
         return 403;
@@ -105,7 +105,7 @@ curl http://localhost:8084/payment-processor/health           # ✅ Direct acces
 ### After Changes (Secure):
 ```bash
 curl http://localhost:8081/reservation-engine/health          # ❌ Connection refused
-curl http://localhost:8083/availability-calculator/health     # ❌ Connection refused  
+curl http://localhost:8083/availability-calculator/health     # ❌ Connection refused
 curl http://localhost:8084/payment-processor/health           # ❌ Connection refused
 
 # Only through gateway
@@ -128,8 +128,8 @@ spring:
             - Path=/reservation-engine/**
           filters:
             - StripPrefix=1
-            
-        - id: payment-processor  
+
+        - id: payment-processor
           uri: http://127.0.0.1:8084
           predicates:
             - Path=/payment-processor/**
@@ -140,7 +140,7 @@ spring:
 ## 💡 Benefits Achieved
 
 1. **Zero Direct Access** → Business services unreachable externally
-2. **Single Entry Point** → All traffic flows through gateway  
+2. **Single Entry Point** → All traffic flows through gateway
 3. **Centralized Security** → Authentication/authorization at gateway
 4. **Service Discovery Still Works** → Internal communication via localhost
 5. **Development Friendly** → No complex networking setup
@@ -148,7 +148,7 @@ spring:
 
 ## 🎯 Next Steps
 
-1. ✅ **Localhost binding implemented** 
+1. ✅ **Localhost binding implemented**
 2. 🔄 **Test service isolation**
 3. 🔄 **Verify gateway routing**
 4. 🔄 **Update monitoring/health checks**
