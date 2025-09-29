@@ -227,8 +227,7 @@ main() {
     # Clean up any existing business service PID files
     print_status "Cleaning up old business service PID files..."
     cd "$BASE_DIR"
-    rm -f reservation-engine.pid availability-calculator.pid payment-processor.pid rate-management.pid
-    analytics-engine.pid
+    rm -f reservation-engine.pid availability-calculator.pid payment-processor.pid rate-management.pid analytics-engine.pid
 
     # Business services startup order (dependencies first)
     # Format: "service-name:directory:port:startup-wait:context-path"
