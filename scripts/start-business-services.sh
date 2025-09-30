@@ -130,8 +130,8 @@ build_parent_project() {
     print_status "Building parent Maven project..."
     cd "$BASE_DIR/apps/backend/java-services"
 
-    # Create logs directory
-    mkdir -p logs
+    # Create centralized logs directory
+    mkdir -p logs/business-services
 
     # Build the parent project (compile all modules)
     if mvn clean compile -q > logs/parent-build.log 2>&1; then
@@ -171,15 +171,16 @@ start_business_service() {
     # Navigate to service directory
     cd "$BUSINESS_SERVICES_DIR/$service_dir"
 
-    # Create logs directory if it doesn't exist
-    mkdir -p logs
+    # Create centralized logs directory if it doesn't exist
+    local java_services_dir="$BASE_DIR/apps/backend/java-services"
+    mkdir -p "$java_services_dir/logs/business-services"
 
     # Ensure service is compiled
     print_status "Ensuring $service_name is compiled..."
-    if mvn compile -q > "logs/${service_name}-compile.log" 2>&1; then
+    if mvn compile -q > "$java_services_dir/logs/business-services/${service_name}-compile.log" 2>&1; then
         print_success "$service_name compilation verified"
     else
-        print_error "Failed to compile $service_name. Check logs/${service_name}-compile.log for details"
+        print_error "Failed to compile $service_name. Check $java_services_dir/logs/business-services/${service_name}-compile.log for details"
         return 1
     fi
 
@@ -187,7 +188,7 @@ start_business_service() {
     print_status "Executing: mvn spring-boot:run for $service_name"
 
     # Start the service in background
-    nohup mvn spring-boot:run > "logs/${service_name}.log" 2>&1 &
+    nohup mvn spring-boot:run > "$java_services_dir/logs/business-services/${service_name}.log" 2>&1 &
     local pid=$!
 
     # Save PID to file
@@ -279,7 +280,7 @@ analytics-engine:analytics-engine:8086:45:/analytics-engine
         print_success "Business services are ready to accept requests!"
     else
         print_error "Only $success_count out of $total_services business services started successfully"
-        print_warning "Check individual service logs in their respective logs/ directories"
+        print_warning "Check individual service logs in $BASE_DIR/apps/backend/java-services/logs/business-services/"
         exit 1
     fi
 

@@ -155,8 +155,8 @@ build_parent_project() {
     # Change to Java services directory
     cd "$java_services_dir"
 
-    # Create logs directory if it doesn't exist
-    mkdir -p logs
+    # Create centralized logs directory if it doesn't exist
+    mkdir -p logs/infrastructure
 
     # Build parent project
     if mvn clean install -DskipTests > "logs/parent-build.log" 2>&1; then
@@ -192,21 +192,22 @@ start_service() {
     # Change to service directory
     cd "$INFRA_DIR/$service_dir"
 
-    # Create logs directory if it doesn't exist
-    mkdir -p logs
+    # Create centralized logs directory if it doesn't exist
+    local java_services_dir="$BASE_DIR/apps/backend/java-services"
+    mkdir -p "$java_services_dir/logs/infrastructure"
 
     # Ensure service is compiled (quick check)
     print_status "Ensuring $service_name is compiled..."
-    if mvn compile -q > "logs/${service_name}-compile.log" 2>&1; then
+    if mvn compile -q > "$java_services_dir/logs/infrastructure/${service_name}-compile.log" 2>&1; then
         print_success "$service_name compilation verified"
     else
-        print_error "Failed to compile $service_name. Check logs/${service_name}-compile.log for details"
+        print_error "Failed to compile $service_name. Check $java_services_dir/logs/infrastructure/${service_name}-compile.log for details"
         return 1
     fi
 
     # Start the service in background
     print_status "Executing: mvn spring-boot:run for $service_name"
-    nohup mvn spring-boot:run > "logs/${service_name}.log" 2>&1 &
+    nohup mvn spring-boot:run > "$java_services_dir/logs/infrastructure/${service_name}.log" 2>&1 &
     local pid=$!
 
     # Save PID
@@ -287,7 +288,7 @@ main() {
                 print_success "✅ $service_name started successfully"
             else
                 print_error "❌ Failed to start $service_name"
-                print_warning "Check logs at: $INFRA_DIR/$service_dir/logs/${service_name}.log"
+                print_warning "Check logs at: $BASE_DIR/apps/backend/java-services/logs/infrastructure/${service_name}.log"
             fi
         fi
 

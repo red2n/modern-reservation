@@ -61,7 +61,7 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%logger{36}] - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%logger{36}] - %msg%n"
   file:
-    name: logs/eureka-server.log
+    name: ../../logs/infrastructure/eureka-server.log
 
 # Application Information
 info:

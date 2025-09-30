@@ -10,6 +10,16 @@ spring:
     config:
       username: config-admin
       password: ${CONFIG_SERVER_PASSWORD:admin123}
+      - url: /reservation-engine/api-docs
+        name: 🏨 Reservation Engine
+      - url: /availability-calculator/api-docs
+        name: 📅 Availability Calculator
+      - url: /payment-processor/api-docs
+        name: 💳 Payment Processor
+      - url: /rate-management/api-docs
+        name: 💰 Rate Management
+      - url: /analytics-engine/api-docs
+        name: 📊 Analytics Enginein123}
   main:
     allow-bean-definition-overriding: true
     web-application-type: reactive
@@ -114,6 +124,42 @@ spring:
           predicates:
             - Path=/ws/**
 
+        # Swagger UI Documentation Routes for Business Services
+        - id: reservation-engine-docs
+          uri: lb://reservation-engine
+          predicates:
+            - Path=/reservation-engine/api-docs/**
+          filters:
+            - RewritePath=/reservation-engine/api-docs/(?<path>.*), /api-docs/$\{path}
+
+        - id: availability-calculator-docs
+          uri: lb://availability-calculator
+          predicates:
+            - Path=/availability-calculator/api-docs/**
+          filters:
+            - RewritePath=/availability-calculator/api-docs/(?<path>.*), /availability-calculator/api-docs/$\{path}
+
+        - id: payment-processor-docs
+          uri: lb://payment-processor
+          predicates:
+            - Path=/payment-processor/api-docs/**
+          filters:
+            - RewritePath=/payment-processor/api-docs/(?<path>.*), /payment-processor/api-docs/$\{path}
+
+        - id: rate-management-docs
+          uri: lb://rate-management
+          predicates:
+            - Path=/rate-management/api-docs/**
+          filters:
+            - RewritePath=/rate-management/api-docs/(?<path>.*), /rate-management/api-docs/$\{path}
+
+        - id: analytics-engine-docs
+          uri: lb://analytics-engine
+          predicates:
+            - Path=/analytics-engine/api-docs/**
+          filters:
+            - RewritePath=/analytics-engine/api-docs/(?<path>.*), /analytics-engine/api-docs/$\{path}
+
   # Redis Configuration for Rate Limiting
   redis:
     host: localhost
@@ -163,6 +209,9 @@ logging:
     org.springframework.security: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%X{traceId:-},%X{spanId:-}] [%thread] %-5level [%logger{36}] - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%X{traceId:-},%X{spanId:-}] [%thread] %-5level [%logger{36}] - %msg%n"
+  file:
+    name: ../../logs/infrastructure/gateway-service.log
 
 # Application Information
 info:
@@ -170,3 +219,43 @@ info:
     name: Modern Reservation Gateway Service
     description: API Gateway with routing, load balancing, and security
     version: 2.0.0
+
+# SpringDoc OpenAPI Configuration for Gateway
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    config-url: /v3/api-docs/swagger-config
+    urls:
+      - url: /v3/api-docs
+        name: Gateway Service
+      - url: /reservation-engine/v3/api-docs
+        name: 🏨 Reservation Engine
+      - url: /availability-calculator/v3/api-docs
+        name: 📅 Availability Calculator
+      - url: /payment-processor/v3/api-docs
+        name: 💳 Payment Processor
+      - url: /rate-management/v3/api-docs
+        name: 💰 Rate Management
+      - url: /analytics-engine/v3/api-docs
+        name: 📊 Analytics Engine
+    urls-primary-name: Gateway Service
+    display-request-duration: true
+    groups-order: ASC
+    operations-sorter: alpha
+    tags-sorter: alpha
+    disable-swagger-default-url: false
+    show-extensions: true
+    show-common-extensions: true
+    deep-linking: true
+    display-operation-id: false
+    default-models-expand-depth: 1
+    default-model-expand-depth: 1
+    default-model-rendering: example
+    doc-expansion: none
+    filter: false
+    oauth2-redirect-url: http://localhost:8080/swagger-ui/oauth2-redirect.html
+  show-actuator: true

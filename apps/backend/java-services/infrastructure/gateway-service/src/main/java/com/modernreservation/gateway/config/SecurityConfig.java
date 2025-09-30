@@ -34,6 +34,20 @@ public class SecurityConfig {
                 .pathMatchers("/api/v1/public/**").permitAll()
                 .pathMatchers("/ws/**").permitAll()
 
+                // Swagger UI and API Documentation endpoints
+                .pathMatchers("/swagger-ui.html", "/swagger-ui/**").permitAll()
+                .pathMatchers("/v3/api-docs", "/v3/api-docs/**").permitAll()
+                .pathMatchers("/swagger-resources/**").permitAll()
+                .pathMatchers("/webjars/**").permitAll()
+                .pathMatchers("/gateway/health").permitAll()
+
+                // Service-specific API documentation endpoints
+                .pathMatchers("/reservation-engine/v3/api-docs/**").permitAll()
+                .pathMatchers("/availability-calculator/v3/api-docs/**").permitAll()
+                .pathMatchers("/payment-processor/v3/api-docs/**").permitAll()
+                .pathMatchers("/rate-management/v3/api-docs/**").permitAll()
+                .pathMatchers("/analytics-engine/v3/api-docs/**").permitAll()
+
                 // Protected endpoints - require authentication
                 .pathMatchers("/api/v1/reservations/**").authenticated()
                 .pathMatchers("/api/v1/payments/**").authenticated()

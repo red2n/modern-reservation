@@ -50,7 +50,7 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%logger{36}] - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%logger{36}] - %msg%n"
   file:
-    name: logs/config-server.log
+    name: ../../logs/infrastructure/config-server.log
 
 # Application Information
 info:

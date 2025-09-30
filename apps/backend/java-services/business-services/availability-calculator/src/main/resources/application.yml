@@ -136,7 +136,7 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
   file:
-    name: logs/availability-calculator.log
+    name: ../../logs/business-services/availability-calculator.log
 
 # OpenAPI Documentation
 springdoc:
