@@ -100,41 +100,41 @@ spring:
           uri: lb://PAYMENT-PROCESSOR-SERVICE
           order: -1
           predicates:
-            - Path=/payment-processor/api/**
+            - Path=/payment-processor/api/v1/**
           filters:
-            - RewritePath=/payment-processor/api/(?<path>.*), /api/$\{path}
+            - RewritePath=/payment-processor/api/v1/(?<path>.*), /api/v1/$\{path}
 
         - id: reservation-engine-api
           uri: lb://reservation-engine
           order: -1
           predicates:
-            - Path=/reservation-engine/api/**
+            - Path=/reservation-engine/api/v1/**
           filters:
-            - RewritePath=/reservation-engine/api/(?<path>.*), /api/$\{path}
+            - RewritePath=/reservation-engine/api/v1/(?<path>.*), /api/v1/$\{path}
 
         - id: analytics-engine-api
           uri: lb://analytics-engine
           order: -1
           predicates:
-            - Path=/analytics-engine/api/**
+            - Path=/analytics-engine/api/v1/**
           filters:
-            - RewritePath=/analytics-engine/api/(?<path>.*), /api/$\{path}
+            - RewritePath=/analytics-engine/api/v1/(?<path>.*), /api/v1/$\{path}
 
         - id: availability-calculator-api
           uri: lb://AVAILABILITY-CALCULATOR
           order: -1
           predicates:
-            - Path=/availability-calculator/api/**
+            - Path=/availability-calculator/api/v1/**
           filters:
-            - RewritePath=/availability-calculator/api/(?<path>.*), /api/$\{path}
+            - RewritePath=/availability-calculator/api/v1/(?<path>.*), /api/v1/$\{path}
 
         - id: rate-management-api
           uri: lb://rate-management
           order: -1
           predicates:
-            - Path=/rate-management/api/**
+            - Path=/rate-management/api/v1/**
           filters:
-            - RewritePath=/rate-management/api/(?<path>.*), /api/$\{path}
+            - RewritePath=/rate-management/api/v1/(?<path>.*), /api/v1/$\{path}
 
         # Node.js Services Routes
         - id: api-gateway-node
