@@ -36,11 +36,11 @@ public class OpenApiConfig {
                     .url("https://opensource.org/licenses/MIT")))
             .servers(List.of(
                 new Server()
-                    .url("http://localhost:" + serverPort)
-                    .description("Development Server"),
+                    .url("http://localhost:8080/availability-calculator")
+                    .description("Gateway Server (Use this for testing)"),
                 new Server()
-                    .url("http://gateway-service:8080/availability-calculator")
-                    .description("Gateway Server")
+                    .url("http://localhost:" + serverPort)
+                    .description("Direct Service (Internal only)")
             ));
     }
 }

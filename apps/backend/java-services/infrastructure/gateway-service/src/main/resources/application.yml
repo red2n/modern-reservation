@@ -95,6 +95,47 @@ spring:
                 name: batch-circuit-breaker
                 fallbackUri: forward:/fallback/batch
 
+        # Service-Prefixed API Routes (for Swagger UI integration)
+        - id: payment-processor-api
+          uri: lb://PAYMENT-PROCESSOR-SERVICE
+          order: -1
+          predicates:
+            - Path=/payment-processor/api/**
+          filters:
+            - RewritePath=/payment-processor/api/(?<path>.*), /api/$\{path}
+
+        - id: reservation-engine-api
+          uri: lb://reservation-engine
+          order: -1
+          predicates:
+            - Path=/reservation-engine/api/**
+          filters:
+            - RewritePath=/reservation-engine/api/(?<path>.*), /api/$\{path}
+
+        - id: analytics-engine-api
+          uri: lb://analytics-engine
+          order: -1
+          predicates:
+            - Path=/analytics-engine/api/**
+          filters:
+            - RewritePath=/analytics-engine/api/(?<path>.*), /api/$\{path}
+
+        - id: availability-calculator-api
+          uri: lb://AVAILABILITY-CALCULATOR
+          order: -1
+          predicates:
+            - Path=/availability-calculator/api/**
+          filters:
+            - RewritePath=/availability-calculator/api/(?<path>.*), /api/$\{path}
+
+        - id: rate-management-api
+          uri: lb://rate-management
+          order: -1
+          predicates:
+            - Path=/rate-management/api/**
+          filters:
+            - RewritePath=/rate-management/api/(?<path>.*), /api/$\{path}
+
         # Node.js Services Routes
         - id: api-gateway-node
           uri: lb://api-gateway-node
@@ -114,6 +155,7 @@ spring:
         # Swagger UI Documentation Routes for Business Services
         - id: reservation-engine-docs
           uri: lb://reservation-engine
+          order: -1
           predicates:
             - Path=/reservation-engine/api-docs/**
           filters:
@@ -125,7 +167,7 @@ spring:
           predicates:
             - Path=/availability-calculator/api-docs/**
           filters:
-            - RewritePath=/availability-calculator/api-docs/(?<path>.*), /availability-calculator/api-docs/$\{path}
+            - RewritePath=/availability-calculator/api-docs/(?<path>.*), /api-docs/$\{path}
 
         - id: payment-processor-docs
           uri: lb://PAYMENT-PROCESSOR-SERVICE
@@ -133,7 +175,7 @@ spring:
           predicates:
             - Path=/payment-processor/api-docs/**
           filters:
-            - RewritePath=/payment-processor/api-docs/(?<path>.*), /payment-processor/api-docs/$\{path}
+            - RewritePath=/payment-processor/api-docs/(?<path>.*), /api-docs/$\{path}
 
         - id: rate-management-docs
           uri: lb://RATE-MANAGEMENT
@@ -141,14 +183,15 @@ spring:
           predicates:
             - Path=/rate-management/api-docs/**
           filters:
-            - RewritePath=/rate-management/api-docs/(?<path>.*), /rate-management/api-docs/$\{path}
+            - RewritePath=/rate-management/api-docs/(?<path>.*), /api-docs/$\{path}
 
         - id: analytics-engine-docs
           uri: lb://analytics-engine
+          order: -1
           predicates:
             - Path=/analytics-engine/api-docs/**
           filters:
-            - RewritePath=/analytics-engine/api-docs/(?<path>.*), /analytics-engine/api-docs/$\{path}
+            - RewritePath=/analytics-engine/api-docs/(?<path>.*), /api-docs/$\{path}
 
         # Swagger UI Routes for Business Services
         - id: availability-calculator-swagger-ui

@@ -50,11 +50,20 @@ public class SecurityConfig {
                 .pathMatchers("/rate-management/api-docs/**").permitAll()
                 .pathMatchers("/analytics-engine/api-docs/**").permitAll()
 
-                // Protected endpoints - require authentication
-                .pathMatchers("/api/v1/reservations/**").authenticated()
-                .pathMatchers("/api/v1/payments/**").authenticated()
-                .pathMatchers("/api/v1/analytics/**").hasRole("ADMIN")
-                .pathMatchers("/api/v1/batch/**").hasRole("ADMIN")
+                // Service-specific Swagger UI endpoints
+                .pathMatchers("/reservation-engine/swagger-ui/**").permitAll()
+                .pathMatchers("/availability-calculator/swagger-ui/**").permitAll()
+                .pathMatchers("/payment-processor/swagger-ui/**").permitAll()
+                .pathMatchers("/rate-management/swagger-ui/**").permitAll()
+                .pathMatchers("/analytics-engine/swagger-ui/**").permitAll()
+
+                // API endpoints for testing (allow all for now)
+                .pathMatchers("/api/**", "/*/api/**").permitAll()
+                .pathMatchers("/reservation-engine/api/**").permitAll()
+                .pathMatchers("/availability-calculator/api/**").permitAll()
+                .pathMatchers("/payment-processor/api/**").permitAll()
+                .pathMatchers("/rate-management/api/**").permitAll()
+                .pathMatchers("/analytics-engine/api/**").permitAll()
 
                 // Allow all other requests for now (will be restricted later)
                 .anyExchange().permitAll()
@@ -66,9 +75,9 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(List.of("*")); // Configure based on environment
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setAllowCredentials(true);
+        configuration.setAllowCredentials(false); // Set to false when using * for origins
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
