@@ -113,8 +113,8 @@ stop_service() {
 
 # Function to stop all services by port (fallback method)
 stop_services_by_port() {
-    local ports=("8081" "8083" "8084" "8085")
-    local service_names=("reservation-engine" "availability-calculator" "payment-processor" "rate-management")
+    local ports=("8081" "8083" "8084" "8085" "8086")
+    local service_names=("reservation-engine" "availability-calculator" "payment-processor" "rate-management" "analytics-engine")
 
     print_status "Attempting to stop services by port (fallback method)..."
 
@@ -153,7 +153,7 @@ main() {
 
     # Business services to stop (reverse order of startup for proper dependency shutdown)
     declare -a SERVICES=(
-        # "analytics-engine"  # Temporarily excluded due to compilation errors
+        "analytics-engine"
         "rate-management"
         "payment-processor"
         "availability-calculator"
@@ -190,8 +190,8 @@ main() {
 
     # Final verification
     local running_services=0
-    local ports=("8081" "8083" "8084" "8085")
-    local service_names=("reservation-engine" "availability-calculator" "payment-processor" "rate-management")
+    local ports=("8081" "8083" "8084" "8085" "8086")
+    local service_names=("reservation-engine" "availability-calculator" "payment-processor" "rate-management" "analytics-engine")
 
     for i in "${!ports[@]}"; do
         local port=${ports[$i]}
@@ -213,7 +213,7 @@ main() {
         print_status "  • localhost:8083 (availability-calculator) - Network Isolated"
         print_status "  • localhost:8084 (payment-processor) - Network Isolated"
         print_status "  • localhost:8085 (rate-management) - Network Isolated"
-        print_status "  • localhost:8086 (analytics-engine) - Temporarily Disabled"
+        print_status "  • localhost:8086 (analytics-engine) - Network Isolated"
         print_status ""
         print_status "Note: Business services use network isolation (localhost binding)"
         print_status "External access available only through Gateway: http://localhost:8080"
