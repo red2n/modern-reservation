@@ -27,6 +27,8 @@ public class SecurityConfig {
         return http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
+
+            // Security headers will be added via application.yml or other means
             .authorizeExchange(exchanges -> exchanges
                 // Public endpoints
                 .pathMatchers("/actuator/**", "/fallback/**").permitAll()

@@ -39,9 +39,9 @@ public class ReportService {
     private final AnalyticsService analyticsService;
     private final TemplateService templateService;
     private final ExportService exportService;
-    private final NotificationService notificationService;
-    private final EmailService emailService;
     private final StorageService storageService;
+
+    // Removed unused fields: NotificationService, EmailService
 
     /**
      * Generate a report based on request parameters
@@ -625,10 +625,7 @@ public class ReportService {
 
     // Additional helper methods would be implemented here...
 
-    private String convertParametersToJson(ReportRequestDTO request) {
-        // Convert request parameters to JSON string
-        return "{}"; // Simplified implementation
-    }
+    // Removed unused method: convertParametersToJson
 
     private String convertDeliveryOptionsToJson(ReportRequestDTO request) {
         // Convert delivery options to JSON string

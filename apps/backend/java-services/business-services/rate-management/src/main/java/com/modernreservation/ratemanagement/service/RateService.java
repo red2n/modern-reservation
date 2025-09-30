@@ -14,6 +14,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -29,7 +30,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)  // Default to read-only transactions
 public class RateService {
 
     private final RateRepository rateRepository;
@@ -38,6 +39,11 @@ public class RateService {
     /**
      * Create a new rate
      */
+    @Transactional(
+        isolation = Isolation.READ_COMMITTED,
+        timeout = 30,
+        rollbackFor = Exception.class
+    )
     @CacheEvict(value = {"rate-search", "best-rates", "rate-statistics"}, allEntries = true)
     public RateResponseDTO createRate(RateCreationRequestDTO request) {
         log.info("Creating new rate: {} for property: {}", request.rateCode(), request.propertyId());
@@ -168,6 +174,11 @@ public class RateService {
     /**
      * Update rate status
      */
+    @Transactional(
+        isolation = Isolation.READ_COMMITTED,
+        timeout = 30,
+        rollbackFor = Exception.class
+    )
     @CacheEvict(value = {"rate-search", "best-rates", "rate-details"}, allEntries = true)
     public RateResponseDTO updateRateStatus(UUID rateId, RateStatus newStatus, String updatedBy) {
         log.info("Updating rate status: {} to {}", rateId, newStatus);
@@ -251,6 +262,11 @@ public class RateService {
     /**
      * Expire outdated rates (scheduled task)
      */
+    @Transactional(
+        isolation = Isolation.READ_COMMITTED,
+        timeout = 60,  // Longer timeout for batch operations
+        rollbackFor = Exception.class
+    )
     @CacheEvict(value = {"rate-search", "best-rates", "rate-statistics"}, allEntries = true)
     public int expireOutdatedRates() {
         log.info("Expiring outdated rates");

@@ -1,8 +1,9 @@
 package com.modernreservation.analyticsengine.config;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -10,6 +11,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Analytics Engine Configuration
@@ -25,14 +29,25 @@ import java.util.concurrent.Executor;
 @EnableCaching
 @EnableAsync
 @EnableScheduling
+@Slf4j
 public class AnalyticsEngineConfig {
 
     /**
-     * Cache manager for analytics data
+     * Cache manager for analytics data with Caffeine
+     * Fixes memory leak by implementing proper eviction policies
      */
     @Bean
     public CacheManager cacheManager() {
-        ConcurrentMapCacheManager cacheManager = new ConcurrentMapCacheManager();
+        CaffeineCacheManager cacheManager = new CaffeineCacheManager();
+        cacheManager.setCaffeine(Caffeine.newBuilder()
+                .maximumSize(10000)  // Limit cache size to prevent unbounded growth
+                .expireAfterWrite(30, TimeUnit.MINUTES)  // Expire entries after 30 minutes
+                .expireAfterAccess(15, TimeUnit.MINUTES)  // Expire if not accessed for 15 minutes
+                .recordStats()  // Enable statistics for monitoring
+                .removalListener((key, value, cause) -> {
+                    // Log cache evictions for monitoring
+                    log.debug("Cache entry removed: key={}, cause={}", key, cause);
+                }));
         cacheManager.setAllowNullValues(false);
         return cacheManager;
     }
