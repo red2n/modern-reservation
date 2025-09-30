@@ -21,7 +21,10 @@ import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
  * @author Modern Reservation Team
  * @version 2.0.0
  */
-@SpringBootApplication
+@SpringBootApplication(exclude = {
+    org.springframework.boot.autoconfigure.http.client.HttpClientAutoConfiguration.class,
+    org.springframework.boot.autoconfigure.web.client.RestClientAutoConfiguration.class
+})
 @EnableEurekaServer
 public class EurekaServerApplication {
 

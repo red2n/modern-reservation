@@ -10,19 +10,6 @@ spring:
     config:
       username: config-admin
       password: ${CONFIG_SERVER_PASSWORD:admin123}
-      - url: /reservation-engine/api-docs
-        name: 🏨 Reservation Engine
-      - url: /availability-calculator/api-docs
-        name: 📅 Availability Calculator
-      - url: /payment-processor/api-docs
-        name: 💳 Payment Processor
-      - url: /rate-management/api-docs
-        name: 💰 Rate Management
-      - url: /analytics-engine/api-docs
-        name: 📊 Analytics Enginein123}
-  main:
-    allow-bean-definition-overriding: true
-    web-application-type: reactive
     gateway:
       discovery:
         locator:
@@ -165,6 +152,11 @@ spring:
     host: localhost
     port: 6379
     timeout: 2000ms
+
+  # Main Configuration
+  main:
+    allow-bean-definition-overriding: true
+    web-application-type: reactive
 
 # Circuit Breaker Configuration
 resilience4j:

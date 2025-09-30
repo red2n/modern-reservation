@@ -70,27 +70,60 @@ wait_for_service() {
     return 1
 }
 
-# Function to check infrastructure prerequisites
-check_infrastructure() {
+# Function to run infrastructure health check
+run_infrastructure_check() {
+    local check_script="$SCRIPT_DIR/check-infrastructure.sh"
+
     print_status "Checking infrastructure prerequisites..."
 
-    local required_ports=("8888" "8761" "8080")  # Config, Eureka, Gateway
-    local required_services=("config-server" "eureka-server" "gateway-service")
-
-    for i in "${!required_ports[@]}"; do
-        local port=${required_ports[$i]}
-        local service=${required_services[$i]}
-
-        if check_port $port; then
-            print_error "$service is not running on port $port"
-            print_error "Please start infrastructure services first: ./infra.sh start"
-            return 1
+    if [ -f "$check_script" ]; then
+        if bash "$check_script" >/dev/null 2>&1; then
+            print_success "Infrastructure services are running and healthy"
+            return 0
         else
-            print_success "$service is running on port $port"
+            print_error "Infrastructure services are not ready"
+            print_error "Please start infrastructure services first: ./scripts/start-infrastructure.sh"
+            return 1
         fi
-    done
+    else
+        print_warning "Infrastructure check script not found: $check_script"
+        # Fallback to basic port checking
+        local required_ports=("8888" "8761" "8080")  # Config, Eureka, Gateway
+        local required_services=("config-server" "eureka-server" "gateway-service")
 
-    return 0
+        for i in "${!required_ports[@]}"; do
+            local port=${required_ports[$i]}
+            local service=${required_services[$i]}
+
+            if check_port $port; then
+                print_error "$service is not running on port $port"
+                print_error "Please start infrastructure services first: ./scripts/start-infrastructure.sh"
+                return 1
+            else
+                print_success "$service is running on port $port"
+            fi
+        done
+        return 0
+    fi
+}
+
+# Function to run business services health check
+run_business_services_check() {
+    local check_script="$SCRIPT_DIR/check-business-services.sh"
+
+    if [ -f "$check_script" ]; then
+        print_status "Running business services health check first..."
+        if bash "$check_script" >/dev/null 2>&1; then
+            print_success "Business services health check passed - some services may already be running"
+            return 0
+        else
+            print_status "Business services health check indicates services need to be started"
+            return 1
+        fi
+    else
+        print_warning "Business services check script not found: $check_script"
+        return 1
+    fi
 }
 
 # Function to wait for service registration with Eureka (Service Discovery)
@@ -158,14 +191,34 @@ start_business_service() {
     print_status "Port: $port"
     print_status "========================================="
 
-    # Check if port is already occupied
+    # First, check if service is already running and healthy
+    local pid_file="$BASE_DIR/${service_name}.pid"
+    if [ -f "$pid_file" ]; then
+        local pid=$(cat "$pid_file")
+        if [ ! -z "$pid" ] && ps -p "$pid" > /dev/null 2>&1; then
+            # Process is running, check if it's healthy
+            if curl -s -f "http://localhost:$port$context_path/actuator/health" >/dev/null 2>&1; then
+                print_success "$service_name is already running and healthy on port $port"
+                return 0
+            fi
+        fi
+    fi
+
+    # Check if port is already occupied by another service
     if ! check_port $port; then
         print_warning "$service_name localhost:$port is already in use"
-        local existing_pid=$(lsof -ti :$port)
-        if [ ! -z "$existing_pid" ]; then
-            print_warning "Process $existing_pid is using localhost:$port"
+
+        # Check if it's our service and healthy
+        if curl -s -f "http://localhost:$port$context_path/actuator/health" >/dev/null 2>&1; then
+            print_success "$service_name is already running and healthy on port $port"
+            return 0
+        else
+            local existing_pid=$(lsof -ti :$port)
+            if [ ! -z "$existing_pid" ]; then
+                print_warning "Process $existing_pid is using localhost:$port but service is not healthy"
+            fi
+            return 1
         fi
-        return 1
     fi
 
     # Navigate to service directory
@@ -215,8 +268,11 @@ main() {
     print_status "Base directory: $BASE_DIR"
     print_status "Business services directory: $BUSINESS_SERVICES_DIR"
 
+    # Run business services health check first
+    run_business_services_check
+
     # Check infrastructure prerequisites
-    if ! check_infrastructure; then
+    if ! run_infrastructure_check; then
         exit 1
     fi
 

@@ -99,49 +99,44 @@ wait_for_service() {
     return 1
 }
 
-# Function to start zipkin server using Docker
-start_zipkin_service() {
-    local service_name="zipkin-server"
-    local port=9411
-    local wait_time=10
+# Function to start infrastructure services via Docker Compose
+start_docker_infrastructure() {
+    local docker_compose_file="$BASE_DIR/infrastructure/docker/docker-compose-infrastructure.yml"
 
-    print_status "Starting $service_name via Docker..."
+    print_status "Starting Docker infrastructure services (Zipkin, PostgreSQL, Redis)..."
 
-    # Check if Docker Zipkin container is already running
+    if [ ! -f "$docker_compose_file" ]; then
+        print_error "Docker Compose file not found: $docker_compose_file"
+        return 1
+    fi
+
+    # Check if services are already running
     if docker ps --filter "name=modern-reservation-zipkin" --format "{{.Names}}" | grep -q "modern-reservation-zipkin"; then
-        print_success "$service_name is already running via Docker"
+        print_success "Docker infrastructure services are already running"
         return 0
     fi
 
-    # Ensure Docker network exists
-    if ! docker network ls | grep -q "modern-reservation-network"; then
-        print_status "Creating Docker network: modern-reservation-network"
-        docker network create modern-reservation-network
-    fi
+    # Clean up any existing containers first
+    print_status "Cleaning up any existing Docker containers..."
+    docker compose -f "$docker_compose_file" down --remove-orphans 2>/dev/null || true
+    # Also remove any manually created containers with our naming pattern
+    docker rm -f modern-reservation-zipkin modern-reservation-postgres modern-reservation-redis modern-reservation-consul 2>/dev/null || true
 
-    # Start Zipkin via Docker
-    print_status "Executing: docker run for $service_name"
-    docker run -d \
-        --name modern-reservation-zipkin \
-        --network modern-reservation-network \
-        -p $port:9411 \
-        --restart unless-stopped \
-        openzipkin/zipkin:latest
+    # Start infrastructure services via Docker Compose
+    print_status "Executing: docker compose up -d for infrastructure services"
+    if docker compose -f "$docker_compose_file" up -d; then
+        print_success "Docker infrastructure services started successfully"
 
-    if [ $? -eq 0 ]; then
-        print_status "$service_name Docker container started"
-
-        # Wait for service to be ready
-        sleep $wait_time
-        if wait_for_service "$service_name" $port; then
-            print_success "$service_name is running successfully on port $port"
+        # Wait for Zipkin to be ready
+        if wait_for_service "zipkin-server" 9411; then
+            print_success "Zipkin is ready on port 9411"
             return 0
         else
-            print_error "Failed to start $service_name - service not responding"
-            return 1
+            print_warning "Zipkin may still be starting up"
+            return 0  # Don't fail the whole process
         fi
     else
-        print_error "Failed to start $service_name Docker container"
+        print_error "Failed to start Docker infrastructure services"
         return 1
     fi
 }
@@ -177,10 +172,23 @@ start_service() {
 
     print_status "Starting $service_name..."
 
-    # Check if port is already in use
+    # First, check if service is already running and healthy
+    local pid_file="$BASE_DIR/${service_name}.pid"
+    if [ -f "$pid_file" ]; then
+        local pid=$(cat "$pid_file")
+        if [ ! -z "$pid" ] && ps -p "$pid" > /dev/null 2>&1; then
+            # Process is running, check if it's healthy
+            if curl -s -f "http://localhost:$port/actuator/health" >/dev/null 2>&1; then
+                print_success "$service_name is already running and healthy on port $port"
+                return 0
+            fi
+        fi
+    fi
+
+    # Check if port is already in use by another process
     if ! check_port $port; then
         print_warning "Port $port is already in use. Checking if it's our service..."
-        if wait_for_service "$service_name" $port; then
+        if curl -s -f "http://localhost:$port/actuator/health" >/dev/null 2>&1; then
             print_success "$service_name is already running on port $port"
             return 0
         else
@@ -227,6 +235,25 @@ start_service() {
     fi
 }
 
+# Function to run infrastructure health check
+run_infrastructure_check() {
+    local check_script="$SCRIPT_DIR/check-infrastructure.sh"
+
+    if [ -f "$check_script" ]; then
+        print_status "Running infrastructure health check first..."
+        if bash "$check_script" >/dev/null 2>&1; then
+            print_success "Infrastructure health check passed - some services may already be running"
+            return 0
+        else
+            print_status "Infrastructure health check indicates services need to be started"
+            return 1
+        fi
+    else
+        print_warning "Infrastructure check script not found: $check_script"
+        return 1
+    fi
+}
+
 # Function to cleanup on exit
 cleanup() {
     print_warning "Script interrupted. Cleaning up..."
@@ -242,6 +269,9 @@ main() {
     print_status "Base directory: $BASE_DIR"
     print_status "Infrastructure directory: $INFRA_DIR"
 
+    # Run infrastructure health check first
+    run_infrastructure_check
+
     # Clean up any existing PID files
     print_status "Cleaning up old PID files..."
     cd "$BASE_DIR"
@@ -253,16 +283,21 @@ main() {
         exit 1
     fi
 
-    # Service startup order (dependencies first)
+    # Start Docker infrastructure services first
+    if ! start_docker_infrastructure; then
+        print_error "❌ Failed to start Docker infrastructure services. Cannot proceed."
+        exit 1
+    fi
+
+    # Java service startup order (dependencies first)
     declare -a SERVICES=(
         "config-server:config-server:8888:15"
         "eureka-server:eureka-server:8761:20"
-        "zipkin-server:zipkin-docker:9411:10"
         "gateway-service:gateway-service:8080:15"
     )
 
-    local success_count=0
-    local total_services=${#SERVICES[@]}
+    local success_count=1  # Docker services already started
+    local total_services=$((${#SERVICES[@]} + 1))  # +1 for Docker services
 
     for service_config in "${SERVICES[@]}"; do
         IFS=':' read -r service_name service_dir port wait_time <<< "$service_config"
@@ -273,23 +308,14 @@ main() {
         print_status "Port: $port"
         print_status "========================================="
 
-        # Handle zipkin-server specially (uses Docker)
-        if [ "$service_name" = "zipkin-server" ]; then
-            if start_zipkin_service; then
-                success_count=$((success_count + 1))
-                print_success "✅ $service_name started successfully"
-            else
-                print_error "❌ Failed to start $service_name"
-                print_warning "Check Docker logs: docker logs modern-reservation-zipkin"
-            fi
+        if start_service "$service_name" "$service_dir" "$port" "$wait_time"; then
+            success_count=$((success_count + 1))
+            print_success "✅ $service_name started successfully"
         else
-            if start_service "$service_name" "$service_dir" "$port" "$wait_time"; then
-                success_count=$((success_count + 1))
-                print_success "✅ $service_name started successfully"
-            else
-                print_error "❌ Failed to start $service_name"
-                print_warning "Check logs at: $BASE_DIR/apps/backend/java-services/logs/infrastructure/${service_name}.log"
-            fi
+            print_error "❌ Failed to start $service_name"
+            print_warning "Check logs at: $BASE_DIR/apps/backend/java-services/logs/infrastructure/${service_name}.log"
+            print_error "❌ Infrastructure startup failed. Fix $service_name before continuing."
+            exit 1
         fi
 
         echo ""

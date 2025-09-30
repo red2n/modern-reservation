@@ -22,7 +22,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @author Modern Reservation Team
  * @version 2.0.0
  */
-@SpringBootApplication
+@SpringBootApplication(exclude = {
+    org.springframework.boot.autoconfigure.http.client.HttpClientAutoConfiguration.class,
+    org.springframework.boot.autoconfigure.web.client.RestClientAutoConfiguration.class
+})
 public class GatewayApplication {
 
     public static void main(String[] args) {
