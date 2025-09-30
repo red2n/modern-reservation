@@ -74,8 +74,12 @@ spring:
 springdoc:
   api-docs:
     path: /api-docs
+    enabled: true
   swagger-ui:
     path: /swagger-ui.html
+    config-url: /reservation-engine/api-docs/swagger-config
+    url: /reservation-engine/api-docs
+    enabled: true
     operationsSorter: method
     tagsSorter: alpha
   info:

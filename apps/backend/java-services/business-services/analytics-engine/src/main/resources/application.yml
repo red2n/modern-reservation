@@ -130,9 +130,13 @@ management:
 # OpenAPI Configuration
 springdoc:
   api-docs:
-    path: /analytics-engine/v3/api-docs
+    path: /api-docs
+    enabled: true
   swagger-ui:
-    path: /analytics-engine/swagger-ui.html
+    path: /swagger-ui.html
+    config-url: /analytics-engine/api-docs/swagger-config
+    url: /analytics-engine/api-docs
+    enabled: true
     operationsSorter: method
     disable-swagger-default-url: true
   show-actuator: true

@@ -30,7 +30,9 @@ import org.springframework.cache.annotation.EnableCaching;
  * @version 2.0.0
  */
 @SpringBootApplication(exclude = {
-    org.springframework.boot.actuate.autoconfigure.tracing.zipkin.ZipkinAutoConfiguration.class
+    org.springframework.boot.actuate.autoconfigure.tracing.zipkin.ZipkinAutoConfiguration.class,
+    org.springframework.boot.autoconfigure.http.client.HttpClientAutoConfiguration.class,
+    org.springframework.boot.autoconfigure.web.client.RestClientAutoConfiguration.class
 })
 @EnableDiscoveryClient
 @EnableFeignClients

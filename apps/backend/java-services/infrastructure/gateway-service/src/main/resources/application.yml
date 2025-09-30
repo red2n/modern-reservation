@@ -34,7 +34,7 @@ spring:
 
         # Availability Calculator Routes
         - id: availability-calculator
-          uri: lb://availability-calculator
+          uri: lb://AVAILABILITY-CALCULATOR
           predicates:
             - Path=/api/v1/availability/**
           filters:
@@ -49,7 +49,7 @@ spring:
 
         # Payment Processor Routes
         - id: payment-processor
-          uri: lb://payment-processor
+          uri: lb://PAYMENT-PROCESSOR-SERVICE
           predicates:
             - Path=/api/v1/payments/**
           filters:
@@ -120,21 +120,24 @@ spring:
             - RewritePath=/reservation-engine/api-docs/(?<path>.*), /api-docs/$\{path}
 
         - id: availability-calculator-docs
-          uri: lb://availability-calculator
+          uri: lb://AVAILABILITY-CALCULATOR
+          order: -1
           predicates:
             - Path=/availability-calculator/api-docs/**
           filters:
             - RewritePath=/availability-calculator/api-docs/(?<path>.*), /availability-calculator/api-docs/$\{path}
 
         - id: payment-processor-docs
-          uri: lb://payment-processor
+          uri: lb://PAYMENT-PROCESSOR-SERVICE
+          order: -1
           predicates:
             - Path=/payment-processor/api-docs/**
           filters:
             - RewritePath=/payment-processor/api-docs/(?<path>.*), /payment-processor/api-docs/$\{path}
 
         - id: rate-management-docs
-          uri: lb://rate-management
+          uri: lb://RATE-MANAGEMENT
+          order: -1
           predicates:
             - Path=/rate-management/api-docs/**
           filters:
@@ -146,6 +149,47 @@ spring:
             - Path=/analytics-engine/api-docs/**
           filters:
             - RewritePath=/analytics-engine/api-docs/(?<path>.*), /analytics-engine/api-docs/$\{path}
+
+        # Swagger UI Routes for Business Services
+        - id: availability-calculator-swagger-ui
+          uri: lb://AVAILABILITY-CALCULATOR
+          order: -1
+          predicates:
+            - Path=/availability-calculator/swagger-ui/**
+          filters:
+            - RewritePath=/availability-calculator/swagger-ui/(?<path>.*), /availability-calculator/swagger-ui/$\{path}
+
+        - id: payment-processor-swagger-ui
+          uri: lb://PAYMENT-PROCESSOR-SERVICE
+          order: -1
+          predicates:
+            - Path=/payment-processor/swagger-ui/**
+          filters:
+            - RewritePath=/payment-processor/swagger-ui/(?<path>.*), /payment-processor/swagger-ui/$\{path}
+
+        - id: rate-management-swagger-ui
+          uri: lb://RATE-MANAGEMENT
+          order: -1
+          predicates:
+            - Path=/rate-management/swagger-ui/**
+          filters:
+            - RewritePath=/rate-management/swagger-ui/(?<path>.*), /rate-management/swagger-ui/$\{path}
+
+        - id: analytics-engine-swagger-ui
+          uri: lb://ANALYTICS-ENGINE
+          order: -1
+          predicates:
+            - Path=/analytics-engine/swagger-ui/**
+          filters:
+            - RewritePath=/analytics-engine/swagger-ui/(?<path>.*), /analytics-engine/swagger-ui/$\{path}
+
+        - id: reservation-engine-swagger-ui
+          uri: lb://RESERVATION-ENGINE
+          order: -1
+          predicates:
+            - Path=/reservation-engine/swagger-ui/**
+          filters:
+            - RewritePath=/reservation-engine/swagger-ui/(?<path>.*), /swagger-ui/$\{path}
 
   # Redis Configuration for Rate Limiting
   redis:
@@ -216,23 +260,23 @@ info:
 springdoc:
   api-docs:
     enabled: true
-    path: /v3/api-docs
+    path: /api-docs
   swagger-ui:
     enabled: true
     path: /swagger-ui.html
-    config-url: /v3/api-docs/swagger-config
+    config-url: /api-docs/swagger-config
     urls:
-      - url: /v3/api-docs
+      - url: /api-docs
         name: Gateway Service
-      - url: /reservation-engine/v3/api-docs
+      - url: /reservation-engine/api-docs
         name: 🏨 Reservation Engine
-      - url: /availability-calculator/v3/api-docs
+      - url: /availability-calculator/api-docs
         name: 📅 Availability Calculator
-      - url: /payment-processor/v3/api-docs
+      - url: /payment-processor/api-docs
         name: 💳 Payment Processor
-      - url: /rate-management/v3/api-docs
+      - url: /rate-management/api-docs
         name: 💰 Rate Management
-      - url: /analytics-engine/v3/api-docs
+      - url: /analytics-engine/api-docs
         name: 📊 Analytics Engine
     urls-primary-name: Gateway Service
     display-request-duration: true

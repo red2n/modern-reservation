@@ -50,7 +50,9 @@ import org.springframework.scheduling.annotation.EnableAsync;
  * @since 2024-01-01
  */
 @SpringBootApplication(exclude = {
-    org.springframework.boot.actuate.autoconfigure.tracing.zipkin.ZipkinAutoConfiguration.class
+    org.springframework.boot.actuate.autoconfigure.tracing.zipkin.ZipkinAutoConfiguration.class,
+    org.springframework.boot.autoconfigure.http.client.HttpClientAutoConfiguration.class,
+    org.springframework.boot.autoconfigure.web.client.RestClientAutoConfiguration.class
 })
 @EnableDiscoveryClient
 @EnableFeignClients

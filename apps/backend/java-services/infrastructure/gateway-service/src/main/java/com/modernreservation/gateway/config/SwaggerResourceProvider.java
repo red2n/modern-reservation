@@ -16,7 +16,7 @@ import java.util.List;
 @Primary
 public class SwaggerResourceProvider {
 
-    public static final String API_URI = "/v3/api-docs";
+    public static final String API_URI = "/api-docs";
     public static final String SERVICE_API_URI = "/api-docs";
 
     @Autowired
