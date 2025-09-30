@@ -16,7 +16,9 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  * Handles rate calculation, pricing strategies, seasonal adjustments,
  * demand-based pricing, and revenue optimization for hotel properties.
  */
-@SpringBootApplication
+@SpringBootApplication(exclude = {
+    org.springframework.boot.actuate.autoconfigure.tracing.zipkin.ZipkinAutoConfiguration.class
+})
 @EnableDiscoveryClient
 @EnableJpaAuditing
 @EnableCaching

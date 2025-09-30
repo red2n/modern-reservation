@@ -202,8 +202,11 @@ logging:
 springdoc:
   api-docs:
     path: /api-docs
+    enabled: true
   swagger-ui:
     path: /swagger-ui.html
+    config-url: /payment-processor/api-docs/swagger-config
+    url: /payment-processor/api-docs
     enabled: true
     operations-sorter: alpha
     tags-sorter: alpha

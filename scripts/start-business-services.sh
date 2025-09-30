@@ -269,7 +269,7 @@ main() {
     print_status "Business services directory: $BUSINESS_SERVICES_DIR"
 
     # Run business services health check first
-    run_business_services_check
+    run_business_services_check || true  # Don't exit if health check fails - services may need to be started
 
     # Check infrastructure prerequisites
     if ! run_infrastructure_check; then

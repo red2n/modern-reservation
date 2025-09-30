@@ -29,7 +29,9 @@ import org.springframework.cache.annotation.EnableCaching;
  * @author Modern Reservation Team
  * @version 2.0.0
  */
-@SpringBootApplication
+@SpringBootApplication(exclude = {
+    org.springframework.boot.actuate.autoconfigure.tracing.zipkin.ZipkinAutoConfiguration.class
+})
 @EnableDiscoveryClient
 @EnableFeignClients
 @EnableKafka

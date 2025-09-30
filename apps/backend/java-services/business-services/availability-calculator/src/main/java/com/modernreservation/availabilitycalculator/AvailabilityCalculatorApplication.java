@@ -13,7 +13,9 @@ import org.springframework.kafka.annotation.EnableKafka;
  * Handles room availability calculations, pricing, and booking validations
  * for the Modern Reservation System.
  */
-@SpringBootApplication
+@SpringBootApplication(exclude = {
+    org.springframework.boot.actuate.autoconfigure.tracing.zipkin.ZipkinAutoConfiguration.class
+})
 @EnableDiscoveryClient
 @EnableJpaAuditing
 @EnableCaching

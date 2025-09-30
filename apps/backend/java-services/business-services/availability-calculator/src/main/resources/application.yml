@@ -142,8 +142,11 @@ logging:
 springdoc:
   api-docs:
     path: /api-docs
+    enabled: true
   swagger-ui:
     path: /swagger-ui.html
+    config-url: /availability-calculator/api-docs/swagger-config
+    url: /availability-calculator/api-docs
     tags-sorter: alpha
     operations-sorter: alpha
   show-actuator: true

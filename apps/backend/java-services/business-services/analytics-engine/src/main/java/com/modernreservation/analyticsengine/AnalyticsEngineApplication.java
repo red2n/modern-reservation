@@ -49,7 +49,9 @@ import org.springframework.scheduling.annotation.EnableAsync;
  * @version 3.2.0
  * @since 2024-01-01
  */
-@SpringBootApplication
+@SpringBootApplication(exclude = {
+    org.springframework.boot.actuate.autoconfigure.tracing.zipkin.ZipkinAutoConfiguration.class
+})
 @EnableDiscoveryClient
 @EnableFeignClients
 @EnableJpaAuditing
