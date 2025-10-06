@@ -46,7 +46,7 @@ public class OpenApiConfig {
         return GroupedOpenApi.builder()
                 .group("00-all-services")
                 .displayName("🌟 All Services Combined")
-                .pathsToMatch("/reservation-engine/**", "/availability-calculator/**", 
+                .pathsToMatch("/reservation-engine/**", "/availability-calculator/**",
                              "/payment-processor/**", "/rate-management/**", "/analytics-engine/**")
                 .build();
     }
