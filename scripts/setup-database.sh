@@ -17,6 +17,7 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 SCHEMA_DIR="$BASE_DIR/database/schema"
+SAMPLE_DATA_DIR="$BASE_DIR/database/sample-data"
 
 # Print functions
 print_status() {
@@ -189,6 +190,80 @@ execute_schema_migration() {
     fi
 }
 
+# Function to execute sample data file
+execute_sample_data_file() {
+    local db_name=$1
+    local data_file=$2
+    local file_path="$SAMPLE_DATA_DIR/$data_file"
+
+    if [ ! -f "$file_path" ]; then
+        print_error "Sample data file not found: $file_path"
+        return 1
+    fi
+
+    print_status "Loading sample data: $data_file"
+
+    # Create a temporary output file to capture errors
+    local temp_output=$(mktemp)
+
+    # Execute the sample data file
+    if docker exec -i modern-reservation-postgres psql -U postgres -d "$db_name" < "$file_path" > "$temp_output" 2>&1; then
+        print_success "Sample data loaded: $data_file"
+        rm -f "$temp_output"
+        return 0
+    else
+        print_error "Failed to load sample data: $data_file"
+        print_warning "Error details:"
+        cat "$temp_output" | head -5
+        rm -f "$temp_output"
+        return 1
+    fi
+}
+
+# Function to load sample data
+load_sample_data() {
+    local db_name=$1
+
+    print_status "Loading sample data for database: $db_name"
+    print_status "========================================="
+
+    # Sample data files in order
+    local sample_files=(
+        "00-sample-system-user.sql"
+        "01-sample-properties.sql"
+        "02-sample-rooms.sql"
+        "03-sample-guests.sql"
+        "04-sample-users.sql"
+        "05-sample-rate-plans.sql"
+        "06-sample-reservations.sql"
+        "07-sample-payments.sql"
+        "08-sample-availability.sql"
+        "09-sample-promotions.sql"
+        "10-sample-reviews.sql"
+    )
+
+    local success_count=0
+    local total_files=${#sample_files[@]}
+
+    for data_file in "${sample_files[@]}"; do
+        if execute_sample_data_file "$db_name" "$data_file"; then
+            success_count=$((success_count + 1))
+        else
+            print_warning "Continuing despite error in $data_file..."
+        fi
+        sleep 1
+    done
+
+    print_status "========================================="
+    if [ $success_count -eq $total_files ]; then
+        print_success "All sample data files loaded successfully for $db_name"
+        return 0
+    else
+        print_warning "Loaded $success_count out of $total_files sample data files for $db_name"
+        return 1
+    fi
+}
+
 # Function to verify schema
 verify_schema() {
     local db_name=$1
@@ -351,18 +426,35 @@ show_help() {
     echo "  -h, --help        Show this help message"
     echo "  -v, --validate    Only validate existing databases (no setup)"
     echo "  -d, --database    Specify database to validate (default: modern_reservation)"
+    echo "  --debug           Load sample data (100+ rows per table) for testing"
+    echo "  --clean           Drop and recreate databases before setup"
     echo ""
     echo "Examples:"
     echo "  $0                           # Full database setup"
+    echo "  $0 --debug                   # Setup with sample data"
+    echo "  $0 --clean --debug           # Clean install with sample data"
     echo "  $0 --validate                # Validate main database"
     echo "  $0 --validate -d modern_reservation_dev  # Validate dev database"
     echo ""
+}
+
+# Function to drop database if exists
+drop_database_if_exists() {
+    local db_name=$1
+
+    if database_exists "$db_name"; then
+        print_warning "Dropping existing database: $db_name"
+        docker exec modern-reservation-postgres psql -U postgres -c "DROP DATABASE $db_name;"
+        print_success "Database $db_name dropped"
+    fi
 }
 
 # Main function
 main() {
     local validate_only=false
     local target_database="modern_reservation"
+    local load_sample_data=false
+    local clean_install=false
 
     # Parse command line arguments
     while [[ $# -gt 0 ]]; do
@@ -378,6 +470,14 @@ main() {
             -d|--database)
                 target_database="$2"
                 shift 2
+                ;;
+            --debug)
+                load_sample_data=true
+                shift
+                ;;
+            --clean)
+                clean_install=true
+                shift
                 ;;
             *)
                 print_error "Unknown option: $1"
@@ -404,6 +504,16 @@ main() {
     print_status "Starting Modern Reservation Database Setup"
     print_status "========================================="
 
+    if [ "$load_sample_data" = true ]; then
+        print_status "🎲 DEBUG MODE: Sample data will be loaded"
+    fi
+
+    if [ "$clean_install" = true ]; then
+        print_warning "🧹 CLEAN INSTALL: Existing databases will be dropped"
+    fi
+
+    print_status ""
+
     # Check prerequisites
     if ! check_postgresql || ! check_redis || ! check_db_connectivity; then
         print_error "Prerequisites check failed"
@@ -412,6 +522,15 @@ main() {
 
     print_status "Prerequisites check passed"
     print_status ""
+
+    # Clean install if requested
+    if [ "$clean_install" = true ]; then
+        print_status "Performing clean installation..."
+        drop_database_if_exists "modern_reservation"
+        drop_database_if_exists "modern_reservation_dev"
+        drop_database_if_exists "modern_reservation_payments"
+        print_status ""
+    fi
 
     # Setup databases
     print_status "Setting up databases..."
@@ -427,11 +546,28 @@ main() {
     if execute_schema_migration "modern_reservation"; then
         verify_schema "modern_reservation"
         print_status ""
+
+        # Load sample data if --debug flag is set
+        if [ "$load_sample_data" = true ]; then
+            print_status ""
+            print_status "🎲 Loading sample data (this may take a few minutes)..."
+            load_sample_data "modern_reservation"
+            print_status ""
+        fi
+
         validate_database "modern_reservation"
     fi
 
     if execute_schema_migration "modern_reservation_dev"; then
         verify_schema "modern_reservation_dev"
+
+        # Load sample data for dev database if --debug flag is set
+        if [ "$load_sample_data" = true ]; then
+            print_status ""
+            print_status "🎲 Loading sample data for dev database..."
+            load_sample_data "modern_reservation_dev"
+            print_status ""
+        fi
     fi
 
     # Payment database might have different schema
@@ -447,14 +583,29 @@ main() {
     print_status "  • Dev Database:  modern_reservation_dev (user: reservation_user)"
     print_status "  • Payment DB:    modern_reservation_payments (user: modern_reservation)"
     print_status ""
+
+    if [ "$load_sample_data" = true ]; then
+        print_status "🎲 Sample Data Summary:"
+        print_status "  • Properties: 10 hotels with amenities"
+        print_status "  • Rooms: 150 rooms across properties"
+        print_status "  • Guests: 100 guests with profiles"
+        print_status "  • Users: 50 users with roles"
+        print_status "  • Rates: 100+ rates for testing"
+        print_status "  • Reservations: 150 bookings"
+        print_status "  • Payments: 120 payment records"
+        print_status "  • Reviews: 80 guest reviews"
+        print_status ""
+    fi
+
     print_status "Redis Server: Running on localhost:6379"
     print_status "PostgreSQL:   Running on localhost:5432"
     print_status ""
     print_success "Your business services should now be able to connect to the databases!"
     print_status ""
-    print_status "💡 To validate databases later, run:"
+    print_status "💡 Useful commands:"
     print_status "   $0 --validate                    # Validate main database"
     print_status "   $0 --validate -d <database_name> # Validate specific database"
+    print_status "   $0 --clean --debug               # Fresh install with sample data"
 }
 
 # Trap to handle script interruption
