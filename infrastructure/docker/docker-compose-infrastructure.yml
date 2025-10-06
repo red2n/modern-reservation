@@ -68,23 +68,81 @@ services:
       - modern-reservation-network
     restart: unless-stopped
 
-  # Service Discovery (Alternative to your Java Eureka)
-  # Removed Consul - Using Eureka for Java microservices
-  # consul:
-  #   image: consul:1.15
-  #   container_name: modern-reservation-consul
-  #   ports:
-  #     - "8500:8500"
-  #   environment:
-  #     - CONSUL_BIND_INTERFACE=eth0
-  #   networks:
-  #     - modern-reservation-network
-  #   restart: unless-stopped
+  # Apache Kafka with KRaft (No Zookeeper needed)
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: modern-reservation-kafka
+    ports:
+      - "9092:9092"      # Internal access
+      - "9094:9094"      # External access
+    environment:
+      # KRaft settings (Kafka without Zookeeper)
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+
+      # Listeners
+      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:9094"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+
+      # Cluster ID for KRaft
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
+
+      # Topic settings
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+
+      # Retention
+      KAFKA_LOG_RETENTION_HOURS: 168  # 7 days
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824  # 1GB
+
+      # Performance
+      KAFKA_COMPRESSION_TYPE: "snappy"
+      KAFKA_HEAP_OPTS: "-Xmx1G -Xms1G"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - modern-reservation-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Kafka UI for Monitoring
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: modern-reservation-kafka-ui
+    ports:
+      - "8090:8080"
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=modern-reservation
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+      - KAFKA_CLUSTERS_0_METRICS_PORT=9092
+      - DYNAMIC_CONFIG_ENABLED=true
+      - LOGGING_LEVEL_ROOT=INFO
+      - LOGGING_LEVEL_COM_PROVECTUS=INFO
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - modern-reservation-network
+    restart: unless-stopped
 
 volumes:
   postgres_data:
   pgadmin_data:
   redis_data:
+  kafka_data:
 
 networks:
   modern-reservation-network:

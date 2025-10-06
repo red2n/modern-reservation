@@ -314,6 +314,28 @@ show_docker_services_status() {
         print_table_row "redis" "FAILED" "6379" "Container not running"
     fi
 
+    # Kafka
+    if $DOCKER_CMD ps --filter "name=modern-reservation-kafka" --format "{{.Names}}" | grep -q "modern-reservation-kafka"; then
+        if $DOCKER_CMD exec modern-reservation-kafka kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1; then
+            print_table_row "kafka" "DOCKER" "9092" "Broker ready"
+        else
+            print_table_row "kafka" "WARNING" "9092" "Container running, broker not ready"
+        fi
+    else
+        print_table_row "kafka" "FAILED" "9092" "Container not running"
+    fi
+
+    # Kafka UI
+    if $DOCKER_CMD ps --filter "name=modern-reservation-kafka-ui" --format "{{.Names}}" | grep -q "modern-reservation-kafka-ui"; then
+        if curl -s -f http://localhost:8090 >/dev/null 2>&1; then
+            print_table_row "kafka-ui" "DOCKER" "8090" "Monitoring ready"
+        else
+            print_table_row "kafka-ui" "WARNING" "8090" "Container running, UI not ready"
+        fi
+    else
+        print_table_row "kafka-ui" "FAILED" "8090" "Container not running"
+    fi
+
     printf "${CYAN}└─────────────────────┴────────────┴─────────────┴────────────────────────────────┘${NC}\n"
 }
 
@@ -332,7 +354,7 @@ main() {
 
     local healthy_count=0
     local total_services=${#SERVICES[@]}
-    local docker_services=4  # zipkin, postgres, pgadmin, redis
+    local docker_services=6  # zipkin, postgres, pgadmin, redis, kafka, kafka-ui
     total_services=$((total_services + docker_services))
 
     # Print header

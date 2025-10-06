@@ -25,6 +25,8 @@ This starts:
 - **PostgreSQL** (Port 5432) - Database
 - **Redis** (Port 6379) - Cache
 - **pgAdmin** (Port 5050) - Database management GUI
+- **Kafka** (Port 9092, 9094) - Event streaming platform
+- **Kafka UI** (Port 8090) - Kafka monitoring and management
 
 ### 2. Start Application Services
 ```bash
@@ -57,8 +59,10 @@ docker-compose -f docker-compose-infrastructure.yml -f docker-compose-services.y
 
 - **Zipkin UI**: http://localhost:9411
 - **pgAdmin UI**: http://localhost:5050 (or http://172.27.108.197:5050 for WSL2)
+- **Kafka UI**: http://localhost:8090 (or http://172.27.108.197:8090 for WSL2)
 - **Database**: localhost:5432
 - **Redis**: localhost:6379
+- **Kafka**: localhost:9092 (internal), localhost:9094 (external)
 - **Gateway**: http://localhost:8080
 
 ## Environment Variables
