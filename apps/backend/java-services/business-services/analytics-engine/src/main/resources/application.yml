@@ -11,7 +11,7 @@ spring:
   application:
     name: analytics-engine
   config:
-    import: "optional:configserver:http://localhost:8888/config"
+    import: "optional:configserver:http://localhost:8888"
   profiles:
     active: development
 

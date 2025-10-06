@@ -12,6 +12,12 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# Parse command-line arguments
+RESTART_MODE=false
+if [ "$1" = "--restart" ]; then
+    RESTART_MODE=true
+fi
+
 # Base directory - dynamically detect script location (go up one level from scripts folder)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -110,14 +116,20 @@ start_docker_infrastructure() {
         return 1
     fi
 
-    # Check if services are already running
-    if docker ps --filter "name=modern-reservation-zipkin" --format "{{.Names}}" | grep -q "modern-reservation-zipkin"; then
-        print_success "Docker infrastructure services are already running"
-        return 0
+    # Check if services are already running (only in smart start mode)
+    if [ "$RESTART_MODE" = false ]; then
+        if docker ps --filter "name=modern-reservation-zipkin" --format "{{.Names}}" | grep -q "modern-reservation-zipkin"; then
+            print_success "Docker infrastructure services are already running"
+            return 0
+        fi
     fi
 
-    # Clean up any existing containers first
-    print_status "Cleaning up any existing Docker containers..."
+    # Clean up any existing containers (always in restart mode, only if needed in smart mode)
+    if [ "$RESTART_MODE" = true ]; then
+        print_status "Restart mode: Cleaning up existing Docker containers..."
+    else
+        print_status "Cleaning up any existing Docker containers..."
+    fi
     docker compose -f "$docker_compose_file" down --remove-orphans 2>/dev/null || true
     # Also remove any manually created containers with our naming pattern
     docker rm -f modern-reservation-zipkin modern-reservation-postgres modern-reservation-redis modern-reservation-consul 2>/dev/null || true
@@ -172,28 +184,46 @@ start_service() {
 
     print_status "Starting $service_name..."
 
-    # First, check if service is already running and healthy
-    local pid_file="$BASE_DIR/${service_name}.pid"
-    if [ -f "$pid_file" ]; then
-        local pid=$(cat "$pid_file")
-        if [ ! -z "$pid" ] && ps -p "$pid" > /dev/null 2>&1; then
-            # Process is running, check if it's healthy
-            if curl -s -f "http://localhost:$port/actuator/health" >/dev/null 2>&1; then
-                print_success "$service_name is already running and healthy on port $port"
-                return 0
+    # In restart mode, we skip health checks and force restart
+    if [ "$RESTART_MODE" = false ]; then
+        # Smart start mode - check if service is already running and healthy
+        local pid_file="$BASE_DIR/${service_name}.pid"
+        if [ -f "$pid_file" ]; then
+            local pid=$(cat "$pid_file")
+            if [ ! -z "$pid" ] && ps -p "$pid" > /dev/null 2>&1; then
+                # Process is running, check if it's healthy
+                if curl -s -f "http://localhost:$port/actuator/health" >/dev/null 2>&1; then
+                    print_success "$service_name is already running and healthy on port $port"
+                    return 0
+                fi
             fi
         fi
-    fi
 
-    # Check if port is already in use by another process
-    if ! check_port $port; then
-        print_warning "Port $port is already in use. Checking if it's our service..."
-        if curl -s -f "http://localhost:$port/actuator/health" >/dev/null 2>&1; then
-            print_success "$service_name is already running on port $port"
-            return 0
-        else
-            print_error "Port $port is occupied by another process"
-            return 1
+        # Check if port is already in use by another process
+        if ! check_port $port; then
+            print_warning "Port $port is already in use. Checking if it's our service..."
+            if curl -s -f "http://localhost:$port/actuator/health" >/dev/null 2>&1; then
+                print_success "$service_name is already running on port $port"
+                return 0
+            else
+                print_error "Port $port is occupied by another process"
+                return 1
+            fi
+        fi
+    else
+        # Restart mode - kill any existing process first
+        print_status "Restart mode: stopping any existing $service_name process..."
+        local pid_file="$BASE_DIR/${service_name}.pid"
+        if [ -f "$pid_file" ]; then
+            local pid=$(cat "$pid_file")
+            if [ ! -z "$pid" ] && ps -p "$pid" > /dev/null 2>&1; then
+                kill $pid && sleep 2
+                if ps -p "$pid" > /dev/null 2>&1; then
+                    kill -9 $pid
+                fi
+                print_status "Stopped existing $service_name process (PID: $pid)"
+            fi
+            rm -f "$pid_file"
         fi
     fi
 
@@ -269,13 +299,18 @@ main() {
     print_status "Base directory: $BASE_DIR"
     print_status "Infrastructure directory: $INFRA_DIR"
 
-    # Run infrastructure health check first
-    run_infrastructure_check
-
-    # Clean up any existing PID files
-    print_status "Cleaning up old PID files..."
-    cd "$BASE_DIR"
-    rm -f *.pid
+    # Handle restart mode vs smart start mode
+    if [ "$RESTART_MODE" = true ]; then
+        print_status "Restart mode enabled - stopping all services first..."
+        "$SCRIPT_DIR/stop-infrastructure.sh" || true
+        print_status "Cleaning up all PID files for fresh restart..."
+        cd "$BASE_DIR"
+        rm -f *.pid
+    else
+        # Smart start mode - only check health, don't clean up PID files
+        print_status "Smart start mode - checking service health first..."
+        run_infrastructure_check
+    fi
 
     # Build parent Maven project first
     if ! build_parent_project; then

@@ -25,8 +25,10 @@ show_usage() {
     printf "${CYAN}│ %-18s │ %-47s │${NC}\n" "Command" "Description"
     printf "${CYAN}├────────────────────┼─────────────────────────────────────────────────┤${NC}\n"
     printf "${GREEN}│ %-18s │ %-47s │${NC}\n" "start" "Start infrastructure services"
+    printf "${GREEN}│ %-18s │ %-47s │${NC}\n" "start --restart" "Force restart infrastructure services"
     printf "${GREEN}│ %-18s │ %-47s │${NC}\n" "start-business" "Start business services"
     printf "${GREEN}│ %-18s │ %-47s │${NC}\n" "start-all" "Start infrastructure + business services"
+    printf "${GREEN}│ %-18s │ %-47s │${NC}\n" "start-all --restart" "Force restart all services"
     printf "${RED}│ %-18s │ %-47s │${NC}\n" "stop" "Stop infrastructure services"
     printf "${RED}│ %-18s │ %-47s │${NC}\n" "stop-business" "Stop business services"
     printf "${RED}│ %-18s │ %-47s │${NC}\n" "stop-all" "Stop all services"
@@ -34,16 +36,28 @@ show_usage() {
     printf "${BLUE}│ %-18s │ %-47s │${NC}\n" "status-business" "Check business services status"
     printf "${BLUE}│ %-18s │ %-47s │${NC}\n" "status-all" "Check all services status"
     printf "${YELLOW}│ %-18s │ %-47s │${NC}\n" "eureka" "Open Eureka Dashboard"
-    printf "${CYAN}└────────────────────┴─────────────────────────────────────────────────┘${NC}\n"
+    printf "${CYAN}└────────────────────┴─────────────────────────────┘${NC}\n"
     echo ""
     printf "${YELLOW}💡 Quick Start:${NC} ./infra.sh start-all  |  ${RED}Stop All:${NC} ./infra.sh stop-all  |  ${BLUE}Check:${NC} ./infra.sh status-all\n"
+    printf "${YELLOW}💡 Force Restart:${NC} ./infra.sh start-all --restart  |  ${GREEN}Smart Start:${NC} ./infra.sh start-all\n"
 }
+
+# Parse restart flag
+RESTART_MODE=""
+if [ "$2" = "--restart" ]; then
+    RESTART_MODE="--restart"
+fi
 
 # Main command handling
 case "${1:-help}" in
     "start")
-        echo -e "${GREEN}🚀 Starting infrastructure services...${NC}"
-        exec "$SCRIPTS_DIR/start-infrastructure.sh"
+        if [ "$RESTART_MODE" = "--restart" ]; then
+            echo -e "${YELLOW}🔄 Force restarting infrastructure services...${NC}"
+            exec "$SCRIPTS_DIR/start-infrastructure.sh" --restart
+        else
+            echo -e "${GREEN}🚀 Starting infrastructure services...${NC}"
+            exec "$SCRIPTS_DIR/start-infrastructure.sh"
+        fi
         ;;
     "stop")
         echo -e "${RED}🛑 Stopping infrastructure services...${NC}"
@@ -54,8 +68,13 @@ case "${1:-help}" in
         exec "$SCRIPTS_DIR/check-infrastructure.sh"
         ;;
     "start-business")
-        echo -e "${GREEN}🚀 Starting business services...${NC}"
-        exec "$SCRIPTS_DIR/start-business-services.sh"
+        if [ "$RESTART_MODE" = "--restart" ]; then
+            echo -e "${YELLOW}🔄 Force restarting business services...${NC}"
+            exec "$SCRIPTS_DIR/start-business-services.sh" --restart
+        else
+            echo -e "${GREEN}🚀 Starting business services...${NC}"
+            exec "$SCRIPTS_DIR/start-business-services.sh"
+        fi
         ;;
     "stop-business")
         echo -e "${RED}🛑 Stopping business services...${NC}"
@@ -66,12 +85,22 @@ case "${1:-help}" in
         exec "$SCRIPTS_DIR/check-business-services.sh"
         ;;
     "start-all")
-        echo -e "${GREEN}🚀 Starting all services (infrastructure + business)...${NC}"
-        echo -e "${BLUE}Step 1/2: Starting infrastructure services...${NC}"
-        "$SCRIPTS_DIR/start-infrastructure.sh"
+        if [ "$RESTART_MODE" = "--restart" ]; then
+            echo -e "${YELLOW}🔄 Force restarting all services (infrastructure + business)...${NC}"
+            echo -e "${BLUE}Step 1/2: Force restarting infrastructure services...${NC}"
+            "$SCRIPTS_DIR/start-infrastructure.sh" --restart
+        else
+            echo -e "${GREEN}🚀 Starting all services (infrastructure + business)...${NC}"
+            echo -e "${BLUE}Step 1/2: Starting infrastructure services...${NC}"
+            "$SCRIPTS_DIR/start-infrastructure.sh"
+        fi
         if [ $? -eq 0 ]; then
             echo -e "${BLUE}Step 2/2: Starting business services...${NC}"
-            exec "$SCRIPTS_DIR/start-business-services.sh"
+            if [ "$RESTART_MODE" = "--restart" ]; then
+                exec "$SCRIPTS_DIR/start-business-services.sh" --restart
+            else
+                exec "$SCRIPTS_DIR/start-business-services.sh"
+            fi
         else
             echo -e "${RED}❌ Infrastructure startup failed. Skipping business services.${NC}"
             exit 1

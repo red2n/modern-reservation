@@ -19,11 +19,12 @@ spring:
         #   search-paths: config
         #   clone-on-start: true
         #   timeout: 10
-  security:
-    user:
-      name: ${CONFIG_SERVER_USERNAME:config-admin}
-      password: ${CONFIG_SERVER_PASSWORD:#{null}}
-      roles: ADMIN
+  # Temporarily disable security for testing
+  # security:
+  #   user:
+  #     name: ${CONFIG_SERVER_USERNAME:config-admin}
+  #     password: ${CONFIG_SERVER_PASSWORD:#{null}}
+  #     roles: ADMIN
 
 # Management and Monitoring
 management:

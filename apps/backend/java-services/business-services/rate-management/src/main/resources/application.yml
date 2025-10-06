@@ -8,7 +8,7 @@ spring:
   application:
     name: rate-management
   config:
-    import: "optional:configserver:http://localhost:8888/config"
+    import: "optional:configserver:http://localhost:8888"
 
   # CRITICAL: Set DB_PASSWORD as environment variable
   datasource:

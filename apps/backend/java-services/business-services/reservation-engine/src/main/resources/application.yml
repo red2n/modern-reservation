@@ -7,8 +7,8 @@ spring:
     name: reservation-engine
   config:
     import:
-      - "configserver:${CONFIG_SERVER_URL:http://localhost:8888/config}"
-      - "optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/config}/business-services-common.yml"
+      - "configserver:${CONFIG_SERVER_URL:http://localhost:8888}"
+      - "optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}/business-services-common.yml"
   cloud:
     config:
       username: ${CONFIG_SERVER_USERNAME:config-admin}
