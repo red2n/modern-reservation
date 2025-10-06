@@ -1,6 +1,8 @@
 server:
   port: 8081
   address: 127.0.0.1  # Bind only to localhost - not accessible externally
+  servlet:
+    context-path: /reservation-engine
 
 spring:
   application:
@@ -19,7 +21,7 @@ spring:
   # Database Configuration (using Docker PostgreSQL)
   # CRITICAL: Set DB_PASSWORD as environment variable in production
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/modern_reservation}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/modern_reservation_dev}
     username: ${DB_USERNAME:reservation_user}
     password: ${DB_PASSWORD:#{null}}
     driver-class-name: org.postgresql.Driver
