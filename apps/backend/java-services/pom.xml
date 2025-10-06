@@ -236,6 +236,8 @@
                     <configuration>
                         <source>${java.version}</source>
                         <target>${java.version}</target>
+                        <!-- Preserve parameter names for reflection (required for Spring @PathVariable, @RequestParam) -->
+                        <parameters>true</parameters>
                         <annotationProcessorPaths>
                             <path>
                                 <groupId>org.mapstruct</groupId>

@@ -30,11 +30,13 @@
             <artifactId>spring-cloud-config-server</artifactId>
         </dependency>
 
-        <!-- Security for Config Server -->
+        <!-- Security for Config Server - DISABLED -->
+        <!--
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
+        -->
 
         <!-- Actuator for Health Checks -->
         <dependency>
