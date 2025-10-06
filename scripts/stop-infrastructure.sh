@@ -165,7 +165,7 @@ stop_service_by_process() {
 stop_docker_infrastructure() {
     print_status "Stopping Docker infrastructure containers..."
 
-    local containers=("modern-reservation-postgres" "modern-reservation-redis" "modern-reservation-consul" "modern-reservation-kafka" "modern-reservation-zookeeper")
+    local containers=("modern-reservation-postgres" "modern-reservation-redis" "modern-reservation-kafka" "modern-reservation-zookeeper")
     local stopped=0
 
     for container in "${containers[@]}"; do

@@ -24,7 +24,7 @@ This starts:
 - **Zipkin** (Port 9411) - Distributed tracing
 - **PostgreSQL** (Port 5432) - Database
 - **Redis** (Port 6379) - Cache
-- **Consul** (Port 8500) - Service discovery (optional)
+- **pgAdmin** (Port 5050) - Database management GUI
 
 ### 2. Start Application Services
 ```bash
@@ -56,10 +56,10 @@ docker-compose -f docker-compose-infrastructure.yml -f docker-compose-services.y
 ## Access Points
 
 - **Zipkin UI**: http://localhost:9411
+- **pgAdmin UI**: http://localhost:5050 (or http://172.27.108.197:5050 for WSL2)
 - **Database**: localhost:5432
 - **Redis**: localhost:6379
 - **Gateway**: http://localhost:8080
-- **Consul** (if used): http://localhost:8500
 
 ## Environment Variables
 

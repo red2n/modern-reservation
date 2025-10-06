@@ -69,16 +69,17 @@ services:
     restart: unless-stopped
 
   # Service Discovery (Alternative to your Java Eureka)
-  consul:
-    image: consul:1.15
-    container_name: modern-reservation-consul
-    ports:
-      - "8500:8500"
-    environment:
-      - CONSUL_BIND_INTERFACE=eth0
-    networks:
-      - modern-reservation-network
-    restart: unless-stopped
+  # Removed Consul - Using Eureka for Java microservices
+  # consul:
+  #   image: consul:1.15
+  #   container_name: modern-reservation-consul
+  #   ports:
+  #     - "8500:8500"
+  #   environment:
+  #     - CONSUL_BIND_INTERFACE=eth0
+  #   networks:
+  #     - modern-reservation-network
+  #   restart: unless-stopped
 
 volumes:
   postgres_data:

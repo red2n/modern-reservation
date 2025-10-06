@@ -280,7 +280,7 @@ show_docker_services_status() {
     IFS='|' read -r status details <<< "$status_info"
     print_table_row "zipkin-server" "$status" "9411" "$details"
 
-    # Check other Docker services (PostgreSQL, Redis, pgAdmin, Consul)
+    # Check other Docker services (PostgreSQL, Redis, pgAdmin)
     # PostgreSQL
     if $DOCKER_CMD ps --filter "name=modern-reservation-postgres" --format "{{.Names}}" | grep -q "modern-reservation-postgres"; then
         if $DOCKER_CMD exec modern-reservation-postgres pg_isready -U postgres >/dev/null 2>&1; then
