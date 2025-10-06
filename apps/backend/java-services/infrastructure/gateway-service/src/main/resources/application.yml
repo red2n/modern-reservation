@@ -5,11 +5,17 @@ spring:
   application:
     name: gateway-service
   config:
-    import: "configserver:http://localhost:8888/config"
+    import: "configserver:${CONFIG_SERVER_URL:http://localhost:8888/config}"
   cloud:
     config:
-      username: config-admin
-      password: ${CONFIG_SERVER_PASSWORD:admin123}
+      username: ${CONFIG_SERVER_USERNAME:config-admin}
+      password: ${CONFIG_SERVER_PASSWORD:#{null}}
+      fail-fast: false
+      retry:
+        max-attempts: 6
+        initial-interval: 1000
+        max-interval: 2000
+        multiplier: 1.1
     gateway:
       discovery:
         locator:
@@ -266,9 +272,13 @@ resilience4j:
         minimum-number-of-calls: 3
 
 # JWT Configuration
+# CRITICAL: JWT_SECRET must be set as environment variable (minimum 256-bit)
+# Generate secure secret: openssl rand -base64 32
 jwt:
-  secret: ${JWT_SECRET:modernReservationSecretKey2024}
-  expiration: 86400000 # 24 hours
+  secret: ${JWT_SECRET:#{null}}
+  expiration: ${JWT_EXPIRATION:86400000} # 24 hours (default)
+  issuer: ${JWT_ISSUER:modern-reservation-system}
+  audience: ${JWT_AUDIENCE:modern-reservation-api}
 
 # Management and Monitoring
 management:

@@ -23,8 +23,8 @@ spring:
         #   timeout: 10
   security:
     user:
-      name: config-admin
-      password: ${CONFIG_SERVER_PASSWORD:admin123}
+      name: ${CONFIG_SERVER_USERNAME:config-admin}
+      password: ${CONFIG_SERVER_PASSWORD:#{null}}
       roles: ADMIN
 
 # Management and Monitoring
