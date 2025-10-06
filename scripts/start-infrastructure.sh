@@ -109,7 +109,7 @@ wait_for_service() {
 start_docker_infrastructure() {
     local docker_compose_file="$BASE_DIR/infrastructure/docker/docker-compose-infrastructure.yml"
 
-    print_status "Starting Docker infrastructure services (Zipkin, PostgreSQL, Redis)..."
+    print_status "Starting Docker infrastructure services (Zipkin, PostgreSQL, Redis, Consul, pgAdmin)..."
 
     if [ ! -f "$docker_compose_file" ]; then
         print_error "Docker Compose file not found: $docker_compose_file"
@@ -132,7 +132,7 @@ start_docker_infrastructure() {
     fi
     docker compose -f "$docker_compose_file" down --remove-orphans 2>/dev/null || true
     # Also remove any manually created containers with our naming pattern
-    docker rm -f modern-reservation-zipkin modern-reservation-postgres modern-reservation-redis modern-reservation-consul 2>/dev/null || true
+    docker rm -f modern-reservation-zipkin modern-reservation-postgres modern-reservation-redis modern-reservation-consul modern-reservation-pgadmin 2>/dev/null || true
 
     # Start infrastructure services via Docker Compose
     print_status "Executing: docker compose up -d for infrastructure services"

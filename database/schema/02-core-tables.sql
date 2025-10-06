@@ -1,0 +1,315 @@
+-- =====================================================
+-- 02-core-tables.sql
+-- Core Table Definitions from Entity Classes
+-- Generated from JPA Entities
+-- Date: 2025-10-06
+-- =====================================================
+
+-- =====================================================
+-- RATE MANAGEMENT TABLES
+-- =====================================================
+
+-- Rates Table
+CREATE TABLE rates (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    property_id UUID NOT NULL,
+    room_type_id UUID NOT NULL,
+    rate_code VARCHAR(50) NOT NULL,
+    rate_name VARCHAR(100) NOT NULL,
+    description VARCHAR(500),
+    rate_strategy rate_strategy NOT NULL,
+    rate_status rate_status NOT NULL,
+    season_type season_type,
+    base_rate NUMERIC(10, 2) NOT NULL,
+    current_rate NUMERIC(10, 2) NOT NULL,
+    minimum_rate NUMERIC(10, 2),
+    maximum_rate NUMERIC(10, 2),
+    currency CHAR(3) NOT NULL DEFAULT 'USD',
+    effective_date DATE NOT NULL,
+    expiry_date DATE,
+    minimum_stay INTEGER,
+    maximum_stay INTEGER,
+    advance_booking_days INTEGER,
+    maximum_booking_days INTEGER,
+    is_refundable BOOLEAN NOT NULL DEFAULT true,
+    is_modifiable BOOLEAN NOT NULL DEFAULT true,
+    cancellation_hours INTEGER,
+    tax_inclusive BOOLEAN NOT NULL DEFAULT false,
+    service_fee_inclusive BOOLEAN NOT NULL DEFAULT false,
+    occupancy_multiplier NUMERIC(5, 2),
+    demand_multiplier NUMERIC(5, 2),
+    competitive_adjustment NUMERIC(5, 2),
+    priority_order INTEGER NOT NULL DEFAULT 0,
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    created_by VARCHAR(100) NOT NULL,
+    updated_by VARCHAR(100),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP,
+    version BIGINT DEFAULT 0
+);
+
+COMMENT ON TABLE rates IS 'Rate management table storing pricing information';
+COMMENT ON COLUMN rates.property_id IS 'Reference to property';
+COMMENT ON COLUMN rates.room_type_id IS 'Reference to room type';
+COMMENT ON COLUMN rates.rate_code IS 'Unique rate identifier code';
+COMMENT ON COLUMN rates.rate_strategy IS 'Pricing strategy applied';
+COMMENT ON COLUMN rates.rate_status IS 'Current rate status';
+COMMENT ON COLUMN rates.season_type IS 'Seasonal pricing period';
+COMMENT ON COLUMN rates.base_rate IS 'Original base rate';
+COMMENT ON COLUMN rates.current_rate IS 'Currently active rate after adjustments';
+COMMENT ON COLUMN rates.occupancy_multiplier IS 'Occupancy-based pricing multiplier';
+COMMENT ON COLUMN rates.demand_multiplier IS 'Demand-based pricing multiplier';
+COMMENT ON COLUMN rates.competitive_adjustment IS 'Market competition adjustment';
+COMMENT ON COLUMN rates.priority_order IS 'Display/selection priority';
+COMMENT ON COLUMN rates.version IS 'Optimistic locking version';
+
+-- =====================================================
+-- RESERVATION ENGINE TABLES
+-- =====================================================
+
+-- Reservations Table
+CREATE TABLE reservations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    confirmation_number VARCHAR(20) UNIQUE NOT NULL,
+    property_id UUID NOT NULL,
+    guest_id UUID,
+    guest_first_name VARCHAR(100) NOT NULL,
+    guest_last_name VARCHAR(100) NOT NULL,
+    guest_email VARCHAR(255) NOT NULL,
+    guest_phone VARCHAR(20),
+    check_in_date DATE NOT NULL,
+    check_out_date DATE NOT NULL,
+    nights INTEGER NOT NULL,
+    room_type_id UUID,
+    room_number VARCHAR(10),
+    adults INTEGER NOT NULL CHECK (adults > 0),
+    children INTEGER DEFAULT 0,
+    infants INTEGER DEFAULT 0,
+    room_rate NUMERIC(10, 2) NOT NULL,
+    taxes NUMERIC(10, 2),
+    fees NUMERIC(10, 2),
+    total_amount NUMERIC(10, 2) NOT NULL,
+    currency CHAR(3) DEFAULT 'USD',
+    status reservation_status NOT NULL DEFAULT 'PENDING',
+    source reservation_source NOT NULL,
+    special_requests TEXT,
+    internal_notes TEXT,
+    booking_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    arrival_time VARCHAR(5),
+    departure_time VARCHAR(5),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+COMMENT ON TABLE reservations IS 'Reservation bookings table';
+COMMENT ON COLUMN reservations.confirmation_number IS 'Unique booking confirmation number';
+COMMENT ON COLUMN reservations.property_id IS 'Reference to property';
+COMMENT ON COLUMN reservations.guest_id IS 'Reference to guest profile (if registered)';
+COMMENT ON COLUMN reservations.nights IS 'Number of nights for stay';
+COMMENT ON COLUMN reservations.status IS 'Current reservation status';
+COMMENT ON COLUMN reservations.source IS 'Booking channel/source';
+COMMENT ON COLUMN reservations.special_requests IS 'Guest special requests';
+COMMENT ON COLUMN reservations.internal_notes IS 'Internal staff notes';
+
+-- Reservation Status History Table
+CREATE TABLE reservation_status_history (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    reservation_id UUID NOT NULL,
+    old_status reservation_status,
+    new_status reservation_status,
+    reason TEXT,
+    notes TEXT,
+    changed_by UUID,
+    changed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+COMMENT ON TABLE reservation_status_history IS 'Audit trail for reservation status changes';
+COMMENT ON COLUMN reservation_status_history.reservation_id IS 'Reference to reservation';
+COMMENT ON COLUMN reservation_status_history.old_status IS 'Previous status';
+COMMENT ON COLUMN reservation_status_history.new_status IS 'New status';
+COMMENT ON COLUMN reservation_status_history.changed_by IS 'User who made the change';
+
+-- =====================================================
+-- PAYMENT PROCESSOR TABLES
+-- =====================================================
+
+-- Payments Table
+CREATE TABLE payments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    payment_reference VARCHAR(100) UNIQUE NOT NULL,
+    reservation_id UUID NOT NULL,
+    customer_id UUID NOT NULL,
+    amount NUMERIC(10, 2) NOT NULL CHECK (amount >= 0.01),
+    currency CHAR(3) NOT NULL,
+    processing_fee NUMERIC(10, 2) CHECK (processing_fee >= 0),
+    payment_method payment_method NOT NULL,
+    transaction_type transaction_type NOT NULL,
+    status payment_status NOT NULL DEFAULT 'PENDING',
+    gateway_provider VARCHAR(50),
+    gateway_transaction_id VARCHAR(100),
+    authorization_code VARCHAR(50),
+    card_last_four CHAR(4),
+    card_brand VARCHAR(20),
+    billing_name VARCHAR(100),
+    billing_email VARCHAR(100),
+    billing_address VARCHAR(255),
+    description VARCHAR(500),
+    failure_reason VARCHAR(255),
+    refunded_amount NUMERIC(10, 2) DEFAULT 0.00,
+    authorized_at TIMESTAMP,
+    captured_at TIMESTAMP,
+    settled_at TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+COMMENT ON TABLE payments IS 'Payment transactions table';
+COMMENT ON COLUMN payments.payment_reference IS 'Unique payment reference number';
+COMMENT ON COLUMN payments.reservation_id IS 'Reference to reservation';
+COMMENT ON COLUMN payments.customer_id IS 'Reference to customer';
+COMMENT ON COLUMN payments.payment_method IS 'Method of payment';
+COMMENT ON COLUMN payments.transaction_type IS 'Type of transaction';
+COMMENT ON COLUMN payments.status IS 'Payment processing status';
+COMMENT ON COLUMN payments.gateway_provider IS 'Payment gateway provider name';
+COMMENT ON COLUMN payments.gateway_transaction_id IS 'External gateway transaction ID';
+COMMENT ON COLUMN payments.card_last_four IS 'Last 4 digits of card (PCI compliant)';
+COMMENT ON COLUMN payments.refunded_amount IS 'Total amount refunded';
+
+-- =====================================================
+-- AVAILABILITY CALCULATOR TABLES
+-- =====================================================
+
+-- Create availability schema
+CREATE SCHEMA IF NOT EXISTS availability;
+
+-- Room Availability Table
+CREATE TABLE availability.room_availability (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    property_id UUID NOT NULL,
+    room_type_id UUID NOT NULL,
+    room_number VARCHAR(20),
+    room_category room_category NOT NULL,
+    availability_date DATE NOT NULL,
+    availability_status availability_status NOT NULL DEFAULT 'AVAILABLE',
+    base_rate NUMERIC(10, 2) CHECK (base_rate >= 0),
+    current_rate NUMERIC(10, 2) CHECK (current_rate >= 0),
+    min_rate NUMERIC(10, 2) CHECK (min_rate >= 0),
+    max_rate NUMERIC(10, 2) CHECK (max_rate >= 0),
+    total_rooms INTEGER NOT NULL CHECK (total_rooms >= 1 AND total_rooms <= 1000),
+    available_rooms INTEGER NOT NULL CHECK (available_rooms >= 0),
+    occupied_rooms INTEGER NOT NULL DEFAULT 0,
+    maintenance_rooms INTEGER NOT NULL DEFAULT 0,
+    blocked_rooms INTEGER NOT NULL DEFAULT 0,
+    minimum_stay INTEGER NOT NULL DEFAULT 1,
+    maximum_stay INTEGER,
+    closed_to_arrival BOOLEAN NOT NULL DEFAULT false,
+    closed_to_departure BOOLEAN NOT NULL DEFAULT false,
+    stop_sell BOOLEAN NOT NULL DEFAULT false,
+    currency CHAR(3) NOT NULL DEFAULT 'USD',
+    notes VARCHAR(500),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+COMMENT ON SCHEMA availability IS 'Schema for availability management';
+COMMENT ON TABLE availability.room_availability IS 'Daily room availability and pricing';
+COMMENT ON COLUMN availability.room_availability.property_id IS 'Reference to property';
+COMMENT ON COLUMN availability.room_availability.room_type_id IS 'Reference to room type';
+COMMENT ON COLUMN availability.room_availability.room_number IS 'Specific room number (optional)';
+COMMENT ON COLUMN availability.room_availability.availability_date IS 'Date for availability';
+COMMENT ON COLUMN availability.room_availability.availability_status IS 'Current availability status';
+COMMENT ON COLUMN availability.room_availability.total_rooms IS 'Total room inventory';
+COMMENT ON COLUMN availability.room_availability.available_rooms IS 'Currently available rooms';
+COMMENT ON COLUMN availability.room_availability.closed_to_arrival IS 'CTA restriction flag';
+COMMENT ON COLUMN availability.room_availability.closed_to_departure IS 'CTD restriction flag';
+COMMENT ON COLUMN availability.room_availability.stop_sell IS 'Stop sell flag';
+
+-- =====================================================
+-- ANALYTICS ENGINE TABLES
+-- =====================================================
+
+-- Analytics Metrics Table
+CREATE TABLE analytics_metrics (
+    metric_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    metric_type metric_type NOT NULL,
+    property_id UUID,
+    room_type_id UUID,
+    rate_plan_id UUID,
+    channel_id UUID,
+    user_id UUID,
+    time_granularity time_granularity NOT NULL,
+    period_start TIMESTAMP NOT NULL,
+    period_end TIMESTAMP NOT NULL,
+    metric_value NUMERIC(19, 4),
+    count_value BIGINT,
+    percentage_value NUMERIC(5, 2),
+    currency_code CHAR(3),
+    formatted_value VARCHAR(255),
+    status analytics_status NOT NULL DEFAULT 'PENDING',
+    calculated_at TIMESTAMP,
+    expires_at TIMESTAMP,
+    calculation_duration_ms BIGINT,
+    data_points_count INTEGER CHECK (data_points_count >= 0),
+    confidence_score NUMERIC(3, 2) CHECK (confidence_score >= 0 AND confidence_score <= 1),
+    baseline_value NUMERIC(19, 4),
+    target_value NUMERIC(19, 4),
+    variance_percentage NUMERIC(5, 2),
+    trend_direction VARCHAR(10) CHECK (trend_direction IN ('UP', 'DOWN', 'STABLE', 'UNKNOWN')),
+    seasonality_factor NUMERIC(5, 4),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+COMMENT ON TABLE analytics_metrics IS 'Analytics metrics and KPIs';
+COMMENT ON COLUMN analytics_metrics.metric_type IS 'Type of metric being tracked';
+COMMENT ON COLUMN analytics_metrics.time_granularity IS 'Time period granularity';
+COMMENT ON COLUMN analytics_metrics.period_start IS 'Metric calculation period start';
+COMMENT ON COLUMN analytics_metrics.period_end IS 'Metric calculation period end';
+COMMENT ON COLUMN analytics_metrics.metric_value IS 'Calculated metric value';
+COMMENT ON COLUMN analytics_metrics.confidence_score IS 'Statistical confidence (0-1)';
+COMMENT ON COLUMN analytics_metrics.trend_direction IS 'Metric trend direction';
+
+-- Analytics Metric Dimensions Table (for @ElementCollection)
+CREATE TABLE analytics_metric_dimensions (
+    metric_id UUID NOT NULL,
+    dimension_key VARCHAR(50) NOT NULL,
+    dimension_value VARCHAR(255),
+    PRIMARY KEY (metric_id, dimension_key)
+);
+
+COMMENT ON TABLE analytics_metric_dimensions IS 'Key-value dimensions for metrics';
+
+-- Analytics Reports Table
+CREATE TABLE analytics_reports (
+    report_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    report_name VARCHAR(200) NOT NULL,
+    report_type VARCHAR(50) NOT NULL CHECK (
+        report_type IN ('DASHBOARD', 'EXECUTIVE', 'OPERATIONAL', 'FINANCIAL',
+                       'OCCUPANCY', 'REVENUE', 'CUSTOMER', 'CUSTOM', 'SCHEDULED')
+    ),
+    report_description TEXT,
+    property_id UUID,
+    time_granularity time_granularity NOT NULL,
+    period_start TIMESTAMP NOT NULL,
+    period_end TIMESTAMP NOT NULL,
+    status analytics_status NOT NULL DEFAULT 'PENDING',
+    generation_started_at TIMESTAMP,
+    generation_completed_at TIMESTAMP,
+    scheduled_at TIMESTAMP,
+    created_by UUID,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+COMMENT ON TABLE analytics_reports IS 'Generated analytics reports';
+COMMENT ON COLUMN analytics_reports.report_type IS 'Type of report';
+COMMENT ON COLUMN analytics_reports.status IS 'Report generation status';
+
+-- Report Property IDs Table (for @ElementCollection)
+CREATE TABLE report_property_ids (
+    report_id UUID NOT NULL,
+    property_id UUID NOT NULL,
+    PRIMARY KEY (report_id, property_id)
+);
+
+COMMENT ON TABLE report_property_ids IS 'Multi-property associations for reports';

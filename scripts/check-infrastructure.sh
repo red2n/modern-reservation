@@ -169,9 +169,14 @@ check_service() {
     fi
 
     local port_pid=$(lsof -Pi :$port -sTCP:LISTEN -t 2>/dev/null)
+    # Check if port_pid matches our PID or is a child of our PID (Maven spawns child Java process)
     if [ "$port_pid" != "$pid" ]; then
-        echo "WARNING|Port used by different process"
-        return 1
+        # Check if port_pid is a child of our PID
+        local parent_pid=$(ps -o ppid= -p "$port_pid" 2>/dev/null | tr -d ' ')
+        if [ "$parent_pid" != "$pid" ]; then
+            echo "WARNING|Port used by different process"
+            return 1
+        fi
     fi
 
     # Check service health
@@ -275,7 +280,7 @@ show_docker_services_status() {
     IFS='|' read -r status details <<< "$status_info"
     print_table_row "zipkin-server" "$status" "9411" "$details"
 
-    # Check other Docker services (PostgreSQL, Redis)
+    # Check other Docker services (PostgreSQL, Redis, pgAdmin, Consul)
     # PostgreSQL
     if $DOCKER_CMD ps --filter "name=modern-reservation-postgres" --format "{{.Names}}" | grep -q "modern-reservation-postgres"; then
         if $DOCKER_CMD exec modern-reservation-postgres pg_isready -U postgres >/dev/null 2>&1; then
@@ -285,6 +290,17 @@ show_docker_services_status() {
         fi
     else
         print_table_row "postgresql" "FAILED" "5432" "Container not running"
+    fi
+
+    # pgAdmin
+    if $DOCKER_CMD ps --filter "name=modern-reservation-pgadmin" --format "{{.Names}}" | grep -q "modern-reservation-pgadmin"; then
+        if curl -s -f http://localhost:5050 >/dev/null 2>&1; then
+            print_table_row "pgadmin" "DOCKER" "5050" "GUI ready"
+        else
+            print_table_row "pgadmin" "WARNING" "5050" "Container running, GUI not ready"
+        fi
+    else
+        print_table_row "pgadmin" "FAILED" "5050" "Container not running"
     fi
 
     # Redis
@@ -316,7 +332,7 @@ main() {
 
     local healthy_count=0
     local total_services=${#SERVICES[@]}
-    local docker_services=3  # zipkin, postgres, redis
+    local docker_services=4  # zipkin, postgres, pgadmin, redis
     total_services=$((total_services + docker_services))
 
     # Print header
