@@ -5,7 +5,7 @@ spring:
   application:
     name: eureka-server
   config:
-    import: "configserver:http://localhost:8888/config"
+    import: "configserver:http://localhost:8888"
   cloud:
     config:
       username: config-admin
