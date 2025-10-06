@@ -1,7 +1,9 @@
 package com.modernreservation.reservationengine.service;
 
+import com.modernreservation.reservationengine.dto.ReservationAuditDTO;
 import com.modernreservation.reservationengine.dto.ReservationRequestDTO;
 import com.modernreservation.reservationengine.dto.ReservationResponseDTO;
+import com.modernreservation.reservationengine.dto.ReservationSummaryDTO;
 import com.modernreservation.reservationengine.entity.Reservation;
 import com.modernreservation.reservationengine.entity.ReservationAudit;
 import com.modernreservation.reservationengine.enums.ReservationStatus;
@@ -267,7 +269,7 @@ public class ReservationService {
     }
 
     /**
-     * Get reservations by property
+     * Get reservations by property (full details)
      */
     @Cacheable(value = "reservations", key = "'property:' + #propertyId + ':' + #pageable.pageNumber")
     @Transactional(readOnly = true)
@@ -275,6 +277,28 @@ public class ReservationService {
         log.debug("Fetching reservations for property: {}", propertyId);
         return reservationRepository.findByPropertyId(propertyId, pageable)
                 .map(this::mapToResponseDTO);
+    }
+
+    /**
+     * Get reservations by property (summary only - optimized for list views)
+     */
+    @Cacheable(value = "reservations", key = "'property:summary:' + #propertyId + ':' + #pageable.pageNumber")
+    @Transactional(readOnly = true)
+    public Page<ReservationSummaryDTO> getReservationsSummaryByProperty(UUID propertyId, Pageable pageable) {
+        log.debug("Fetching reservation summaries for property: {}", propertyId);
+        return reservationRepository.findByPropertyId(propertyId, pageable)
+                .map(this::mapToSummaryDTO);
+    }
+
+    /**
+     * Get audit information for a specific reservation
+     */
+    @Transactional(readOnly = true)
+    public Optional<ReservationAuditDTO> getReservationAuditInfo(UUID reservationId) {
+        log.debug("Fetching audit information for reservation: {}", reservationId);
+        return reservationRepository.findById(reservationId)
+                .map(this::mapToResponseDTO)
+                .map(ReservationAuditDTO::from);
     }
 
     /**
@@ -293,7 +317,7 @@ public class ReservationService {
     }
 
     /**
-     * Get upcoming arrivals
+     * Get upcoming arrivals (full details)
      */
     @Transactional(readOnly = true)
     public List<ReservationResponseDTO> getUpcomingArrivals(UUID propertyId, LocalDate date) {
@@ -305,7 +329,19 @@ public class ReservationService {
     }
 
     /**
-     * Get upcoming departures
+     * Get upcoming arrivals (summary only - optimized for dashboard)
+     */
+    @Transactional(readOnly = true)
+    public List<ReservationSummaryDTO> getUpcomingArrivalsSummary(UUID propertyId, LocalDate date) {
+        log.debug("Fetching upcoming arrival summaries for property: {} on date: {}", propertyId, date);
+        return reservationRepository.findUpcomingArrivals(propertyId, date)
+                .stream()
+                .map(this::mapToSummaryDTO)
+                .toList();
+    }
+
+    /**
+     * Get upcoming departures (full details)
      */
     @Transactional(readOnly = true)
     public List<ReservationResponseDTO> getUpcomingDepartures(UUID propertyId, LocalDate date) {
@@ -313,6 +349,18 @@ public class ReservationService {
         return reservationRepository.findUpcomingDepartures(propertyId, date)
                 .stream()
                 .map(this::mapToResponseDTO)
+                .toList();
+    }
+
+    /**
+     * Get upcoming departures (summary only - optimized for dashboard)
+     */
+    @Transactional(readOnly = true)
+    public List<ReservationSummaryDTO> getUpcomingDeparturesSummary(UUID propertyId, LocalDate date) {
+        log.debug("Fetching upcoming departure summaries for property: {} on date: {}", propertyId, date);
+        return reservationRepository.findUpcomingDepartures(propertyId, date)
+                .stream()
+                .map(this::mapToSummaryDTO)
                 .toList();
     }
 
@@ -363,6 +411,31 @@ public class ReservationService {
         } catch (Exception e) {
             log.error("Failed to publish {} event for reservation: {}", eventType, reservation.getId(), e);
         }
+    }
+
+    /**
+     * Map Reservation entity to lightweight summary DTO
+     * Only includes essential fields for list/grid displays
+     */
+    private ReservationSummaryDTO mapToSummaryDTO(Reservation reservation) {
+        int totalGuests = reservation.getAdults() +
+            (reservation.getChildren() != null ? reservation.getChildren() : 0) +
+            (reservation.getInfants() != null ? reservation.getInfants() : 0);
+
+        return new ReservationSummaryDTO(
+            reservation.getId(),
+            reservation.getConfirmationNumber(),
+            reservation.getGuestFirstName() + " " + reservation.getGuestLastName(),
+            reservation.getGuestEmail(),
+            reservation.getCheckInDate(),
+            reservation.getCheckOutDate(),
+            reservation.getNights(),
+            reservation.getRoomNumber(),
+            reservation.getStatus(),
+            reservation.getTotalAmount(),
+            reservation.getCurrency(),
+            totalGuests
+        );
     }
 
     private ReservationResponseDTO mapToResponseDTO(Reservation reservation) {

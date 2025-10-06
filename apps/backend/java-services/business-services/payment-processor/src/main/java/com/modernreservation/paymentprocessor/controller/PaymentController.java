@@ -264,8 +264,8 @@ public class PaymentController {
 
     @GetMapping("/reservation/{reservationId}")
     @Operation(
-        summary = "Get payments by reservation",
-        description = "Retrieves all payments associated with a specific reservation."
+        summary = "Get payments by reservation (full details)",
+        description = "Retrieves all payments associated with a specific reservation with complete details."
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Payments retrieved successfully")
@@ -278,10 +278,28 @@ public class PaymentController {
         return ResponseEntity.ok(payments);
     }
 
+    @GetMapping("/reservation/{reservationId}/summary")
+    @Operation(
+        summary = "Get payments by reservation (summary only - optimized)",
+        description = "Retrieves lightweight payment summaries for a reservation. " +
+                "Reduces payload size by ~70% compared to full details. " +
+                "Perfect for transaction lists and payment history tables."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Payment summaries retrieved successfully")
+    })
+    public ResponseEntity<List<PaymentSummaryDTO>> getPaymentsSummaryByReservation(
+            @Parameter(description = "Reservation ID", required = true)
+            @PathVariable @Positive Long reservationId) {
+
+        List<PaymentSummaryDTO> payments = paymentService.getPaymentsSummaryByReservation(reservationId);
+        return ResponseEntity.ok(payments);
+    }
+
     @GetMapping("/customer/{customerId}")
     @Operation(
-        summary = "Get payments by customer",
-        description = "Retrieves paginated payments for a specific customer."
+        summary = "Get payments by customer (full details)",
+        description = "Retrieves paginated payments for a specific customer with complete details."
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Payments retrieved successfully")
@@ -289,10 +307,28 @@ public class PaymentController {
     public ResponseEntity<Page<PaymentResponseDTO>> getPaymentsByCustomer(
             @Parameter(description = "Customer ID", required = true)
             @PathVariable @Positive Long customerId,
-
             Pageable pageable) {
 
         Page<PaymentResponseDTO> payments = paymentService.getPaymentsByCustomer(customerId, pageable);
+        return ResponseEntity.ok(payments);
+    }
+
+    @GetMapping("/customer/{customerId}/summary")
+    @Operation(
+        summary = "Get payments by customer (summary only - optimized)",
+        description = "Retrieves paginated lightweight payment summaries for a customer. " +
+                "Reduces payload size by ~70% compared to full details. " +
+                "Perfect for customer payment history lists."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Payment summaries retrieved successfully")
+    })
+    public ResponseEntity<Page<PaymentSummaryDTO>> getPaymentsSummaryByCustomer(
+            @Parameter(description = "Customer ID", required = true)
+            @PathVariable @Positive Long customerId,
+            Pageable pageable) {
+
+        Page<PaymentSummaryDTO> payments = paymentService.getPaymentsSummaryByCustomer(customerId, pageable);
         return ResponseEntity.ok(payments);
     }
 

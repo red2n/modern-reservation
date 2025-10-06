@@ -286,7 +286,7 @@ public class PaymentService {
     }
 
     /**
-     * Get all payments for a reservation
+     * Get all payments for a reservation (full details)
      */
     @Transactional(readOnly = true)
     public List<PaymentResponseDTO> getPaymentsByReservation(Long reservationId) {
@@ -295,12 +295,30 @@ public class PaymentService {
     }
 
     /**
-     * Get paginated payments for a customer
+     * Get all payments for a reservation (summary only - optimized for lists)
+     */
+    @Transactional(readOnly = true)
+    public List<PaymentSummaryDTO> getPaymentsSummaryByReservation(Long reservationId) {
+        List<Payment> payments = paymentRepository.findByReservationIdOrderByCreatedDateDesc(reservationId);
+        return payments.stream().map(this::convertToSummaryDTO).toList();
+    }
+
+    /**
+     * Get paginated payments for a customer (full details)
      */
     @Transactional(readOnly = true)
     public Page<PaymentResponseDTO> getPaymentsByCustomer(Long customerId, Pageable pageable) {
         Page<Payment> payments = paymentRepository.findByCustomerIdOrderByCreatedDateDesc(customerId, pageable);
         return payments.map(this::convertToResponseDTO);
+    }
+
+    /**
+     * Get paginated payments for a customer (summary only - optimized for lists)
+     */
+    @Transactional(readOnly = true)
+    public Page<PaymentSummaryDTO> getPaymentsSummaryByCustomer(Long customerId, Pageable pageable) {
+        Page<Payment> payments = paymentRepository.findByCustomerIdOrderByCreatedDateDesc(customerId, pageable);
+        return payments.map(this::convertToSummaryDTO);
     }
 
     /**
@@ -485,6 +503,26 @@ public class PaymentService {
             null, // metadata - parse from JSON string if needed
             payment.getCreatedDate(),
             payment.getLastModifiedDate()
+        );
+    }
+
+    /**
+     * Convert Payment entity to lightweight summary DTO
+     * Only includes essential fields for list/table displays
+     */
+    private PaymentSummaryDTO convertToSummaryDTO(Payment payment) {
+        return new PaymentSummaryDTO(
+            payment.getId(),
+            payment.getPaymentReference(),
+            payment.getReservationId(),
+            payment.getAmount(),
+            payment.getCurrency(),
+            payment.getPaymentMethod(),
+            payment.getTransactionType(),
+            payment.getStatus(),
+            payment.getCardLastFour(),
+            payment.getCardBrand(),
+            payment.getCreatedDate()
         );
     }
 
