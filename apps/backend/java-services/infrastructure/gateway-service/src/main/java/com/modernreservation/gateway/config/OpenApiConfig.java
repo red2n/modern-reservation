@@ -46,7 +46,8 @@ public class OpenApiConfig {
         return GroupedOpenApi.builder()
                 .group("00-all-services")
                 .displayName("🌟 All Services Combined")
-                .pathsToMatch("/api/v1/**")
+                .pathsToMatch("/reservation-engine/**", "/availability-calculator/**", 
+                             "/payment-processor/**", "/rate-management/**", "/analytics-engine/**")
                 .build();
     }
 
@@ -55,7 +56,7 @@ public class OpenApiConfig {
         return GroupedOpenApi.builder()
                 .group("01-reservation-engine")
                 .displayName("🏨 Reservation Engine API")
-                .pathsToMatch("/api/v1/reservations/**")
+                .pathsToMatch("/reservation-engine/**")
                 .build();
     }
 
@@ -64,7 +65,7 @@ public class OpenApiConfig {
         return GroupedOpenApi.builder()
                 .group("02-availability-calculator")
                 .displayName("📅 Availability Calculator API")
-                .pathsToMatch("/api/v1/availability/**")
+                .pathsToMatch("/availability-calculator/**")
                 .build();
     }
 
@@ -73,7 +74,7 @@ public class OpenApiConfig {
         return GroupedOpenApi.builder()
                 .group("03-payment-processor")
                 .displayName("💳 Payment Processor API")
-                .pathsToMatch("/api/v1/payments/**")
+                .pathsToMatch("/payment-processor/**")
                 .build();
     }
 
@@ -82,7 +83,7 @@ public class OpenApiConfig {
         return GroupedOpenApi.builder()
                 .group("04-rate-management")
                 .displayName("💰 Rate Management API")
-                .pathsToMatch("/api/v1/rates/**")
+                .pathsToMatch("/rate-management/**")
                 .build();
     }
 
@@ -91,7 +92,7 @@ public class OpenApiConfig {
         return GroupedOpenApi.builder()
                 .group("05-analytics-engine")
                 .displayName("📊 Analytics Engine API")
-                .pathsToMatch("/api/v1/analytics/**")
+                .pathsToMatch("/analytics-engine/**")
                 .build();
     }
 
