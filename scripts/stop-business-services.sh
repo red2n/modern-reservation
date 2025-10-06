@@ -222,7 +222,7 @@ main() {
     # Try to stop services using PID files
     for service_name in "${SERVICES[@]}"; do
         local stopped=false
-        
+
         # Try PID file first
         if [ -f "$BASE_DIR/${service_name}.pid" ]; then
             if stop_service "$service_name"; then
@@ -230,7 +230,7 @@ main() {
                 stopped=true
             fi
         fi
-        
+
         # If PID file approach didn't work, try process pattern
         if [ "$stopped" = false ]; then
             if stop_service_by_process "$service_name" "${SERVICE_PATTERNS[$service_name]}"; then
@@ -238,7 +238,7 @@ main() {
                 stopped=true
             fi
         fi
-        
+
         sleep 1
     done
 
