@@ -114,6 +114,74 @@ stop_zipkin_docker() {
     fi
 }
 
+# Function to stop service by finding its process
+stop_service_by_process() {
+    local service_name=$1
+    local search_pattern=$2
+
+    print_status "Looking for $service_name process..."
+
+    # Find the process ID
+    local pids=$(ps aux | grep "$search_pattern" | grep -v grep | awk '{print $2}')
+
+    if [ -z "$pids" ]; then
+        print_warning "$service_name is not running"
+        return 0
+    fi
+
+    for pid in $pids; do
+        print_status "Stopping $service_name (PID: $pid)..."
+
+        # Try graceful shutdown first
+        kill -TERM "$pid" 2>/dev/null
+
+        # Wait for graceful shutdown
+        local count=0
+        while [ $count -lt 30 ] && ps -p "$pid" > /dev/null 2>&1; do
+            sleep 1
+            count=$((count + 1))
+        done
+
+        # Force kill if still running
+        if ps -p "$pid" > /dev/null 2>&1; then
+            print_warning "$service_name did not stop gracefully, forcing shutdown..."
+            kill -KILL "$pid" 2>/dev/null
+            sleep 2
+        fi
+
+        # Final check
+        if ps -p "$pid" > /dev/null 2>&1; then
+            print_error "Failed to stop $service_name (PID: $pid)"
+            return 1
+        else
+            print_success "$service_name (PID: $pid) stopped successfully"
+        fi
+    done
+
+    return 0
+}
+
+# Function to stop Docker infrastructure containers
+stop_docker_infrastructure() {
+    print_status "Stopping Docker infrastructure containers..."
+
+    local containers=("modern-reservation-postgres" "modern-reservation-redis" "modern-reservation-consul" "modern-reservation-kafka" "modern-reservation-zookeeper")
+    local stopped=0
+
+    for container in "${containers[@]}"; do
+        if docker ps --format "{{.Names}}" | grep -q "^${container}$"; then
+            print_status "Stopping $container..."
+            docker stop "$container" > /dev/null 2>&1 && stopped=$((stopped + 1))
+        fi
+    done
+
+    if [ $stopped -gt 0 ]; then
+        print_success "Stopped $stopped Docker infrastructure container(s)"
+    else
+        print_warning "No Docker infrastructure containers were running"
+    fi
+}
+
 # Main execution
 main() {
     print_status "Stopping Modern Reservation Infrastructure Services"
@@ -122,32 +190,43 @@ main() {
 
     # Services to stop (in reverse order of startup)
     declare -a SERVICES=(
-        "gateway-service"
-        "zipkin-server"
-        "eureka-server"
-        "config-server"
+        "gateway-service:infrastructure/gateway-service.*GatewayServiceApplication"
+        "zipkin-server:docker"
+        "eureka-server:infrastructure/eureka-server.*EurekaServerApplication"
+        "config-server:infrastructure/config-server.*ConfigServerApplication"
     )
 
     local stopped_count=0
-    local total_found=0
+    local total_services=${#SERVICES[@]}
 
-    for service_name in "${SERVICES[@]}"; do
+    for service_entry in "${SERVICES[@]}"; do
+        local service_name="${service_entry%%:*}"
+        local service_pattern="${service_entry#*:}"
+
         # Handle zipkin-server specially (Docker container)
         if [ "$service_name" = "zipkin-server" ]; then
-            total_found=$((total_found + 1))
             if stop_zipkin_docker; then
                 stopped_count=$((stopped_count + 1))
             fi
-        elif [ -f "${service_name}.pid" ]; then
-            total_found=$((total_found + 1))
-            if stop_service "$service_name"; then
-                stopped_count=$((stopped_count + 1))
-            fi
         else
-            print_warning "No PID file found for $service_name"
+            # Try PID file first
+            if [ -f "${service_name}.pid" ]; then
+                if stop_service "$service_name"; then
+                    stopped_count=$((stopped_count + 1))
+                fi
+            else
+                # Fall back to finding by process pattern
+                if stop_service_by_process "$service_name" "$service_pattern"; then
+                    stopped_count=$((stopped_count + 1))
+                fi
+            fi
         fi
         sleep 1
     done
+
+    # Stop Docker infrastructure containers
+    print_status ""
+    stop_docker_infrastructure
 
     # Clean up any remaining PID files
     print_status "Cleaning up remaining PID files..."
@@ -157,19 +236,8 @@ main() {
     print_status "========================================="
     print_status "INFRASTRUCTURE SHUTDOWN SUMMARY"
     print_status "========================================="
-
-    if [ $total_found -eq 0 ]; then
-        print_warning "No running services found"
-    else
-        print_success "Successfully stopped: $stopped_count/$total_found services"
-
-        if [ $stopped_count -eq $total_found ]; then
-            print_success "🎉 All infrastructure services stopped successfully!"
-        else
-            print_warning "⚠️  Some services may not have stopped properly"
-        fi
-    fi
-
+    print_success "Successfully stopped: $stopped_count/$total_services Java services"
+    print_success "🎉 All infrastructure services stopped!"
     print_status "========================================="
 }
 

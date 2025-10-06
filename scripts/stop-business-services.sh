@@ -111,6 +111,52 @@ stop_service() {
     fi
 }
 
+# Function to stop service by finding its process
+stop_service_by_process() {
+    local service_name=$1
+    local search_pattern=$2
+
+    print_status "Looking for $service_name process..."
+
+    # Find the process ID
+    local pids=$(ps aux | grep "$search_pattern" | grep -v grep | awk '{print $2}')
+
+    if [ -z "$pids" ]; then
+        return 0  # Not running
+    fi
+
+    for pid in $pids; do
+        print_status "Stopping $service_name (PID: $pid)..."
+
+        # Try graceful shutdown first
+        kill -TERM "$pid" 2>/dev/null
+
+        # Wait for graceful shutdown
+        local count=0
+        while [ $count -lt 30 ] && ps -p "$pid" > /dev/null 2>&1; do
+            sleep 1
+            count=$((count + 1))
+        done
+
+        # Force kill if still running
+        if ps -p "$pid" > /dev/null 2>&1; then
+            print_warning "$service_name did not stop gracefully, forcing shutdown..."
+            kill -KILL "$pid" 2>/dev/null
+            sleep 2
+        fi
+
+        # Final check
+        if ! ps -p "$pid" > /dev/null 2>&1; then
+            print_success "$service_name (PID: $pid) stopped successfully"
+        else
+            print_error "Failed to stop $service_name (PID: $pid)"
+            return 1
+        fi
+    done
+
+    return 0
+}
+
 # Function to stop all services by port (fallback method)
 stop_services_by_port() {
     local ports=("8081" "8083" "8084" "8085" "8086")
@@ -165,17 +211,40 @@ main() {
 
     print_status "Attempting to stop $total_services business services..."
 
+    # Define search patterns for each service
+    declare -A SERVICE_PATTERNS
+    SERVICE_PATTERNS["reservation-engine"]="business-services/reservation-engine.*ReservationEngineApplication"
+    SERVICE_PATTERNS["availability-calculator"]="business-services/availability-calculator.*AvailabilityCalculatorApplication"
+    SERVICE_PATTERNS["payment-processor"]="business-services/payment-processor.*PaymentProcessorApplication"
+    SERVICE_PATTERNS["rate-management"]="business-services/rate-management.*RateManagementApplication"
+    SERVICE_PATTERNS["analytics-engine"]="business-services/analytics-engine.*AnalyticsEngineApplication"
+
     # Try to stop services using PID files
     for service_name in "${SERVICES[@]}"; do
-        if stop_service "$service_name"; then
-            stopped_count=$((stopped_count + 1))
+        local stopped=false
+        
+        # Try PID file first
+        if [ -f "$BASE_DIR/${service_name}.pid" ]; then
+            if stop_service "$service_name"; then
+                stopped_count=$((stopped_count + 1))
+                stopped=true
+            fi
         fi
+        
+        # If PID file approach didn't work, try process pattern
+        if [ "$stopped" = false ]; then
+            if stop_service_by_process "$service_name" "${SERVICE_PATTERNS[$service_name]}"; then
+                stopped_count=$((stopped_count + 1))
+                stopped=true
+            fi
+        fi
+        
         sleep 1
     done
 
-    # If some services couldn't be stopped by PID, try port-based approach
+    # If some services still couldn't be stopped, try port-based approach
     if [ $stopped_count -lt $total_services ]; then
-        print_warning "Some services couldn't be stopped by PID files, trying port-based approach..."
+        print_warning "Some services couldn't be stopped, trying port-based approach as last resort..."
         stop_services_by_port
     fi
 
