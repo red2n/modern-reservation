@@ -102,45 +102,36 @@ spring:
                 fallbackUri: forward:/fallback/batch
 
         # Service-Prefixed API Routes (for Swagger UI integration)
+        # Note: No RewritePath needed - services have matching context-path configured
         - id: payment-processor-api
           uri: lb://PAYMENT-PROCESSOR-SERVICE
           order: -1
           predicates:
-            - Path=/payment-processor/api/v1/**
-          filters:
-            - RewritePath=/payment-processor/api/v1/(?<path>.*), /api/v1/$\{path}
+            - Path=/payment-processor/**
 
         - id: reservation-engine-api
           uri: lb://reservation-engine
           order: -1
           predicates:
-            - Path=/reservation-engine/api/v1/**
-          filters:
-            - RewritePath=/reservation-engine/api/v1/(?<path>.*), /api/v1/$\{path}
+            - Path=/reservation-engine/**
 
         - id: analytics-engine-api
           uri: lb://analytics-engine
           order: -1
           predicates:
-            - Path=/analytics-engine/api/v1/**
-          filters:
-            - RewritePath=/analytics-engine/api/v1/(?<path>.*), /api/v1/$\{path}
+            - Path=/analytics-engine/**
 
         - id: availability-calculator-api
           uri: lb://AVAILABILITY-CALCULATOR
           order: -1
           predicates:
-            - Path=/availability-calculator/api/v1/**
-          filters:
-            - RewritePath=/availability-calculator/api/v1/(?<path>.*), /api/v1/$\{path}
+            - Path=/availability-calculator/**
 
         - id: rate-management-api
           uri: lb://rate-management
           order: -1
           predicates:
-            - Path=/rate-management/api/v1/**
-          filters:
-            - RewritePath=/rate-management/api/v1/(?<path>.*), /api/v1/$\{path}
+            - Path=/rate-management/**
 
         # Node.js Services Routes
         - id: api-gateway-node
@@ -159,86 +150,68 @@ spring:
             - Path=/ws/**
 
         # Swagger UI Documentation Routes for Business Services
+        # Note: These routes now pass through without rewriting since services have context-path
         - id: reservation-engine-docs
           uri: lb://reservation-engine
           order: -1
           predicates:
             - Path=/reservation-engine/api-docs/**
-          filters:
-            - RewritePath=/reservation-engine/api-docs/(?<path>.*), /api-docs/$\{path}
 
         - id: availability-calculator-docs
           uri: lb://AVAILABILITY-CALCULATOR
           order: -1
           predicates:
             - Path=/availability-calculator/api-docs/**
-          filters:
-            - RewritePath=/availability-calculator/api-docs/(?<path>.*), /api-docs/$\{path}
 
         - id: payment-processor-docs
           uri: lb://PAYMENT-PROCESSOR-SERVICE
           order: -1
           predicates:
             - Path=/payment-processor/api-docs/**
-          filters:
-            - RewritePath=/payment-processor/api-docs/(?<path>.*), /api-docs/$\{path}
 
         - id: rate-management-docs
           uri: lb://RATE-MANAGEMENT
           order: -1
           predicates:
             - Path=/rate-management/api-docs/**
-          filters:
-            - RewritePath=/rate-management/api-docs/(?<path>.*), /api-docs/$\{path}
 
         - id: analytics-engine-docs
           uri: lb://analytics-engine
           order: -1
           predicates:
             - Path=/analytics-engine/api-docs/**
-          filters:
-            - RewritePath=/analytics-engine/api-docs/(?<path>.*), /api-docs/$\{path}
 
         # Swagger UI Routes for Business Services
+        # Note: No rewriting needed - services have matching context-path configured
         - id: availability-calculator-swagger-ui
           uri: lb://AVAILABILITY-CALCULATOR
           order: -1
           predicates:
             - Path=/availability-calculator/swagger-ui/**
-          filters:
-            - RewritePath=/availability-calculator/swagger-ui/(?<path>.*), /availability-calculator/swagger-ui/$\{path}
 
         - id: payment-processor-swagger-ui
           uri: lb://PAYMENT-PROCESSOR-SERVICE
           order: -1
           predicates:
             - Path=/payment-processor/swagger-ui/**
-          filters:
-            - RewritePath=/payment-processor/swagger-ui/(?<path>.*), /payment-processor/swagger-ui/$\{path}
 
         - id: rate-management-swagger-ui
           uri: lb://RATE-MANAGEMENT
           order: -1
           predicates:
             - Path=/rate-management/swagger-ui/**
-          filters:
-            - RewritePath=/rate-management/swagger-ui/(?<path>.*), /rate-management/swagger-ui/$\{path}
 
         - id: analytics-engine-swagger-ui
           uri: lb://ANALYTICS-ENGINE
           order: -1
           predicates:
             - Path=/analytics-engine/swagger-ui/**
-          filters:
-            - RewritePath=/analytics-engine/swagger-ui/(?<path>.*), /analytics-engine/swagger-ui/$\{path}
 
         - id: reservation-engine-swagger-ui
           uri: lb://RESERVATION-ENGINE
           order: -1
           predicates:
             - Path=/reservation-engine/swagger-ui/**
-          filters:
-            - RewritePath=/reservation-engine/swagger-ui/(?<path>.*), /swagger-ui/$\{path}
 
   # Redis Configuration for Rate Limiting
   redis:
