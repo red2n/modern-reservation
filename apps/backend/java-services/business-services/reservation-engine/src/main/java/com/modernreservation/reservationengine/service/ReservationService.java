@@ -424,25 +424,31 @@ public class ReservationService {
     }
 
     /**
-     * Publish structured ReservationCreatedEvent using EventPublisher
+     * Publish structured ReservationCreatedEvent using Avro-generated event class
      */
     private void publishReservationCreatedEvent(Reservation reservation) {
-        ReservationCreatedEvent event = new ReservationCreatedEvent();
-        event.setReservationId(reservation.getId() != null ? reservation.getId().toString() : null);
-        event.setGuestId(reservation.getGuestId() != null ? reservation.getGuestId().toString() : null);
-        event.setPropertyId(reservation.getPropertyId() != null ? reservation.getPropertyId().toString() : null);
-        event.setRoomTypeId(reservation.getRoomTypeId() != null ? reservation.getRoomTypeId().toString() : null);
-        event.setCheckInDate(reservation.getCheckInDate());
-        event.setCheckOutDate(reservation.getCheckOutDate());
-        event.setTotalAmount(reservation.getTotalAmount());
-        event.setStatus(reservation.getStatus().name());
-        event.setNumberOfGuests(reservation.getAdults() +
-            (reservation.getChildren() != null ? reservation.getChildren() : 0) +
-            (reservation.getInfants() != null ? reservation.getInfants() : 0));
+        // Build Avro event using the generated builder
+        ReservationCreatedEvent event = ReservationCreatedEvent.newBuilder()
+            .setEventId(java.util.UUID.randomUUID().toString())
+            .setEventType("RESERVATION_CREATED")
+            .setTimestamp(java.time.Instant.now())
+            .setVersion(1)
+            .setReservationId(reservation.getId() != null ? reservation.getId().toString() : "")
+            .setGuestId(reservation.getGuestId() != null ? reservation.getGuestId().toString() : "")
+            .setPropertyId(reservation.getPropertyId() != null ? reservation.getPropertyId().toString() : "")
+            .setRoomTypeId(reservation.getRoomTypeId() != null ? reservation.getRoomTypeId().toString() : "")
+            .setCheckInDate(reservation.getCheckInDate() != null ? reservation.getCheckInDate().toString() : "")
+            .setCheckOutDate(reservation.getCheckOutDate() != null ? reservation.getCheckOutDate().toString() : "")
+            .setTotalAmount(reservation.getTotalAmount() != null ? reservation.getTotalAmount().toString() : "0")
+            .setStatus(reservation.getStatus().name())
+            .setNumberOfGuests(reservation.getAdults() +
+                (reservation.getChildren() != null ? reservation.getChildren() : 0) +
+                (reservation.getInfants() != null ? reservation.getInfants() : 0))
+            .build();
 
         // Publish asynchronously for better performance
         eventPublisher.publishAsync("reservation.created", event);
-        log.info("Published ReservationCreatedEvent for reservation: {}", reservation.getConfirmationNumber());
+        log.info("Published Avro ReservationCreatedEvent for reservation: {}", reservation.getConfirmationNumber());
     }
 
     /**

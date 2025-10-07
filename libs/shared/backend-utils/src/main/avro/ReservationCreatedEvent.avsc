@@ -1,0 +1,76 @@
+{
+  "type": "record",
+  "name": "ReservationCreatedEvent",
+  "namespace": "com.reservation.shared.events",
+  "doc": "Event published when a new reservation is created",
+  "fields": [
+    {
+      "name": "eventId",
+      "type": "string",
+      "doc": "Unique identifier for the event (UUID)"
+    },
+    {
+      "name": "eventType",
+      "type": "string",
+      "doc": "Type of the event (RESERVATION_CREATED)"
+    },
+    {
+      "name": "timestamp",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      },
+      "doc": "Event timestamp in milliseconds since epoch"
+    },
+    {
+      "name": "version",
+      "type": "int",
+      "doc": "Event schema version for backward compatibility"
+    },
+    {
+      "name": "reservationId",
+      "type": "string",
+      "doc": "UUID of the reservation"
+    },
+    {
+      "name": "guestId",
+      "type": "string",
+      "doc": "UUID of the guest who made the reservation"
+    },
+    {
+      "name": "propertyId",
+      "type": "string",
+      "doc": "UUID of the property being reserved"
+    },
+    {
+      "name": "roomTypeId",
+      "type": "string",
+      "doc": "UUID of the room type reserved"
+    },
+    {
+      "name": "checkInDate",
+      "type": "string",
+      "doc": "Check-in date in ISO-8601 format (YYYY-MM-DD)"
+    },
+    {
+      "name": "checkOutDate",
+      "type": "string",
+      "doc": "Check-out date in ISO-8601 format (YYYY-MM-DD)"
+    },
+    {
+      "name": "totalAmount",
+      "type": "string",
+      "doc": "Total amount as string to preserve precision (e.g., '150.00')"
+    },
+    {
+      "name": "status",
+      "type": "string",
+      "doc": "Reservation status (e.g., CONFIRMED, PENDING)"
+    },
+    {
+      "name": "numberOfGuests",
+      "type": "int",
+      "doc": "Number of guests for the reservation"
+    }
+  ]
+}

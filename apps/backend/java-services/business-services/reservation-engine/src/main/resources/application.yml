@@ -59,17 +59,20 @@ spring:
 # Kafka Configuration
   kafka:
     bootstrap-servers: localhost:9092
+    schema-registry:
+      url: http://localhost:8085
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
       properties:
-        spring.json.add.type.headers: false
+        schema.registry.url: http://localhost:8085
     consumer:
       group-id: reservation-engine
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
       properties:
-        spring.json.trusted.packages: "com.modernreservation.*,com.reservation.shared.*"
+        schema.registry.url: http://localhost:8085
+        specific.avro.reader: true
 
 # Cache Configuration
   cache:

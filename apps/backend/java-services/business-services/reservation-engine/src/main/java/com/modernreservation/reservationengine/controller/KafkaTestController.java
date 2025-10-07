@@ -27,32 +27,40 @@ public class KafkaTestController {
 
     @GetMapping("/kafka")
     public Map<String, String> testKafkaEvent() {
-        log.info("Testing Kafka event publishing...");
+        log.info("Testing Kafka event publishing with Avro...");
 
         try {
-            // Create a test event
-            ReservationCreatedEvent event = new ReservationCreatedEvent();
-            event.setReservationId("test-reservation-123");
-            event.setGuestId("test-guest-456");
-            event.setPropertyId("test-property-789");
-            event.setRoomTypeId("test-room-101");
-            event.setCheckInDate(LocalDate.of(2025, 12, 25));
-            event.setCheckOutDate(LocalDate.of(2025, 12, 27));
-            event.setTotalAmount(new BigDecimal("439.98"));
-            event.setStatus("CONFIRMED");
-            event.setNumberOfGuests(3);
+            String eventId = java.util.UUID.randomUUID().toString();
+
+            // Create a test event using Avro builder
+            ReservationCreatedEvent event = ReservationCreatedEvent.newBuilder()
+                .setEventId(eventId)
+                .setEventType("RESERVATION_CREATED")
+                .setTimestamp(java.time.Instant.now())
+                .setVersion(1)
+                .setReservationId("test-reservation-123")
+                .setGuestId("test-guest-456")
+                .setPropertyId("test-property-789")
+                .setRoomTypeId("test-room-101")
+                .setCheckInDate(LocalDate.of(2025, 12, 25).toString())
+                .setCheckOutDate(LocalDate.of(2025, 12, 27).toString())
+                .setTotalAmount(new BigDecimal("439.98").toString())
+                .setStatus("CONFIRMED")
+                .setNumberOfGuests(3)
+                .build();
 
             // Publish the event
             eventPublisher.publishAsync("reservation.created", event);
 
-            log.info("✅ Test event published successfully!");
+            log.info("✅ Test Avro event published successfully!");
 
             Map<String, String> response = new HashMap<>();
             response.put("status", "success");
-            response.put("message", "Kafka event published successfully");
-            response.put("eventId", event.getEventId());
+            response.put("message", "Kafka Avro event published successfully");
+            response.put("eventId", eventId);
             response.put("topic", "reservation.created");
             response.put("checkKafkaUI", "http://localhost:8090");
+            response.put("checkSchemaRegistry", "http://localhost:8085/subjects");
 
             return response;
 

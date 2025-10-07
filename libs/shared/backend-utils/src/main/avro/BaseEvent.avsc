@@ -1,0 +1,31 @@
+{
+  "type": "record",
+  "name": "BaseEvent",
+  "namespace": "com.reservation.shared.events",
+  "doc": "Base event schema for all domain events",
+  "fields": [
+    {
+      "name": "eventId",
+      "type": "string",
+      "doc": "Unique identifier for the event (UUID)"
+    },
+    {
+      "name": "eventType",
+      "type": "string",
+      "doc": "Type of the event (e.g., ReservationCreated, ReservationUpdated)"
+    },
+    {
+      "name": "timestamp",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      },
+      "doc": "Event timestamp in milliseconds since epoch"
+    },
+    {
+      "name": "version",
+      "type": "int",
+      "doc": "Event schema version for backward compatibility"
+    }
+  ]
+}

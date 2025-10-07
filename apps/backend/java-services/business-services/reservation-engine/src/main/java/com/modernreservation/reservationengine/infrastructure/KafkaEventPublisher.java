@@ -1,9 +1,9 @@
 package com.modernreservation.reservationengine.infrastructure;
 
-import com.reservation.shared.events.BaseEvent;
 import com.reservation.shared.events.EventPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.specific.SpecificRecord;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Component;
@@ -11,10 +11,11 @@ import org.springframework.stereotype.Component;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Kafka Event Publisher Implementation
+ * Kafka Event Publisher Implementation for Avro Events
  *
  * Implements the EventPublisher interface using Spring Kafka.
  * Provides both synchronous and asynchronous event publishing capabilities.
+ * Uses Avro serialization with Schema Registry.
  */
 @Component
 @RequiredArgsConstructor
@@ -24,68 +25,93 @@ public class KafkaEventPublisher implements EventPublisher {
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     /**
-     * Publish event synchronously
+     * Publish Avro event synchronously
      * Blocks until the event is successfully sent or fails
      *
      * @param topic The Kafka topic to publish to
-     * @param event The event to publish
+     * @param event The Avro SpecificRecord event to publish
      */
     @Override
-    public void publish(String topic, BaseEvent event) {
+    public void publish(String topic, SpecificRecord event) {
         try {
-            log.debug("Publishing event synchronously - Topic: {}, EventType: {}, EventId: {}",
-                     topic, event.getEventType(), event.getEventId());
+            String eventKey = extractEventKey(event);
+            log.debug("Publishing Avro event synchronously - Topic: {}, EventType: {}, EventKey: {}",
+                     topic, event.getClass().getSimpleName(), eventKey);
 
             SendResult<String, Object> result = kafkaTemplate.send(
                 topic,
-                event.getEventId(),
+                eventKey,
                 event
             ).get(); // Blocking call
 
-            log.info("Event published successfully - Topic: {}, EventType: {}, EventId: {}, Partition: {}, Offset: {}",
+            log.info("Avro event published successfully - Topic: {}, EventType: {}, EventKey: {}, Partition: {}, Offset: {}",
                     topic,
-                    event.getEventType(),
-                    event.getEventId(),
+                    event.getClass().getSimpleName(),
+                    eventKey,
                     result.getRecordMetadata().partition(),
                     result.getRecordMetadata().offset());
 
         } catch (Exception e) {
-            log.error("Failed to publish event synchronously - Topic: {}, EventType: {}, EventId: {}",
-                     topic, event.getEventType(), event.getEventId(), e);
-            throw new RuntimeException("Failed to publish event to Kafka", e);
+            log.error("Failed to publish Avro event synchronously - Topic: {}, EventType: {}, EventKey: {}",
+                     topic, event.getClass().getSimpleName(), extractEventKey(event), e);
+            throw new RuntimeException("Failed to publish Avro event to Kafka", e);
         }
     }
 
     /**
-     * Publish event asynchronously
+     * Publish Avro event asynchronously
      * Returns immediately without waiting for confirmation
      *
      * @param topic The Kafka topic to publish to
-     * @param event The event to publish
+     * @param event The Avro SpecificRecord event to publish
      */
     @Override
-    public void publishAsync(String topic, BaseEvent event) {
-        log.debug("Publishing event asynchronously - Topic: {}, EventType: {}, EventId: {}",
-                 topic, event.getEventType(), event.getEventId());
+    public void publishAsync(String topic, SpecificRecord event) {
+        String eventKey = extractEventKey(event);
+        log.debug("Publishing Avro event asynchronously - Topic: {}, EventType: {}, EventKey: {}",
+                 topic, event.getClass().getSimpleName(), eventKey);
 
         CompletableFuture<SendResult<String, Object>> future = kafkaTemplate.send(
             topic,
-            event.getEventId(),
+            eventKey,
             event
         );
 
         future.whenComplete((result, ex) -> {
             if (ex == null) {
-                log.info("Event published successfully (async) - Topic: {}, EventType: {}, EventId: {}, Partition: {}, Offset: {}",
+                log.info("Avro event published successfully (async) - Topic: {}, EventType: {}, EventKey: {}, Partition: {}, Offset: {}",
                         topic,
-                        event.getEventType(),
-                        event.getEventId(),
+                        event.getClass().getSimpleName(),
+                        eventKey,
                         result.getRecordMetadata().partition(),
                         result.getRecordMetadata().offset());
             } else {
-                log.error("Failed to publish event asynchronously - Topic: {}, EventType: {}, EventId: {}",
-                         topic, event.getEventType(), event.getEventId(), ex);
+                log.error("Failed to publish Avro event asynchronously - Topic: {}, EventType: {}, EventKey: {}",
+                         topic, event.getClass().getSimpleName(), eventKey, ex);
             }
         });
+    }
+
+    /**
+     * Extract event key from Avro SpecificRecord
+     * Gets 'eventId' field from schema (index 0)
+     *
+     * @param event Avro SpecificRecord
+     * @return Event key (eventId if available, otherwise className-timestamp)
+     */
+    private String extractEventKey(SpecificRecord event) {
+        try {
+            // Get eventId field (first field in our schemas, index 0)
+            org.apache.avro.Schema.Field field = event.getSchema().getField("eventId");
+            if (field != null) {
+                Object eventId = event.get(field.pos());
+                if (eventId != null) {
+                    return eventId.toString();
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Could not extract eventId from event, using fallback key", e);
+        }
+        return event.getClass().getSimpleName() + "-" + System.currentTimeMillis();
     }
 }

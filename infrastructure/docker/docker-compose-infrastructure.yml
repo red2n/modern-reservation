@@ -118,6 +118,30 @@ services:
       retries: 5
       start_period: 30s
 
+  # Schema Registry for Avro schemas
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.5.0
+    container_name: modern-reservation-schema-registry
+    ports:
+      - "8085:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka:9092
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_DEBUG: "true"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - modern-reservation-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
   # Kafka UI for Monitoring
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -127,12 +151,15 @@ services:
     environment:
       - KAFKA_CLUSTERS_0_NAME=modern-reservation
       - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+      - KAFKA_CLUSTERS_0_SCHEMAREGISTRY=http://schema-registry:8081
       - KAFKA_CLUSTERS_0_METRICS_PORT=9092
       - DYNAMIC_CONFIG_ENABLED=true
       - LOGGING_LEVEL_ROOT=INFO
       - LOGGING_LEVEL_COM_PROVECTUS=INFO
     depends_on:
       kafka:
+        condition: service_healthy
+      schema-registry:
         condition: service_healthy
     networks:
       - modern-reservation-network
