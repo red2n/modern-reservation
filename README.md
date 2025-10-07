@@ -297,57 +297,129 @@ modern-reservation/
 ### **Prerequisites**
 - **Node.js 20+** and **Java 21+**
 - **Docker & Docker Compose**
-- **pnpm** (recommended package manager)
-- **Nx CLI**: `npm install -g nx`
+- **Maven 3.8+** for Java services
+- **PostgreSQL Client** (for database operations)
 
-### **1. Clone & Setup**
+### **⚡ Super Quick Start (One Command)**
 ```bash
+# Clone and navigate
 git clone https://github.com/red2n/modern-reservation.git
 cd modern-reservation
 
-# Install dependencies
-pnpm install
+# Start everything with clean environment
+./dev.sh clean
 
-# Start local infrastructure
-docker-compose up -d postgres redis kafka
+# That's it! All services will be running in ~3 minutes
 ```
 
-### **2. Development Environment**
+### **🎯 Main Control Script: `dev.sh`**
+
+The `dev.sh` script is your single entry point for all operations:
+
 ```bash
-# Start all services in development mode
-nx serve-all
+# See all available commands
+./dev.sh help
 
-# Or start specific services
-nx serve guest-portal          # Frontend on http://localhost:4200
-nx serve graphql-gateway       # GraphQL Federation on http://localhost:4000
-nx serve api-gateway           # Node.js API on http://localhost:3000
-nx serve reservation-engine    # Java service on http://localhost:8080
+# Start all services
+./dev.sh start
+
+# Check what's running
+./dev.sh status
+
+# Stop everything
+./dev.sh stop
+
+# Clean restart for testing
+./dev.sh clean
+
+# View logs
+./dev.sh logs reservation-engine
+
+# Open monitoring UIs
+./dev.sh ui-kafka          # http://localhost:8090
+./dev.sh ui-eureka         # http://localhost:8761
+./dev.sh ui-zipkin         # http://localhost:9411
 ```
 
-### **3. Run Tests**
+### **📚 Common Development Workflows**
+
+#### **Morning Startup**
 ```bash
-# Run all tests
-nx run-many --target=test --all
-
-# Run affected tests only (Nx intelligence)
-nx affected:test
-
-# E2E tests
-nx e2e guest-portal-e2e
+./dev.sh start              # Start all services
+./dev.sh status             # Verify everything is running
 ```
 
-### **4. Build & Deploy**
+#### **Testing with Fresh Environment**
 ```bash
-# Build all applications
-nx run-many --target=build --all
-
-# Build for production
-nx build guest-portal --prod
-nx build reservation-engine --prod
-
-# Deploy to Kubernetes
-kubectl apply -k infrastructure/kubernetes/overlays/development
+./dev.sh clean              # Full clean restart
+# All data removed, fresh database, Avro schemas regenerated
 ```
+
+#### **Quick Restart (Keep Data)**
+```bash
+./dev.sh clean --keep-data --skip-maven
+# Faster restart, preserves database
+```
+
+#### **Code Changes**
+```bash
+./dev.sh stop-business      # Stop business services only
+# Make your changes...
+./dev.sh start-business     # Restart business services
+```
+
+#### **End of Day**
+```bash
+./dev.sh stop               # Stop all services cleanly
+```
+
+### **🧪 Testing & Verification**
+```bash
+# Test Avro event publishing
+./dev.sh test-avro
+
+# Check all dependencies
+./dev.sh check-deps
+
+# Comprehensive health check
+./dev.sh check-health
+
+# View service logs
+./dev.sh logs reservation-engine
+./dev.sh logs kafka
+```
+
+### **💾 Database Operations**
+```bash
+# Initialize database schema
+./dev.sh db-setup
+
+# Connect to database
+./dev.sh db-connect
+
+# Backup database
+./dev.sh db-backup
+```
+
+### **📊 Available Services After Startup**
+
+| Service | URL | Description |
+|---------|-----|-------------|
+| **Reservation Engine** | http://localhost:8081/reservation-engine | Main business service |
+| **Kafka UI** | http://localhost:8090 | Monitor Kafka topics & events |
+| **Schema Registry** | http://localhost:8085 | Avro schema management |
+| **Eureka Dashboard** | http://localhost:8761 | Service discovery |
+| **Zipkin** | http://localhost:9411 | Distributed tracing |
+| **PgAdmin** | http://localhost:5050 | Database management |
+| **PostgreSQL** | localhost:5432 | Database |
+| **Redis** | localhost:6379 | Cache |
+| **Kafka** | localhost:9092 | Event streaming |
+
+### **📖 Detailed Documentation**
+- **Quick Reference**: [`DEV_QUICK_REFERENCE.md`](DEV_QUICK_REFERENCE.md)
+- **All Scripts**: [`scripts/README.md`](scripts/README.md)
+- **Clean Restart Guide**: [`docs/CLEAN_RESTART_GUIDE.md`](docs/CLEAN_RESTART_GUIDE.md)
+- **Avro Events**: [`docs/AVRO_QUICK_REFERENCE.md`](docs/AVRO_QUICK_REFERENCE.md)
 
 ---
 
@@ -614,10 +686,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 **Support & Contact**
 
 ### **Documentation**
-- **📚 [Product Requirements Document](docs/product-requirements-document.md)**
+- **📚 [Complete Documentation](https://red2n.github.io/modern-reservation/)** - GitHub Pages
+- **📋 [Product Requirements](docs/product-requirements-document.md)**
 - **📋 [Project Development Plan](docs/project-development-plan.md)**
-- **🏗️ [Architecture Guide](docs/architecture-guide.md)**
-- **🚀 [Deployment Guide](docs/deployment-guide.md)**
+- **🚀 [Quick Start Guide](docs/guides/DEV_QUICK_REFERENCE.md)**
+- **🏗️ [Architecture Overview](docs/architecture/event-driven-architecture-diagram.md)**
+- **🚀 [Deployment Guide](docs/deployment/network-isolation-guide.md)**
 
 ### **Community**
 - **🐛 [Report Issues](https://github.com/red2n/modern-reservation/issues)**

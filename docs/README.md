@@ -1,53 +1,103 @@
-# Documentation
+# Modern Reservation System Documentation
 
-## Overview
-Comprehensive documentation for the Modern Reservation Management System, covering architecture, development, deployment, and operational aspects.
+Welcome to the Modern Reservation System documentation site! This is a comprehensive cloud-native hotel reservation platform built with microservices and event-driven architecture.
 
-## Documentation Structure
+## Quick Navigation
 
-### 1. Architecture Documentation (`architecture/`)
-- **System Architecture**: High-level system design and component interactions
-- **Hybrid Architecture**: Node.js + Java hybrid approach rationale and implementation
-- **Data Architecture**: Database design, caching strategies, event streaming
-- **Security Architecture**: Authentication, authorization, encryption, compliance
-- **Integration Architecture**: External system integrations and API design
-- **Performance Architecture**: Scaling strategies, performance optimizations
+### 🚀 Getting Started
+- [Quick Start Guide](guides/DEV_QUICK_REFERENCE.md)
+- [Clean Restart Guide](guides/CLEAN_RESTART_GUIDE.md)
+- [Script Organization](guides/SCRIPT_ORGANIZATION.md)
+- [Single Entry Point](guides/SINGLE_ENTRY_POINT.md)
 
-**Key Architecture Documents:**
-- `hybrid-architecture-decision.md` - Node.js + Java hybrid rationale
-- `event-driven-architecture.md` - Kafka-based event streaming design
-- `data-architecture.md` - Multi-master PostgreSQL and Redis cluster design
-- `graphql-federation.md` - Unified API layer design
-- `security-architecture.md` - PCI-DSS compliance and security design
-- `performance-architecture.md` - Ultra-scale performance requirements
+### 🏗️ Architecture
+- [Event-Driven Architecture](architecture/event-driven-architecture-diagram.md)
+- [Kafka Implementation](architecture/KAFKA_IMPLEMENTATION_GUIDE.md)
+- [Kafka Quick Start](architecture/KAFKA_QUICK_START.md)
+- [Implementation Plan](architecture/IMPLEMENTATION_PLAN.md)
+- [Kafka Summary](architecture/KAFKA_SUMMARY.md)
 
-### 2. API Documentation (`api/`)
-- **GraphQL Schema**: Federated GraphQL schema documentation
-- **REST API**: OpenAPI/Swagger specifications for REST endpoints
-- **WebSocket API**: Real-time communication protocols
-- **Event Schemas**: Kafka event schema definitions
-- **Integration APIs**: External system integration specifications
+### 📊 References
+- [Avro Quick Reference](references/AVRO_QUICK_REFERENCE.md)
+- [Avro Migration Guide](references/AVRO_MIGRATION_COMPLETE.md)
 
-**API Documentation Files:**
-- `graphql-federation-schema.md` - Complete GraphQL federation schema
-- `rest-api-specification.yaml` - OpenAPI specification
-- `websocket-protocols.md` - WebSocket event protocols
-- `kafka-event-schemas.md` - Event schema definitions
-- `external-integrations.md` - OTA and payment gateway APIs
+### 🚀 Deployment
+- [Network Isolation Guide](deployment/network-isolation-guide.md)
 
-### 3. Deployment Documentation (`deployment/`)
-- **Infrastructure Setup**: Cloud infrastructure provisioning
-- **Kubernetes Deployment**: Container orchestration configuration
-- **CI/CD Pipeline**: Automated deployment processes
-- **Environment Configuration**: Development, staging, production setup
-- **Monitoring Setup**: Observability and alerting configuration
-- **Disaster Recovery**: Backup and recovery procedures
+### 📋 Project Info
+- [Product Requirements](product-requirements-document.md)
+- [Development Plan](project-development-plan.md)
+- [Phase 0 Complete](PHASE_0_COMPLETE.md)
 
-**Deployment Guides:**
-- `infrastructure-setup.md` - Cloud infrastructure provisioning
-- `kubernetes-deployment.md` - K8s deployment procedures
-- `cicd-pipeline.md` - CI/CD configuration and processes
-- `environment-setup.md` - Environment-specific configurations
+## Project Structure
+
+```
+docs/
+├── index.md                          # GitHub Pages landing
+├── README.md                         # This file
+├── guides/                           # Development guides
+│   ├── DEV_QUICK_REFERENCE.md
+│   ├── CLEAN_RESTART_GUIDE.md
+│   ├── SCRIPT_ORGANIZATION.md
+│   └── SINGLE_ENTRY_POINT.md
+├── architecture/                     # Architecture docs
+│   ├── event-driven-architecture-diagram.md
+│   ├── KAFKA_IMPLEMENTATION_GUIDE.md
+│   └── ...
+├── references/                       # Technical references
+│   ├── AVRO_QUICK_REFERENCE.md
+│   └── AVRO_MIGRATION_COMPLETE.md
+├── deployment/                       # Deployment guides
+│   └── network-isolation-guide.md
+└── [project management docs]
+```
+
+## Tech Stack
+
+- **Backend**: Java (Spring Boot) + Node.js (NestJS)
+- **Event Streaming**: Apache Kafka + Avro (Schema Registry)
+- **Database**: PostgreSQL
+- **Caching**: Redis
+- **Service Discovery**: Eureka
+- **Distributed Tracing**: Zipkin
+- **Monitoring**: Kafka UI, PgAdmin
+- **Container**: Docker
+
+## Quick Commands
+
+```bash
+# Start everything
+./dev.sh start
+
+# Clean restart
+./dev.sh clean
+
+# Check status
+./dev.sh status
+
+# Test Avro events
+./dev.sh test-avro
+```
+
+## Documentation Sections
+
+### 1. Development Guides (`guides/`)
+- **DEV Quick Reference**: Daily development commands
+- **Clean Restart Guide**: Fresh environment setup
+- **Script Organization**: Understanding dev scripts
+- **Single Entry Point**: dev.sh command reference
+
+### 2. Architecture Documentation (`architecture/`)
+- **Event-Driven Architecture**: System architecture overview
+- **Kafka Implementation**: Event streaming details
+- **Implementation Plan**: Development roadmap
+
+### 3. Technical References (`references/`)
+- **Avro Quick Reference**: Working with Avro schemas
+- **Avro Migration**: Migration guide and results
+
+### 4. Deployment (`deployment/`)
+- **Network Isolation**: Security and networking
 - `monitoring-setup.md` - Observability stack deployment
 - `disaster-recovery.md` - DR procedures and testing
 

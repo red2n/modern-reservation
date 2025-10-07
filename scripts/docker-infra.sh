@@ -6,7 +6,8 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DOCKER_DIR="$SCRIPT_DIR/infrastructure/docker"
+BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+DOCKER_DIR="$BASE_DIR/infrastructure/docker"
 COMPOSE_INFRA="$DOCKER_DIR/docker-compose-infrastructure.yml"
 COMPOSE_SERVICES="$DOCKER_DIR/docker-compose-services.yml"
 
