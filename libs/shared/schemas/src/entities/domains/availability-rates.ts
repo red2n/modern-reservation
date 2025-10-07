@@ -71,7 +71,7 @@ export const PricingMethodSchema = z.enum([
   'OCCUPANCY_BASED'
 ]);
 
-// Time Granularity - Matches DB enum (UPPERCASE) 
+// Time Granularity - Matches DB enum (UPPERCASE)
 export const TimeGranularitySchema = z.enum([
   'HOURLY',
   'DAILY',
