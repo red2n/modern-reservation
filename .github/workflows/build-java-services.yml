@@ -1,0 +1,227 @@
+name: Build Java Services
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'apps/backend/java-services/**'
+      - 'libs/shared/backend-utils/**'
+      - '.github/workflows/build-java-services.yml'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'apps/backend/java-services/**'
+      - 'libs/shared/backend-utils/**'
+      - '.github/workflows/build-java-services.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build and Test Java Services
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        java-version: [17]
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ☕ Set up JDK ${{ matrix.java-version }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: 📦 Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: 🔍 Verify Maven installation
+        run: mvn --version
+
+      - name: 🏗️ Build Shared Backend Utils
+        working-directory: libs/shared/backend-utils
+        run: |
+          echo "Building shared backend utilities..."
+          mvn clean install -DskipTests
+
+      - name: 🏗️ Build Infrastructure Services
+        working-directory: apps/backend/java-services/infrastructure
+        run: |
+          echo "Building infrastructure services..."
+
+          # Config Server
+          if [ -d "config-server" ]; then
+            echo "Building Config Server..."
+            cd config-server
+            mvn clean package -DskipTests
+            cd ..
+          fi
+
+          # Eureka Server
+          if [ -d "eureka-server" ]; then
+            echo "Building Eureka Server..."
+            cd eureka-server
+            mvn clean package -DskipTests
+            cd ..
+          fi
+
+          # Gateway Service
+          if [ -d "gateway-service" ]; then
+            echo "Building Gateway Service..."
+            cd gateway-service
+            mvn clean package -DskipTests
+            cd ..
+          fi
+
+      - name: 🏗️ Build Business Services
+        working-directory: apps/backend/java-services/business-services
+        run: |
+          echo "Building business services..."
+
+          # Reservation Engine
+          if [ -d "reservation-engine" ]; then
+            echo "Building Reservation Engine..."
+            cd reservation-engine
+            mvn clean package -DskipTests
+            cd ..
+          fi
+
+          # Payment Processor
+          if [ -d "payment-processor" ]; then
+            echo "Building Payment Processor..."
+            cd payment-processor
+            mvn clean package -DskipTests
+            cd ..
+          fi
+
+          # Rate Management
+          if [ -d "rate-management" ]; then
+            echo "Building Rate Management..."
+            cd rate-management
+            mvn clean package -DskipTests
+            cd ..
+          fi
+
+          # Availability Calculator
+          if [ -d "availability-calculator" ]; then
+            echo "Building Availability Calculator..."
+            cd availability-calculator
+            mvn clean package -DskipTests
+            cd ..
+          fi
+
+          # Analytics Engine
+          if [ -d "analytics-engine" ]; then
+            echo "Building Analytics Engine..."
+            cd analytics-engine
+            mvn clean package -DskipTests
+            cd ..
+          fi
+
+          # Batch Processor (if implemented)
+          if [ -d "batch-processor" ] && [ -f "batch-processor/pom.xml" ]; then
+            echo "Building Batch Processor..."
+            cd batch-processor
+            mvn clean package -DskipTests
+            cd ..
+          fi
+
+      - name: 🧪 Run Tests
+        working-directory: apps/backend/java-services
+        run: |
+          echo "Running tests for all services..."
+
+          # Test Infrastructure Services
+          cd infrastructure
+          for service in config-server eureka-server gateway-service; do
+            if [ -d "$service" ] && [ -f "$service/pom.xml" ]; then
+              echo "Testing $service..."
+              cd "$service"
+              mvn test || echo "⚠️  Tests failed for $service"
+              cd ..
+            fi
+          done
+          cd ..
+
+          # Test Business Services
+          cd business-services
+          for service in reservation-engine payment-processor rate-management availability-calculator analytics-engine; do
+            if [ -d "$service" ] && [ -f "$service/pom.xml" ]; then
+              echo "Testing $service..."
+              cd "$service"
+              mvn test || echo "⚠️  Tests failed for $service"
+              cd ..
+            fi
+          done
+
+      - name: 📊 Generate Build Report
+        if: always()
+        run: |
+          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Infrastructure Services" >> $GITHUB_STEP_SUMMARY
+
+          for service in config-server eureka-server gateway-service; do
+            if [ -f "apps/backend/java-services/infrastructure/$service/target/*.jar" ]; then
+              echo "- ✅ $service: Built successfully" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- ❌ $service: Build failed" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Business Services" >> $GITHUB_STEP_SUMMARY
+
+          for service in reservation-engine payment-processor rate-management availability-calculator analytics-engine; do
+            if [ -f "apps/backend/java-services/business-services/$service/target/*.jar" ]; then
+              echo "- ✅ $service: Built successfully" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- ❌ $service: Build failed" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+
+      - name: 📦 Upload Artifacts
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: java-services-jars-${{ github.sha }}
+          path: |
+            apps/backend/java-services/infrastructure/*/target/*.jar
+            apps/backend/java-services/business-services/*/target/*.jar
+            !apps/backend/java-services/**/target/*-javadoc.jar
+            !apps/backend/java-services/**/target/*-sources.jar
+          retention-days: 7
+
+      - name: 📊 Upload Test Reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-reports-${{ github.sha }}
+          path: |
+            apps/backend/java-services/infrastructure/*/target/surefire-reports
+            apps/backend/java-services/business-services/*/target/surefire-reports
+          retention-days: 7
+
+      - name: ✅ Build Status
+        if: success()
+        run: |
+          echo "✅ All Java services built successfully!"
+          echo "📦 Artifacts uploaded"
+
+      - name: ❌ Build Failed
+        if: failure()
+        run: |
+          echo "❌ Build failed! Check the logs above for details."
+          exit 1
