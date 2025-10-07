@@ -41,7 +41,7 @@ get_service_port() {
         "reservation-engine") echo "8081" ;;
         "availability-calculator") echo "8083" ;;
         "payment-processor") echo "8084" ;;
-        "rate-management") echo "8085" ;;
+        "rate-management") echo "8087" ;;
         "analytics-engine") echo "8086" ;;
         *) echo "" ;;
     esac
@@ -281,7 +281,7 @@ main() {
         print_status "  • localhost:8081 (reservation-engine) - Network Isolated"
         print_status "  • localhost:8083 (availability-calculator) - Network Isolated"
         print_status "  • localhost:8084 (payment-processor) - Network Isolated"
-        print_status "  • localhost:8085 (rate-management) - Network Isolated"
+        print_status "  • localhost:8087 (rate-management) - Network Isolated"
         print_status "  • localhost:8086 (analytics-engine) - Network Isolated"
         print_status ""
         print_status "Note: Business services use network isolation (localhost binding)"

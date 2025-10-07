@@ -159,10 +159,10 @@ print_header "🐳 STEP 2: Cleaning Docker Resources"
 print_step "Stopping and removing Docker containers..."
 cd "$BASE_DIR/infrastructure/docker"
 if [ "$KEEP_DATA" = false ]; then
-    docker-compose -f docker-compose-infrastructure.yml down -v --remove-orphans 2>&1 | grep -v "^$" || true
+    docker compose -f docker-compose-infrastructure.yml down -v --remove-orphans 2>&1 | grep -v "^$" || true
     print_success "Containers, volumes, and networks removed"
 else
-    docker-compose -f docker-compose-infrastructure.yml down --remove-orphans 2>&1 | grep -v "^$" || true
+    docker compose -f docker-compose-infrastructure.yml down --remove-orphans 2>&1 | grep -v "^$" || true
     print_success "Containers and networks removed (volumes kept)"
 fi
 cd "$BASE_DIR"
@@ -253,7 +253,7 @@ print_header "🚀 STEP 5: Starting Infrastructure Services"
 
 print_step "Starting Docker infrastructure..."
 cd "$BASE_DIR/infrastructure/docker"
-docker-compose -f docker-compose-infrastructure.yml up -d 2>&1 | grep -v "^$" | head -20 || true
+docker compose -f docker-compose-infrastructure.yml up -d 2>&1 | grep -v "^$" | head -20 || true
 cd "$BASE_DIR"
 
 print_substep "Waiting for services to initialize (30 seconds)..."

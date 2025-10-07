@@ -11,7 +11,14 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 CYAN='\033[0;36m'
-NC='\033[0m' # No Color
+NC='\03    # Format: "service-name:directory:port:startup-wait:context-path"
+    declare -a BUSINESS_SERVICES=(
+        "reservation-engine:reservation-engine:8081:45:/reservation-engine"
+        "availability-calculator:availability-calculator:8083:40:/availability-calculator"
+        "payment-processor:payment-processor:8084:35:/payment-processor"
+        "rate-management:rate-management:8087:35:/rate-management"
+        "analytics-engine:analytics-engine:8086:45:/analytics-engine"
+    )No Color
 
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -325,7 +332,7 @@ analytics-engine:analytics-engine:8086:45:/analytics-engine
         print_status "  • Reservation Engine:    http://localhost:8081/reservation-engine"
         print_status "  • Availability Calculator: http://localhost:8083/availability-calculator"
         print_status "  • Payment Processor:     http://localhost:8084/payment-processor"
-        print_status "  • Rate Management:       http://localhost:8085/rate-management"
+        print_status "  • Rate Management:       http://localhost:8087/rate-management"
         print_status "  • Analytics Engine:      http://localhost:8086/analytics-engine"
         print_status ""
         print_status "Health Check URLs:"

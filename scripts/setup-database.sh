@@ -159,17 +159,13 @@ execute_schema_migration() {
 
     print_status "Executing schema migration for database: $db_name"
 
-    # Schema files in order
+    # Schema files in order (updated to match actual files)
     local schema_files=(
-        "00-extensions-and-types.sql"
-        "01-property-management.sql"
-        "02-guest-management.sql"
-        "03-reservation-management.sql"
-        "04-payment-management.sql"
-        "05-availability-rate-management.sql"
-        "06-user-management.sql"
-        "07-audit-and-events.sql"
-        "08-notifications.sql"
+        "01-extensions-and-types.sql"
+        "02-core-tables.sql"
+        "03-indexes.sql"
+        "04-constraints.sql"
+        "05-reference-data.sql"
     )
 
     local success_count=0

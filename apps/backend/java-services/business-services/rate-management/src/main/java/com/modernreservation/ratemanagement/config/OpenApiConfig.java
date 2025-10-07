@@ -32,7 +32,7 @@ public class OpenApiConfig {
                                 .url("http://springdoc.org")))
                 .servers(List.of(
                         new Server().url("http://localhost:8080/rate-management").description("Gateway Server (Use this for testing)"),
-                        new Server().url("http://localhost:8085/rate-management").description("Direct Service (Internal only)")
+                        new Server().url("http://localhost:8087/rate-management").description("Direct Service (Internal only)")
                 ));
     }
 }

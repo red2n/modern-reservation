@@ -84,7 +84,7 @@ start_infrastructure() {
     log "Starting infrastructure services..."
     ensure_network
     cd "$DOCKER_DIR"
-    docker-compose -f docker-compose-infrastructure.yml up -d
+    docker compose -f docker-compose-infrastructure.yml up -d
     log "Infrastructure services started!"
     log "Access points:"
     log "  📊 Zipkin UI: http://localhost:9411"
@@ -95,7 +95,7 @@ start_infrastructure() {
 stop_infrastructure() {
     log "Stopping infrastructure services..."
     cd "$DOCKER_DIR"
-    docker-compose -f docker-compose-infrastructure.yml down
+    docker compose -f docker-compose-infrastructure.yml down
     log "Infrastructure services stopped!"
 }
 
@@ -104,7 +104,7 @@ start_zipkin() {
     log "Starting Zipkin service..."
     ensure_network
     cd "$DOCKER_DIR"
-    docker-compose -f docker-compose-infrastructure.yml up -d zipkin
+    docker compose -f docker-compose-infrastructure.yml up -d zipkin
     log "Zipkin started! Access at: http://localhost:9411"
 }
 
@@ -112,7 +112,7 @@ start_postgres() {
     log "Starting PostgreSQL service..."
     ensure_network
     cd "$DOCKER_DIR"
-    docker-compose -f docker-compose-infrastructure.yml up -d postgres
+    docker compose -f docker-compose-infrastructure.yml up -d postgres
     log "PostgreSQL started! Access at: localhost:5432"
 }
 
@@ -120,7 +120,7 @@ start_redis() {
     log "Starting Redis service..."
     ensure_network
     cd "$DOCKER_DIR"
-    docker-compose -f docker-compose-infrastructure.yml up -d redis
+    docker compose -f docker-compose-infrastructure.yml up -d redis
     log "Redis started! Access at: localhost:6379"
 }
 
@@ -155,10 +155,10 @@ show_logs() {
     local service="$1"
     if [ -z "$service" ]; then
         cd "$DOCKER_DIR"
-        docker-compose -f docker-compose-infrastructure.yml logs -f
+        docker compose -f docker-compose-infrastructure.yml logs -f
     else
         cd "$DOCKER_DIR"
-        docker-compose -f docker-compose-infrastructure.yml logs -f "$service"
+        docker compose -f docker-compose-infrastructure.yml logs -f "$service"
     fi
 }
 
