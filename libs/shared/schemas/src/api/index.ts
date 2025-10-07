@@ -1,5 +1,8 @@
 import { z } from 'zod';
-import { PropertySchema, RoomSchema, GuestSchema, ReservationSchema, PaymentSchema } from '../entities';
+import { PropertySchema, RoomSchema, GuestSchema, ReservationSchema, PaymentSchemas } from '../entities';
+
+// Extract the main schema from PaymentSchemas
+const { PaymentTransaction: PaymentSchema } = PaymentSchemas;
 
 // Common API Response Schemas
 export const ApiResponseSchema = z.object({
