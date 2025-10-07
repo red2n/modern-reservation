@@ -10,6 +10,8 @@ import com.modernreservation.reservationengine.enums.ReservationStatus;
 import com.modernreservation.reservationengine.enums.ReservationSource;
 import com.modernreservation.reservationengine.repository.ReservationRepository;
 import com.modernreservation.reservationengine.repository.ReservationAuditRepository;
+import com.reservation.shared.events.EventPublisher;
+import com.reservation.shared.events.ReservationCreatedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -43,6 +45,7 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final ReservationAuditRepository auditRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final EventPublisher eventPublisher;
 
     /**
      * Create a new reservation
@@ -406,11 +409,40 @@ public class ReservationService {
 
     private void publishReservationEvent(String eventType, Reservation reservation) {
         try {
-            kafkaTemplate.send("reservation-events", eventType, reservation);
-            log.debug("Published {} event for reservation: {}", eventType, reservation.getId());
+            // Keep old method for backwards compatibility with other event types
+            // TODO: Migrate all event types to structured events
+            if ("reservation.created".equals(eventType)) {
+                publishReservationCreatedEvent(reservation);
+            } else {
+                // Fallback to old approach for other events
+                kafkaTemplate.send("reservation-events", eventType, reservation);
+                log.debug("Published {} event (legacy) for reservation: {}", eventType, reservation.getId());
+            }
         } catch (Exception e) {
             log.error("Failed to publish {} event for reservation: {}", eventType, reservation.getId(), e);
         }
+    }
+
+    /**
+     * Publish structured ReservationCreatedEvent using EventPublisher
+     */
+    private void publishReservationCreatedEvent(Reservation reservation) {
+        ReservationCreatedEvent event = new ReservationCreatedEvent();
+        event.setReservationId(reservation.getId() != null ? reservation.getId().toString() : null);
+        event.setGuestId(reservation.getGuestId() != null ? reservation.getGuestId().toString() : null);
+        event.setPropertyId(reservation.getPropertyId() != null ? reservation.getPropertyId().toString() : null);
+        event.setRoomTypeId(reservation.getRoomTypeId() != null ? reservation.getRoomTypeId().toString() : null);
+        event.setCheckInDate(reservation.getCheckInDate());
+        event.setCheckOutDate(reservation.getCheckOutDate());
+        event.setTotalAmount(reservation.getTotalAmount());
+        event.setStatus(reservation.getStatus().name());
+        event.setNumberOfGuests(reservation.getAdults() +
+            (reservation.getChildren() != null ? reservation.getChildren() : 0) +
+            (reservation.getInfants() != null ? reservation.getInfants() : 0));
+
+        // Publish asynchronously for better performance
+        eventPublisher.publishAsync("reservation.created", event);
+        log.info("Published ReservationCreatedEvent for reservation: {}", reservation.getConfirmationNumber());
     }
 
     /**

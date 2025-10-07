@@ -8,16 +8,16 @@ import java.time.LocalDate;
 public class ReservationCreatedEvent extends BaseEvent {
 
     @JsonProperty("reservation_id")
-    private Long reservationId;
+    private String reservationId;
 
     @JsonProperty("guest_id")
-    private Long guestId;
+    private String guestId;
 
     @JsonProperty("property_id")
-    private Long propertyId;
+    private String propertyId;
 
     @JsonProperty("room_type_id")
-    private Long roomTypeId;
+    private String roomTypeId;
 
     @JsonProperty("check_in_date")
     private LocalDate checkInDate;
@@ -38,35 +38,35 @@ public class ReservationCreatedEvent extends BaseEvent {
         super("RESERVATION_CREATED");
     }
 
-    public Long getReservationId() {
+    public String getReservationId() {
         return reservationId;
     }
 
-    public void setReservationId(Long reservationId) {
+    public void setReservationId(String reservationId) {
         this.reservationId = reservationId;
     }
 
-    public Long getGuestId() {
+    public String getGuestId() {
         return guestId;
     }
 
-    public void setGuestId(Long guestId) {
+    public void setGuestId(String guestId) {
         this.guestId = guestId;
     }
 
-    public Long getPropertyId() {
+    public String getPropertyId() {
         return propertyId;
     }
 
-    public void setPropertyId(Long propertyId) {
+    public void setPropertyId(String propertyId) {
         this.propertyId = propertyId;
     }
 
-    public Long getRoomTypeId() {
+    public String getRoomTypeId() {
         return roomTypeId;
     }
 
-    public void setRoomTypeId(Long roomTypeId) {
+    public void setRoomTypeId(String roomTypeId) {
         this.roomTypeId = roomTypeId;
     }
 
