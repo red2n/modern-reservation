@@ -1,0 +1,343 @@
+name: Deploy GitHub Pages (Ad-hoc)
+
+# This workflow only runs manually - no automatic triggers
+# Use this when you want to deploy documentation or static content to GitHub Pages
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+      deploy_docs:
+        description: 'Deploy API documentation'
+        required: true
+        default: true
+        type: boolean
+      deploy_architecture:
+        description: 'Deploy architecture diagrams'
+        required: true
+        default: true
+        type: boolean
+      deploy_reports:
+        description: 'Deploy test/coverage reports'
+        required: true
+        default: false
+        type: boolean
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Build job
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Display deployment configuration
+        run: |
+          echo "🚀 Deployment Configuration:"
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Deploy API Docs: ${{ github.event.inputs.deploy_docs }}"
+          echo "Deploy Architecture: ${{ github.event.inputs.deploy_architecture }}"
+          echo "Deploy Reports: ${{ github.event.inputs.deploy_reports }}"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create Pages directory structure
+        run: |
+          mkdir -p _site
+          mkdir -p _site/docs
+          mkdir -p _site/api
+          mkdir -p _site/architecture
+          mkdir -p _site/reports
+
+      - name: Build documentation index
+        run: |
+          cat > _site/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Modern Reservation - Documentation</title>
+              <style>
+                  * { margin: 0; padding: 0; box-sizing: border-box; }
+                  body {
+                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+                      line-height: 1.6;
+                      color: #333;
+                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                      min-height: 100vh;
+                      padding: 2rem;
+                  }
+                  .container {
+                      max-width: 1200px;
+                      margin: 0 auto;
+                      background: white;
+                      border-radius: 12px;
+                      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                      overflow: hidden;
+                  }
+                  header {
+                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                      color: white;
+                      padding: 3rem 2rem;
+                      text-align: center;
+                  }
+                  h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+                  .subtitle { font-size: 1.1rem; opacity: 0.9; }
+                  .content { padding: 2rem; }
+                  .grid {
+                      display: grid;
+                      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                      gap: 1.5rem;
+                      margin-top: 2rem;
+                  }
+                  .card {
+                      border: 2px solid #e2e8f0;
+                      border-radius: 8px;
+                      padding: 1.5rem;
+                      transition: all 0.3s ease;
+                      background: white;
+                  }
+                  .card:hover {
+                      border-color: #667eea;
+                      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+                      transform: translateY(-2px);
+                  }
+                  .card h2 {
+                      color: #667eea;
+                      margin-bottom: 1rem;
+                      font-size: 1.5rem;
+                  }
+                  .card p { color: #666; margin-bottom: 1rem; }
+                  .card a {
+                      display: inline-block;
+                      background: #667eea;
+                      color: white;
+                      padding: 0.5rem 1rem;
+                      border-radius: 4px;
+                      text-decoration: none;
+                      transition: background 0.3s ease;
+                  }
+                  .card a:hover { background: #5568d3; }
+                  .badge {
+                      display: inline-block;
+                      background: #f0fdf4;
+                      color: #166534;
+                      padding: 0.25rem 0.75rem;
+                      border-radius: 12px;
+                      font-size: 0.875rem;
+                      font-weight: 600;
+                      margin-top: 0.5rem;
+                  }
+                  footer {
+                      text-align: center;
+                      padding: 2rem;
+                      color: #666;
+                      border-top: 1px solid #e2e8f0;
+                  }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <header>
+                      <h1>🏨 Modern Reservation</h1>
+                      <p class="subtitle">Enterprise Hotel Management System - Documentation Portal</p>
+                  </header>
+                  <div class="content">
+                      <h2>📚 Available Documentation</h2>
+                      <div class="grid">
+                          <div class="card">
+                              <h2>📖 Project Documentation</h2>
+                              <p>Comprehensive guides, requirements, and development plans</p>
+                              <a href="docs/">View Documentation →</a>
+                              <span class="badge">Always Available</span>
+                          </div>
+                          <div class="card">
+                              <h2>🔌 API Reference</h2>
+                              <p>GraphQL schemas, REST endpoints, and integration guides</p>
+                              <a href="api/">View API Docs →</a>
+                              <span class="badge">Manual Deploy</span>
+                          </div>
+                          <div class="card">
+                              <h2>🏗️ Architecture</h2>
+                              <p>System architecture, ADRs, and technical diagrams</p>
+                              <a href="architecture/">View Architecture →</a>
+                              <span class="badge">Manual Deploy</span>
+                          </div>
+                          <div class="card">
+                              <h2>📊 Test Reports</h2>
+                              <p>Code coverage, test results, and quality metrics</p>
+                              <a href="reports/">View Reports →</a>
+                              <span class="badge">On Demand</span>
+                          </div>
+                      </div>
+                  </div>
+                  <footer>
+                      <p>Deployed from: <strong>${{ github.ref_name }}</strong> branch</p>
+                      <p>Build: <strong>${{ github.run_number }}</strong> | Commit: <strong>${{ github.sha }}</strong></p>
+                      <p>Environment: <strong>${{ github.event.inputs.environment }}</strong></p>
+                  </footer>
+              </div>
+          </body>
+          </html>
+          EOF
+
+      - name: Copy project documentation
+        run: |
+          # Copy main docs folder
+          if [ -d "docs" ]; then
+            cp -r docs/* _site/docs/
+            echo "✅ Copied project documentation"
+          fi
+
+      - name: Deploy API documentation
+        if: github.event.inputs.deploy_docs == 'true'
+        run: |
+          echo "📦 Building API documentation..."
+
+          # Copy GraphQL schemas
+          if [ -d "libs/shared/graphql-schemas" ]; then
+            mkdir -p _site/api/graphql
+            cp libs/shared/graphql-schemas/*.graphql _site/api/graphql/ 2>/dev/null || true
+            echo "✅ Copied GraphQL schemas"
+          fi
+
+          # Generate API docs index
+          cat > _site/api/index.html << 'APIEOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>API Documentation - Modern Reservation</title>
+              <style>
+                  body {
+                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                      max-width: 1200px;
+                      margin: 0 auto;
+                      padding: 2rem;
+                      line-height: 1.6;
+                  }
+                  h1 { color: #667eea; }
+                  .api-section {
+                      background: #f8fafc;
+                      padding: 1.5rem;
+                      border-radius: 8px;
+                      margin: 1rem 0;
+                  }
+                  a { color: #667eea; text-decoration: none; }
+                  a:hover { text-decoration: underline; }
+              </style>
+          </head>
+          <body>
+              <h1>🔌 API Documentation</h1>
+              <div class="api-section">
+                  <h2>GraphQL API</h2>
+                  <ul>
+                      <li><a href="graphql/master-schema.graphql">Master Schema</a></li>
+                      <li><a href="graphql/composed-schema.graphql">Composed Schema</a></li>
+                  </ul>
+              </div>
+              <p><a href="../">← Back to Home</a></p>
+          </body>
+          </html>
+          APIEOF
+
+      - name: Deploy architecture diagrams
+        if: github.event.inputs.deploy_architecture == 'true'
+        run: |
+          echo "🏗️ Building architecture documentation..."
+
+          # Copy architecture docs
+          if [ -d "docs/architecture" ]; then
+            cp -r docs/architecture/* _site/architecture/
+            echo "✅ Copied architecture documentation"
+          fi
+
+          # Copy ADRs
+          if [ -d "docs/adr" ]; then
+            mkdir -p _site/architecture/adr
+            cp -r docs/adr/* _site/architecture/adr/
+            echo "✅ Copied Architecture Decision Records"
+          fi
+
+      - name: Deploy test reports
+        if: github.event.inputs.deploy_reports == 'true'
+        run: |
+          echo "📊 Preparing test reports..."
+
+          # This would typically pull artifacts from previous test runs
+          # For now, create placeholder
+          cat > _site/reports/index.html << 'REPORTEOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <title>Test Reports - Modern Reservation</title>
+              <style>
+                  body {
+                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                      max-width: 1200px;
+                      margin: 0 auto;
+                      padding: 2rem;
+                  }
+                  h1 { color: #667eea; }
+              </style>
+          </head>
+          <body>
+              <h1>📊 Test Reports</h1>
+              <p>Test reports will be generated from the latest test run.</p>
+              <p><a href="../">← Back to Home</a></p>
+          </body>
+          </html>
+          REPORTEOF
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '_site'
+
+  # Deployment job
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Display deployment URL
+        run: |
+          echo "🎉 Deployment successful!"
+          echo "📄 Pages URL: ${{ steps.deployment.outputs.page_url }}"

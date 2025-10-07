@@ -8,6 +8,8 @@ This directory contains GitHub Actions workflows for CI/CD automation.
 
 **Purpose:** Build and test all Java microservices
 
+**Type:** ⚡ Automatic (on push/PR)
+
 **Triggers:**
 - Push to `main` or `develop` branches (when Java files change)
 - Pull requests to `main` or `develop` branches
@@ -66,6 +68,17 @@ Download compiled JARs or test reports from the workflow run page.
 
 ### Logs
 View detailed logs for each build step to troubleshoot issues.
+
+## Build Order (IMPORTANT!)
+
+The workflow builds in this specific order:
+
+1. **Parent POM** (`mvn install -N`) - Must be first!
+2. **Backend Utils** - Shared utilities
+3. **Infrastructure Services** - Config, Eureka, Gateway
+4. **Business Services** - Domain services
+
+**Why this order?** Child modules depend on the parent POM being in the local Maven repository first. The `-N` flag installs only the parent without recursively building children.
 
 ## Local Development
 
@@ -143,6 +156,69 @@ Typical build times (without cache):
 
 Services built in parallel where possible.
 
+---
+
+### 2. Deploy GitHub Pages (`deploy-pages-adhoc.yml`)
+
+**Purpose:** Deploy documentation and reports to GitHub Pages
+
+**Type:** 🎯 Ad-hoc (manual trigger only)
+
+**Why Ad-hoc?**
+- Prevents unnecessary deploys on every commit
+- Gives you full control over when to publish
+- Reduces Actions minutes usage
+- Documentation changes less frequently than code
+
+**Triggers:**
+- ✅ Manual only via workflow dispatch
+- ❌ Never automatic
+
+**Manual Trigger Options:**
+
+Go to Actions → Deploy GitHub Pages → Run workflow
+
+You can choose:
+- **Environment**: `production` or `staging`
+- **Deploy API Docs**: Include GraphQL schemas (default: true)
+- **Deploy Architecture**: Include diagrams and ADRs (default: true)
+- **Deploy Reports**: Include test/coverage reports (default: false)
+
+**What it deploys:**
+1. 🏠 Beautiful landing page with navigation
+2. 📚 Project documentation from `/docs`
+3. 🔌 API documentation (GraphQL schemas)
+4. 🏗️ Architecture diagrams and ADRs
+5. 📊 Test reports (optional)
+
+**Deployment URL:**
+- Will be shown in workflow output
+- Typically: `https://{username}.github.io/{repo-name}`
+
+**First-time Setup:**
+1. Go to repository Settings → Pages
+2. Source: Deploy from GitHub Actions
+3. Run the workflow once to enable Pages
+
+**When to Deploy:**
+- After major documentation updates
+- After completing new features (API docs)
+- After sprint reviews (for stakeholders)
+- Before demos or presentations
+- When you want to share architecture decisions
+
+**Quick Deploy Command:**
+```bash
+# Via GitHub CLI (if installed)
+gh workflow run deploy-pages-adhoc.yml \
+  -f environment=production \
+  -f deploy_docs=true \
+  -f deploy_architecture=true \
+  -f deploy_reports=false
+```
+
+---
+
 ## Best Practices
 
 1. ✅ Always use `./dev.sh` for local operations
@@ -150,17 +226,33 @@ Services built in parallel where possible.
 3. ✅ Keep `pom.xml` files up to date
 4. ✅ Write unit tests for new features
 5. ✅ Check workflow status before merging PRs
+6. ✅ Deploy Pages only when documentation changes
+7. ✅ Use ad-hoc workflows for non-critical deployments
 
 ## Security
 
 - No secrets required for building
 - Artifacts are private to repository
 - 7-day retention minimizes storage costs
+- Pages deployment uses GITHUB_TOKEN
 
 ## Support
 
 For issues with workflows:
 1. Check workflow logs for error details
-2. Verify local build works: `./dev.sh start`
-3. Check MCP server rules: Ask Copilot for guidance
+2. Run local test: `./scripts/test-github-build.sh`
+3. Read [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common issues
+4. Verify local build works: `./dev.sh start`
+5. Check MCP server rules: Ask Copilot for guidance
+6. For Pages issues: Check repository Settings → Pages
+
+## Common Issues
+
+### "Could not find artifact java-services-parent:pom"
+**Solution:** Parent POM must be installed first. This is now automatic in the workflow.
+See [TROUBLESHOOTING.md](TROUBLESHOOTING.md#1--could-not-find-artifact-java-services-parentpom) for details.
+
+### "Unsupported class file major version"
+**Solution:** Java version mismatch. Workflow uses Java 21 to match project requirements.
+See [TROUBLESHOOTING.md](TROUBLESHOOTING.md#2--unsupported-class-file-major-version) for details.
 4. Review pom.xml dependencies

@@ -50,11 +50,19 @@ jobs:
       - name: 🔍 Verify Maven installation
         run: mvn --version
 
+      - name: 🏗️ Install Parent POM
+        working-directory: apps/backend/java-services
+        run: |
+          echo "Installing parent POM to local Maven repository..."
+          mvn clean install -N -DskipTests
+          echo "✅ Parent POM installed successfully"
+
       - name: 🏗️ Build Shared Backend Utils
         working-directory: libs/shared/backend-utils
         run: |
           echo "Building shared backend utilities..."
           mvn clean install -DskipTests
+          echo "✅ Backend utils built successfully"
 
       - name: 🏗️ Build Infrastructure Services
         working-directory: apps/backend/java-services/infrastructure

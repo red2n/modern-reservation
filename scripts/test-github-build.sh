@@ -49,6 +49,19 @@ mvn --version
 echo -e "${GREEN}✅ Maven detected${NC}"
 echo ""
 
+# Step 0: Install Parent POM
+echo -e "${BLUE}═══════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}🏗️  Step 0: Installing Parent POM${NC}"
+echo -e "${BLUE}═══════════════════════════════════════════════════════${NC}"
+cd "$PROJECT_ROOT/apps/backend/java-services"
+if mvn clean install -N -DskipTests; then
+    echo -e "${GREEN}✅ Parent POM installed successfully${NC}"
+else
+    echo -e "${RED}❌ Parent POM installation failed${NC}"
+    exit 1
+fi
+echo ""
+
 # Step 1: Build Shared Backend Utils
 echo -e "${BLUE}═══════════════════════════════════════════════════════${NC}"
 echo -e "${YELLOW}🏗️  Step 1: Building Shared Backend Utils${NC}"
