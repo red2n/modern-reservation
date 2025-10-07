@@ -184,6 +184,6 @@ For issues, questions, or contributions:
 
 ---
 
-**Last Updated**: October 7, 2025  
-**Version**: 1.0.0  
+**Last Updated**: October 7, 2025
+**Version**: 1.0.0
 **Repository**: [github.com/red2n/modern-reservation](https://github.com/red2n/modern-reservation)

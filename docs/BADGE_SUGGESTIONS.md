@@ -9,7 +9,7 @@ Once GitHub Pages is enabled, you can add a professional documentation badge to 
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue.svg)](https://red2n.github.io/modern-reservation/)
 ```
 
-**Preview:**  
+**Preview:**
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue.svg)](https://red2n.github.io/modern-reservation/)
 
 ### Option 2: With Icon
@@ -17,7 +17,7 @@ Once GitHub Pages is enabled, you can add a professional documentation badge to 
 [![📚 Documentation](https://img.shields.io/badge/📚-Documentation-blue.svg)](https://red2n.github.io/modern-reservation/)
 ```
 
-**Preview:**  
+**Preview:**
 [![📚 Documentation](https://img.shields.io/badge/📚-Documentation-blue.svg)](https://red2n.github.io/modern-reservation/)
 
 ### Option 3: Styled Badge
@@ -25,7 +25,7 @@ Once GitHub Pages is enabled, you can add a professional documentation badge to 
 [![Documentation](https://img.shields.io/badge/Documentation-Available-success?style=for-the-badge)](https://red2n.github.io/modern-reservation/)
 ```
 
-**Preview:**  
+**Preview:**
 [![Documentation](https://img.shields.io/badge/Documentation-Available-success?style=for-the-badge)](https://red2n.github.io/modern-reservation/)
 
 ### Option 4: Status Badge (After enabling)
@@ -43,7 +43,7 @@ Add the badge near the top of your `README.md`, with other badges:
 # Modern Reservation Management System 🏨
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue.svg)](https://red2n.github.io/modern-reservation/) 
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue.svg)](https://red2n.github.io/modern-reservation/)
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](https://www.typescriptlang.org/)
 ...
 ```
