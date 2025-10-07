@@ -50,101 +50,222 @@ jobs:
       - name: 🔍 Verify Maven installation
         run: mvn --version
 
+      - name: 🔍 Verify Project Structure
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔍 Verifying Project Structure"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "Parent POM:"
+          ls -la apps/backend/java-services/pom.xml
+          echo ""
+          echo "Backend Utils:"
+          ls -la libs/shared/backend-utils/pom.xml
+          echo ""
+          echo "Infrastructure Services:"
+          ls -d apps/backend/java-services/infrastructure/*/
+          echo ""
+          echo "Business Services:"
+          ls -d apps/backend/java-services/business-services/*/
+          echo ""
+
       - name: 🏗️ Install Parent POM
         working-directory: apps/backend/java-services
         run: |
-          echo "Installing parent POM to local Maven repository..."
-          mvn clean install -N -DskipTests
-          echo "✅ Parent POM installed successfully"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📦 Installing Parent POM"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          if mvn clean install -N -DskipTests; then
+            echo "✅ Parent POM installed successfully"
+          else
+            echo "❌ Parent POM installation failed!"
+            echo "This is critical - all services depend on the parent POM"
+            exit 1
+          fi
 
       - name: 🏗️ Build Shared Backend Utils
         working-directory: libs/shared/backend-utils
         run: |
-          echo "Building shared backend utilities..."
-          mvn clean install -DskipTests
-          echo "✅ Backend utils built successfully"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📦 Building Shared Backend Utils"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          if mvn clean install -DskipTests; then
+            echo "✅ Backend utils built successfully"
+          else
+            echo "❌ Backend utils build failed!"
+            echo "This is critical - all services depend on backend-utils"
+            exit 1
+          fi
 
       - name: 🏗️ Build Infrastructure Services
         working-directory: apps/backend/java-services/infrastructure
         run: |
           echo "Building infrastructure services..."
+          FAILED=0
 
           # Config Server
           if [ -d "config-server" ]; then
-            echo "Building Config Server..."
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "📦 Building Config Server..."
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             cd config-server
-            mvn clean package -DskipTests
+            if mvn clean package -DskipTests; then
+              echo "✅ Config Server built successfully"
+            else
+              echo "❌ Config Server build failed"
+              FAILED=$((FAILED + 1))
+            fi
             cd ..
+            echo ""
           fi
 
           # Eureka Server
           if [ -d "eureka-server" ]; then
-            echo "Building Eureka Server..."
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "📦 Building Eureka Server..."
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             cd eureka-server
-            mvn clean package -DskipTests
+            if mvn clean package -DskipTests; then
+              echo "✅ Eureka Server built successfully"
+            else
+              echo "❌ Eureka Server build failed"
+              FAILED=$((FAILED + 1))
+            fi
             cd ..
+            echo ""
           fi
 
           # Gateway Service
           if [ -d "gateway-service" ]; then
-            echo "Building Gateway Service..."
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "📦 Building Gateway Service..."
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             cd gateway-service
-            mvn clean package -DskipTests
+            if mvn clean package -DskipTests; then
+              echo "✅ Gateway Service built successfully"
+            else
+              echo "❌ Gateway Service build failed"
+              FAILED=$((FAILED + 1))
+            fi
             cd ..
+            echo ""
           fi
+
+          if [ $FAILED -gt 0 ]; then
+            echo "❌ $FAILED infrastructure service(s) failed to build"
+            exit 1
+          fi
+
+          echo "✅ All infrastructure services built successfully"
 
       - name: 🏗️ Build Business Services
         working-directory: apps/backend/java-services/business-services
         run: |
           echo "Building business services..."
+          FAILED=0
 
           # Reservation Engine
           if [ -d "reservation-engine" ]; then
-            echo "Building Reservation Engine..."
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "📦 Building Reservation Engine..."
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             cd reservation-engine
-            mvn clean package -DskipTests
+            if mvn clean package -DskipTests; then
+              echo "✅ Reservation Engine built successfully"
+            else
+              echo "❌ Reservation Engine build failed"
+              FAILED=$((FAILED + 1))
+            fi
             cd ..
+            echo ""
           fi
 
           # Payment Processor
           if [ -d "payment-processor" ]; then
-            echo "Building Payment Processor..."
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "📦 Building Payment Processor..."
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             cd payment-processor
-            mvn clean package -DskipTests
+            if mvn clean package -DskipTests; then
+              echo "✅ Payment Processor built successfully"
+            else
+              echo "❌ Payment Processor build failed"
+              FAILED=$((FAILED + 1))
+            fi
             cd ..
+            echo ""
           fi
 
           # Rate Management
           if [ -d "rate-management" ]; then
-            echo "Building Rate Management..."
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "📦 Building Rate Management..."
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             cd rate-management
-            mvn clean package -DskipTests
+            if mvn clean package -DskipTests; then
+              echo "✅ Rate Management built successfully"
+            else
+              echo "❌ Rate Management build failed"
+              FAILED=$((FAILED + 1))
+            fi
             cd ..
+            echo ""
           fi
 
           # Availability Calculator
           if [ -d "availability-calculator" ]; then
-            echo "Building Availability Calculator..."
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "📦 Building Availability Calculator..."
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             cd availability-calculator
-            mvn clean package -DskipTests
+            if mvn clean package -DskipTests; then
+              echo "✅ Availability Calculator built successfully"
+            else
+              echo "❌ Availability Calculator build failed"
+              FAILED=$((FAILED + 1))
+            fi
             cd ..
+            echo ""
           fi
 
           # Analytics Engine
           if [ -d "analytics-engine" ]; then
-            echo "Building Analytics Engine..."
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "📦 Building Analytics Engine..."
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             cd analytics-engine
-            mvn clean package -DskipTests
+            if mvn clean package -DskipTests; then
+              echo "✅ Analytics Engine built successfully"
+            else
+              echo "❌ Analytics Engine build failed"
+              FAILED=$((FAILED + 1))
+            fi
             cd ..
+            echo ""
           fi
 
           # Batch Processor (if implemented)
           if [ -d "batch-processor" ] && [ -f "batch-processor/pom.xml" ]; then
-            echo "Building Batch Processor..."
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "📦 Building Batch Processor..."
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             cd batch-processor
-            mvn clean package -DskipTests
+            if mvn clean package -DskipTests; then
+              echo "✅ Batch Processor built successfully"
+            else
+              echo "❌ Batch Processor build failed"
+              FAILED=$((FAILED + 1))
+            fi
             cd ..
+            echo ""
           fi
+
+          if [ $FAILED -gt 0 ]; then
+            echo "❌ $FAILED business service(s) failed to build"
+            exit 1
+          fi
+
+          echo "✅ All business services built successfully"
 
       - name: 🧪 Run Tests
         working-directory: apps/backend/java-services
@@ -177,28 +298,38 @@ jobs:
       - name: 📊 Generate Build Report
         if: always()
         run: |
-          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## 📊 Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Infrastructure Services" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
           for service in config-server eureka-server gateway-service; do
-            if [ -f "apps/backend/java-services/infrastructure/$service/target/*.jar" ]; then
-              echo "- ✅ $service: Built successfully" >> $GITHUB_STEP_SUMMARY
+            JAR_COUNT=$(find apps/backend/java-services/infrastructure/$service/target -name "*.jar" -not -name "*-javadoc.jar" -not -name "*-sources.jar" 2>/dev/null | wc -l)
+            if [ "$JAR_COUNT" -gt 0 ]; then
+              JAR_FILE=$(find apps/backend/java-services/infrastructure/$service/target -name "*.jar" -not -name "*-javadoc.jar" -not -name "*-sources.jar" 2>/dev/null | head -1 | xargs basename)
+              echo "- ✅ **$service**: Built successfully (\`$JAR_FILE\`)" >> $GITHUB_STEP_SUMMARY
             else
-              echo "- ❌ $service: Build failed" >> $GITHUB_STEP_SUMMARY
+              echo "- ❌ **$service**: Build failed (no JAR found)" >> $GITHUB_STEP_SUMMARY
             fi
           done
 
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Business Services" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
           for service in reservation-engine payment-processor rate-management availability-calculator analytics-engine; do
-            if [ -f "apps/backend/java-services/business-services/$service/target/*.jar" ]; then
-              echo "- ✅ $service: Built successfully" >> $GITHUB_STEP_SUMMARY
+            JAR_COUNT=$(find apps/backend/java-services/business-services/$service/target -name "*.jar" -not -name "*-javadoc.jar" -not -name "*-sources.jar" 2>/dev/null | wc -l)
+            if [ "$JAR_COUNT" -gt 0 ]; then
+              JAR_FILE=$(find apps/backend/java-services/business-services/$service/target -name "*.jar" -not -name "*-javadoc.jar" -not -name "*-sources.jar" 2>/dev/null | head -1 | xargs basename)
+              echo "- ✅ **$service**: Built successfully (\`$JAR_FILE\`)" >> $GITHUB_STEP_SUMMARY
             else
-              echo "- ❌ $service: Build failed" >> $GITHUB_STEP_SUMMARY
+              echo "- ❌ **$service**: Build failed (no JAR found)" >> $GITHUB_STEP_SUMMARY
             fi
           done
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "*Build completed at $(date)*" >> $GITHUB_STEP_SUMMARY
 
       - name: 📦 Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -228,8 +359,43 @@ jobs:
           echo "✅ All Java services built successfully!"
           echo "📦 Artifacts uploaded"
 
+      - name: 🔍 Debug: List Build Artifacts
+        if: failure()
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔍 Checking for built JAR files..."
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "Infrastructure Services:"
+          find apps/backend/java-services/infrastructure -name "*.jar" -type f 2>/dev/null || echo "No JARs found"
+          echo ""
+          echo "Business Services:"
+          find apps/backend/java-services/business-services -name "*.jar" -type f 2>/dev/null || echo "No JARs found"
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔍 Checking Maven repository..."
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          ls -la ~/.m2/repository/com/modernreservation/ 2>/dev/null || echo "No artifacts in Maven repo"
+
       - name: ❌ Build Failed
         if: failure()
         run: |
-          echo "❌ Build failed! Check the logs above for details."
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "❌ BUILD FAILED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "Please check the logs above for specific errors."
+          echo ""
+          echo "Common issues:"
+          echo "  1. Parent POM not installed"
+          echo "  2. Backend utils build failed"
+          echo "  3. Missing dependencies"
+          echo "  4. Compilation errors"
+          echo ""
+          echo "Troubleshooting:"
+          echo "  - Check 'Install Parent POM' step"
+          echo "  - Check 'Build Shared Backend Utils' step"
+          echo "  - Look for Maven error messages"
+          echo "  - Review pom.xml files for issues"
+          echo ""
           exit 1
