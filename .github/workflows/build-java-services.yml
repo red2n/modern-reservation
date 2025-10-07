@@ -346,12 +346,14 @@ jobs:
       - name: 📊 Upload Test Reports
         uses: actions/upload-artifact@v4
         if: always()
+        continue-on-error: true
         with:
           name: test-reports-${{ github.sha }}
           path: |
             apps/backend/java-services/infrastructure/*/target/surefire-reports
             apps/backend/java-services/business-services/*/target/surefire-reports
           retention-days: 7
+          if-no-files-found: warn
 
       - name: ✅ Build Status
         if: success()
