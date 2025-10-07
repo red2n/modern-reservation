@@ -1,0 +1,26 @@
+{
+  "name": "@modern-reservation/mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for Modern Reservation project guidelines and conventions",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "modern-reservation-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "dev": "node --watch dist/index.js",
+    "start": "node dist/index.js"
+  },
+  "keywords": ["mcp", "model-context-protocol", "copilot"],
+  "author": "Modern Reservation Team",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}
