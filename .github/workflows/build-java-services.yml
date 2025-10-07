@@ -52,9 +52,9 @@ jobs:
 
       - name: 🔍 Verify Project Structure
         run: |
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "=================================================="
           echo "🔍 Verifying Project Structure"
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "=================================================="
           echo ""
           echo "Parent POM:"
           ls -la apps/backend/java-services/pom.xml
@@ -72,9 +72,9 @@ jobs:
       - name: 🏗️ Install Parent POM
         working-directory: apps/backend/java-services
         run: |
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "=================================================="
           echo "📦 Installing Parent POM"
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "=================================================="
           if mvn clean install -N -DskipTests; then
             echo "✅ Parent POM installed successfully"
           else
@@ -86,9 +86,9 @@ jobs:
       - name: 🏗️ Build Shared Backend Utils
         working-directory: libs/shared/backend-utils
         run: |
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "=================================================="
           echo "📦 Building Shared Backend Utils"
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "=================================================="
           if mvn clean install -DskipTests; then
             echo "✅ Backend utils built successfully"
           else
@@ -105,9 +105,9 @@ jobs:
 
           # Config Server
           if [ -d "config-server" ]; then
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "=================================================="
             echo "📦 Building Config Server..."
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "=================================================="
             cd config-server
             if mvn clean package -DskipTests; then
               echo "✅ Config Server built successfully"
@@ -121,9 +121,9 @@ jobs:
 
           # Eureka Server
           if [ -d "eureka-server" ]; then
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "=================================================="
             echo "📦 Building Eureka Server..."
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "=================================================="
             cd eureka-server
             if mvn clean package -DskipTests; then
               echo "✅ Eureka Server built successfully"
@@ -137,9 +137,9 @@ jobs:
 
           # Gateway Service
           if [ -d "gateway-service" ]; then
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "=================================================="
             echo "📦 Building Gateway Service..."
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "=================================================="
             cd gateway-service
             if mvn clean package -DskipTests; then
               echo "✅ Gateway Service built successfully"
@@ -166,9 +166,9 @@ jobs:
 
           # Reservation Engine
           if [ -d "reservation-engine" ]; then
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "=================================================="
             echo "📦 Building Reservation Engine..."
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "=================================================="
             cd reservation-engine
             if mvn clean package -DskipTests; then
               echo "✅ Reservation Engine built successfully"
@@ -182,9 +182,9 @@ jobs:
 
           # Payment Processor
           if [ -d "payment-processor" ]; then
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "=================================================="
             echo "📦 Building Payment Processor..."
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "=================================================="
             cd payment-processor
             if mvn clean package -DskipTests; then
               echo "✅ Payment Processor built successfully"
@@ -198,9 +198,9 @@ jobs:
 
           # Rate Management
           if [ -d "rate-management" ]; then
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "=================================================="
             echo "📦 Building Rate Management..."
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "=================================================="
             cd rate-management
             if mvn clean package -DskipTests; then
               echo "✅ Rate Management built successfully"
@@ -214,9 +214,9 @@ jobs:
 
           # Availability Calculator
           if [ -d "availability-calculator" ]; then
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "=================================================="
             echo "📦 Building Availability Calculator..."
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "=================================================="
             cd availability-calculator
             if mvn clean package -DskipTests; then
               echo "✅ Availability Calculator built successfully"
@@ -230,9 +230,9 @@ jobs:
 
           # Analytics Engine
           if [ -d "analytics-engine" ]; then
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "=================================================="
             echo "📦 Building Analytics Engine..."
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "=================================================="
             cd analytics-engine
             if mvn clean package -DskipTests; then
               echo "✅ Analytics Engine built successfully"
@@ -246,9 +246,9 @@ jobs:
 
           # Batch Processor (if implemented)
           if [ -d "batch-processor" ] && [ -f "batch-processor/pom.xml" ]; then
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "=================================================="
             echo "📦 Building Batch Processor..."
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "=================================================="
             cd batch-processor
             if mvn clean package -DskipTests; then
               echo "✅ Batch Processor built successfully"
@@ -359,12 +359,12 @@ jobs:
           echo "✅ All Java services built successfully!"
           echo "📦 Artifacts uploaded"
 
-      - name: 🔍 Debug: List Build Artifacts
+      - name: 🔍 Debug - List Build Artifacts
         if: failure()
         run: |
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "🔍 Checking for built JAR files..."
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "=================================================="
+          echo "Checking for built JAR files..."
+          echo "=================================================="
           echo ""
           echo "Infrastructure Services:"
           find apps/backend/java-services/infrastructure -name "*.jar" -type f 2>/dev/null || echo "No JARs found"
@@ -372,17 +372,17 @@ jobs:
           echo "Business Services:"
           find apps/backend/java-services/business-services -name "*.jar" -type f 2>/dev/null || echo "No JARs found"
           echo ""
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "🔍 Checking Maven repository..."
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "=================================================="
+          echo "Checking Maven repository..."
+          echo "=================================================="
           ls -la ~/.m2/repository/com/modernreservation/ 2>/dev/null || echo "No artifacts in Maven repo"
 
       - name: ❌ Build Failed
         if: failure()
         run: |
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "❌ BUILD FAILED"
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "=================================================="
+          echo "BUILD FAILED"
+          echo "=================================================="
           echo ""
           echo "Please check the logs above for specific errors."
           echo ""
