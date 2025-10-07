@@ -12,15 +12,47 @@ import {
 // PAYMENT SCHEMAS
 // =============================================================================
 
+// Payment Status - Matches DB enum (UPPERCASE)
 export const PaymentStatusSchema = z.enum([
-  'pending',
-  'authorized',
-  'captured',
-  'paid',
-  'refunded',
-  'failed',
-  'disputed',
-  'cancelled'
+  'PENDING',
+  'AUTHORIZED',
+  'CAPTURED',
+  'COMPLETED',
+  'FAILED',
+  'CANCELLED',
+  'REFUNDED',
+  'PARTIALLY_REFUNDED',
+  'EXPIRED',
+  'PROCESSING',
+  'DECLINED'
+]);
+
+// Payment Method - Matches DB enum (UPPERCASE)
+export const PaymentMethodTypeSchema = z.enum([
+  'CREDIT_CARD',
+  'DEBIT_CARD',
+  'CASH',
+  'BANK_TRANSFER',
+  'PAYPAL',
+  'STRIPE',
+  'APPLE_PAY',
+  'GOOGLE_PAY',
+  'CRYPTOCURRENCY',
+  'CHECK',
+  'WIRE_TRANSFER',
+  'OTHER'
+]);
+
+// Transaction Type - Matches DB enum (UPPERCASE)
+export const TransactionTypeSchema = z.enum([
+  'CHARGE',
+  'REFUND',
+  'AUTHORIZATION',
+  'CAPTURE',
+  'VOID',
+  'ADJUSTMENT',
+  'CHARGEBACK',
+  'REVERSAL'
 ]);
 
 export const PaymentMethodSchema = z.object({
@@ -28,7 +60,7 @@ export const PaymentMethodSchema = z.object({
   guestId: UUIDSchema,
 
   // Payment Method Information
-  type: z.enum(['credit_card', 'debit_card', 'bank_transfer', 'cash', 'digital_wallet']),
+  type: PaymentMethodTypeSchema,
   provider: z.string().max(50).optional(),
 
   // Tokenized Information (PCI Compliance)
@@ -55,7 +87,7 @@ export const PaymentTransactionSchema = z.object({
   paymentMethodId: UUIDSchema.optional(),
 
   // Transaction Information
-  transactionType: z.enum(['authorization', 'capture', 'sale', 'refund', 'void', 'adjustment']),
+  transactionType: TransactionTypeSchema,
   amount: MoneyAmountSchema,
   currencyCode: CurrencyCodeSchema,
 
@@ -66,7 +98,7 @@ export const PaymentTransactionSchema = z.object({
   gatewayResponse: z.record(z.any()).default({}),
 
   // Status
-  status: PaymentStatusSchema.default('pending'),
+  status: PaymentStatusSchema.default('PENDING'),
   processedAt: TimestampSchema.optional(),
   settledAt: TimestampSchema.optional(),
 
@@ -154,25 +186,6 @@ export const RefundRequestSchema = z.object({
   notes: z.string().max(1000).optional(),
   ...AuditFieldsSchema.shape,
 });
-
-// Payment Method Types
-export const PaymentMethodTypeSchema = z.enum([
-  'credit_card',
-  'debit_card',
-  'bank_transfer',
-  'cash',
-  'digital_wallet'
-]);
-
-// Transaction Types
-export const TransactionTypeSchema = z.enum([
-  'authorization',
-  'capture',
-  'sale',
-  'refund',
-  'void',
-  'adjustment'
-]);
 
 // =============================================================================
 // TYPE EXPORTS

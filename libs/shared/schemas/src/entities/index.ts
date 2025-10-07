@@ -55,12 +55,12 @@ import {
 
 import {
   ReservationStatusSchema,
+  ReservationSourceSchema,
   ReservationSchema,
   ReservationGuestSchema,
   ReservationRoomSchema,
   ReservationModificationSchema,
   ReservationServiceSchema,
-  BookingChannelSchema,
   GuestTypeSchema,
 } from './domains/reservation';
 
@@ -85,6 +85,15 @@ import {
   RateCalendarSchema,
   PackageRateSchema,
   RatePlanTypeSchema,
+  RateStatusSchema,
+  RateStrategySchema,
+  SeasonTypeSchema,
+  AvailabilityStatusSchema,
+  RoomCategorySchema,
+  PricingMethodSchema,
+  TimeGranularitySchema,
+  AnalyticsStatusSchema,
+  MetricTypeSchema,
 } from './domains/availability-rates';
 
 import {
@@ -140,12 +149,12 @@ export const GuestSchemas = {
 
 export const ReservationSchemas = {
   ReservationStatus: ReservationStatusSchema,
+  ReservationSource: ReservationSourceSchema,
   Reservation: ReservationSchema,
   ReservationGuest: ReservationGuestSchema,
   ReservationRoom: ReservationRoomSchema,
   ReservationModification: ReservationModificationSchema,
   ReservationService: ReservationServiceSchema,
-  BookingChannel: BookingChannelSchema,
   GuestType: GuestTypeSchema,
 };
 
@@ -170,6 +179,15 @@ export const AvailabilityRateSchemas = {
   RateCalendar: RateCalendarSchema,
   PackageRate: PackageRateSchema,
   RatePlanType: RatePlanTypeSchema,
+  RateStatus: RateStatusSchema,
+  RateStrategy: RateStrategySchema,
+  SeasonType: SeasonTypeSchema,
+  AvailabilityStatus: AvailabilityStatusSchema,
+  RoomCategory: RoomCategorySchema,
+  PricingMethod: PricingMethodSchema,
+  TimeGranularity: TimeGranularitySchema,
+  AnalyticsStatus: AnalyticsStatusSchema,
+  MetricType: MetricTypeSchema,
 };
 
 export const UserSchemas = {

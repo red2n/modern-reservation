@@ -13,6 +13,105 @@ import {
 // RATE MANAGEMENT SCHEMAS
 // =============================================================================
 
+// Rate Status - Matches DB enum (UPPERCASE)
+export const RateStatusSchema = z.enum([
+  'DRAFT',
+  'ACTIVE',
+  'SUSPENDED',
+  'EXPIRED',
+  'ARCHIVED'
+]);
+
+// Rate Strategy - Matches DB enum (UPPERCASE)
+export const RateStrategySchema = z.enum([
+  'FIXED',
+  'DYNAMIC',
+  'SEASONAL',
+  'LAST_MINUTE',
+  'EARLY_BIRD',
+  'LENGTH_OF_STAY',
+  'OCCUPANCY_BASED',
+  'REVENUE_OPTIMIZATION',
+  'COMPETITIVE',
+  'PROMOTIONAL'
+]);
+
+// Season Type - Matches DB enum (UPPERCASE)
+export const SeasonTypeSchema = z.enum([
+  'PEAK',
+  'HIGH',
+  'REGULAR',
+  'LOW',
+  'OFF_PEAK'
+]);
+
+// Availability Status - Matches DB enum (UPPERCASE)
+export const AvailabilityStatusSchema = z.enum([
+  'AVAILABLE',
+  'OCCUPIED',
+  'MAINTENANCE',
+  'BLOCKED',
+  'RESERVED'
+]);
+
+// Room Category - Matches DB enum (UPPERCASE)
+export const RoomCategorySchema = z.enum([
+  'STANDARD',
+  'DELUXE',
+  'SUITE',
+  'EXECUTIVE',
+  'PRESIDENTIAL'
+]);
+
+// Pricing Method - Matches DB enum (UPPERCASE)
+export const PricingMethodSchema = z.enum([
+  'FIXED',
+  'DYNAMIC',
+  'SEASONAL',
+  'OCCUPANCY_BASED'
+]);
+
+// Time Granularity - Matches DB enum (UPPERCASE) 
+export const TimeGranularitySchema = z.enum([
+  'HOURLY',
+  'DAILY',
+  'WEEKLY',
+  'MONTHLY',
+  'QUARTERLY',
+  'YEARLY'
+]);
+
+// Analytics Status - Matches DB enum (UPPERCASE)
+export const AnalyticsStatusSchema = z.enum([
+  'PENDING',
+  'CALCULATING',
+  'COMPLETED',
+  'FAILED',
+  'EXPIRED',
+  'CACHED'
+]);
+
+// Metric Type - Matches DB enum (UPPERCASE)
+export const MetricTypeSchema = z.enum([
+  'OCCUPANCY_RATE',
+  'ADR',
+  'REVPAR',
+  'TOTAL_REVENUE',
+  'ROOM_REVENUE',
+  'ANCILLARY_REVENUE',
+  'BOOKING_COUNT',
+  'CANCELLATION_RATE',
+  'NO_SHOW_RATE',
+  'AVERAGE_LENGTH_OF_STAY',
+  'LEAD_TIME',
+  'CUSTOMER_ACQUISITION_COST',
+  'CUSTOMER_LIFETIME_VALUE',
+  'CONVERSION_RATE',
+  'CHANNEL_CONTRIBUTION',
+  'MARKET_SEGMENT_MIX',
+  'CUSTOM'
+]);
+
 export const RatePlanSchema = z.object({
   id: UUIDSchema,
   propertyId: UUIDSchema,
@@ -43,7 +142,7 @@ export const RatePlanSchema = z.object({
   cancellationPolicyId: UUIDSchema.optional(),
 
   // Validity
-  status: z.enum(['active', 'inactive', 'draft']).default('active'),
+  status: RateStatusSchema.default('ACTIVE'),
   validFrom: DateSchema,
   validUntil: DateSchema,
 
@@ -198,7 +297,7 @@ export const PackageRateSchema = z.object({
   cancellationPolicyId: UUIDSchema.optional(),
   isRefundable: z.boolean().default(true),
 
-  status: z.enum(['active', 'inactive', 'draft']).default('active'),
+  status: RateStatusSchema.default('ACTIVE'),
   ...AuditFieldsSchema.shape,
 });
 
@@ -209,6 +308,18 @@ export const RatePlanTypeSchema = z.enum(['standard', 'corporate', 'package', 'p
 // TYPE EXPORTS
 // =============================================================================
 
+// Enum Types
+export type RateStatus = z.infer<typeof RateStatusSchema>;
+export type RateStrategy = z.infer<typeof RateStrategySchema>;
+export type SeasonType = z.infer<typeof SeasonTypeSchema>;
+export type AvailabilityStatus = z.infer<typeof AvailabilityStatusSchema>;
+export type RoomCategory = z.infer<typeof RoomCategorySchema>;
+export type PricingMethod = z.infer<typeof PricingMethodSchema>;
+export type TimeGranularity = z.infer<typeof TimeGranularitySchema>;
+export type AnalyticsStatus = z.infer<typeof AnalyticsStatusSchema>;
+export type MetricType = z.infer<typeof MetricTypeSchema>;
+
+// Entity Types
 export type RatePlan = z.infer<typeof RatePlanSchema>;
 export type DailyRate = z.infer<typeof DailyRateSchema>;
 export type SeasonalRate = z.infer<typeof SeasonalRateSchema>;
