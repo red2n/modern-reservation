@@ -266,7 +266,7 @@ done
 print_status "Checking GitHub CLI installation..."
 if ! command -v gh &> /dev/null; then
     print_status "Installing GitHub CLI..."
-    
+
     # Add GitHub CLI repository
     MAX_RETRIES=3
     RETRY_COUNT=0
@@ -285,7 +285,7 @@ if ! command -v gh &> /dev/null; then
     else
         sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
         echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-        
+
         # Update and install
         sudo apt update
         if install_package "gh" "GitHub CLI"; then
