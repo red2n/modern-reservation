@@ -80,7 +80,7 @@
         <module>business-services/availability-calculator</module>
         <module>business-services/rate-management</module>
         <module>business-services/payment-processor</module>
-        <!-- <module>business-services/analytics-engine</module> Temporarily disabled due to Lombok compilation issues -->
+        <module>business-services/analytics-engine</module>
     </modules>
 
     <dependencyManagement>

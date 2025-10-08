@@ -15,7 +15,7 @@
 
     <artifactId>rate-management</artifactId>
     <packaging>jar</packaging>
-    <name>Rate Management Service</name>
+    <name>Modern Reservation - Rate Management</name>
     <description>Rate Management Microservice for Modern Reservation System</description>
 
     <properties>

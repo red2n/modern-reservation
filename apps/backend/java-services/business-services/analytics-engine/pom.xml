@@ -14,7 +14,7 @@
     <artifactId>analytics-engine</artifactId>
     <packaging>jar</packaging>
 
-    <name>Analytics Engine Service</name>
+    <name>Modern Reservation - Analytics Engine</name>
     <description>Analytics and business intelligence microservice for Modern Reservation System</description>
 
     <dependencies>
@@ -65,6 +65,13 @@
         <dependency>
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka</artifactId>
+        </dependency>
+
+        <!-- Tenant Commons -->
+        <dependency>
+            <groupId>com.modernreservation</groupId>
+            <artifactId>tenant-commons</artifactId>
+            <version>1.0.0</version>
         </dependency>
 
         <!-- API Documentation -->
