@@ -1,0 +1,136 @@
+server:
+  port: 8083
+  servlet:
+    context-path: /tenant-service
+
+spring:
+  application:
+    name: tenant-service
+
+  # Database Configuration
+  datasource:
+    url: jdbc:postgresql://localhost:5432/modern_reservation
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  # Flyway (Database Migrations)
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+  # Kafka Configuration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        linger.ms: 10
+        batch.size: 16384
+        compression.type: snappy
+    properties:
+      spring.json.add.type.headers: false
+
+  # Cache Configuration
+  cache:
+    type: simple
+    cache-names: tenants, tenant-slugs
+
+  # GraphQL Configuration
+  graphql:
+    servlet:
+      mapping: /graphql
+      enabled: true
+      corsEnabled: true
+    playground:
+      enabled: true
+      mapping: /playground
+
+# Eureka Client Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.modernreservation.tenantservice: DEBUG
+    org.springframework.kafka: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/tenant-service.log
+    max-size: 10MB
+    max-history: 30
+
+# Kafka Topics Configuration
+kafka:
+  topics:
+    tenant-created: tenant.created
+    tenant-updated: tenant.updated
+    tenant-deleted: tenant.deleted
+    tenant-suspended: tenant.suspended
+    tenant-activated: tenant.activated
+    tenant-expired: tenant.expired
+
+# Application-specific Configuration
+app:
+  tenant:
+    slug:
+      min-length: 3
+      max-length: 50
+      pattern: ^[a-z0-9-]+$
+    cache:
+      ttl: 3600 # 1 hour in seconds
+    subscription:
+      trial-days: 14
+      grace-period-days: 7
