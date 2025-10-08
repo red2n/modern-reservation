@@ -257,7 +257,7 @@ install_package "redis-tools" "Redis client"
 
 # 9. Install additional tools
 print_status "Installing additional development tools..."
-ADDITIONAL_TOOLS=(jq tree htop make unzip zip net-tools lsof telnet vim nano)
+ADDITIONAL_TOOLS=(ripgrep fd-find bat jq tree htop make unzip zip net-tools lsof telnet vim nano)
 for tool in "${ADDITIONAL_TOOLS[@]}"; do
     install_package "$tool"
 done
@@ -363,6 +363,38 @@ if nx --version &> /dev/null 2>&1; then
     print_success "✅ Nx CLI: $NX_VERSION"
 else
     print_error "❌ Nx CLI not found"
+fi
+
+# Check ripgrep
+if rg --version &> /dev/null 2>&1; then
+    RG_VERSION=$(rg --version | head -n 1)
+    print_success "✅ Ripgrep: $RG_VERSION"
+else
+    print_error "❌ Ripgrep not found"
+fi
+
+# Check fd-find
+if fd --version &> /dev/null 2>&1 || fdfind --version &> /dev/null 2>&1; then
+    if fd --version &> /dev/null 2>&1; then
+        FD_VERSION=$(fd --version)
+    else
+        FD_VERSION=$(fdfind --version)
+    fi
+    print_success "✅ fd-find: $FD_VERSION"
+else
+    print_error "❌ fd-find not found"
+fi
+
+# Check bat
+if bat --version &> /dev/null 2>&1 || batcat --version &> /dev/null 2>&1; then
+    if bat --version &> /dev/null 2>&1; then
+        BAT_VERSION=$(bat --version | head -n 1)
+    else
+        BAT_VERSION=$(batcat --version | head -n 1)
+    fi
+    print_success "✅ bat: $BAT_VERSION"
+else
+    print_error "❌ bat not found"
 fi
 
 # Report failed installations

@@ -6,6 +6,7 @@
       "icon": "tools",
       "tools": [
         "ripgrep",
+        "fd-find",
         "biome",
         "docker",
         "postgresql",
@@ -25,18 +26,23 @@
       ]
     },
     "code-search": {
-      "description": "Fast code searching with ripgrep",
+      "description": "Fast code searching with ripgrep and fd",
       "icon": "search",
-      "tools": ["ripgrep"],
+      "tools": ["ripgrep", "fd-find"],
       "instructions": [
-        "Use 'rg' instead of 'grep' for faster searches",
+        "Use 'rg' instead of 'grep' for searching file contents",
+        "Use 'fd' instead of 'find' for finding files and directories",
         "Use 'rg --type-list' to see available file types",
         "Use 'rg -t ts' for TypeScript files",
         "Use 'rg -t java' for Java files",
         "Use 'rg -g \"*.json\"' for JSON files",
         "Use 'rg -i' for case-insensitive search",
         "Use 'rg -l' to list only filenames",
-        "Use 'rg --context 3' to show 3 lines before/after match"
+        "Use 'rg --context 3' to show 3 lines before/after match",
+        "Use 'fd pattern' to find files by name",
+        "Use 'fd -e ts' to find TypeScript files",
+        "Use 'fd -t d' to find directories only",
+        "Use 'fd -H' to include hidden files"
       ]
     },
     "code-quality": {

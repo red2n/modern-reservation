@@ -8,6 +8,7 @@
       "icon": "tools",
       "tools": [
         "ripgrep",
+        "fd-find",
         "biome",
         "dev.sh",
         "docker",
@@ -30,11 +31,12 @@
       ]
     },
     "search-tools": {
-      "description": "Fast searching with ripgrep",
+      "description": "Fast searching with ripgrep and fd",
       "icon": "search",
-      "tools": ["ripgrep"],
+      "tools": ["ripgrep", "fd-find"],
       "instructions": [
-        "Use 'rg' instead of 'grep' for faster file searching",
+        "Use 'rg' instead of 'grep' for searching file contents",
+        "Use 'fd' instead of 'find' for finding files by name",
         "Use 'rg --type-list' to see available file types",
         "Use 'rg -t ts' to search TypeScript files",
         "Use 'rg -t java' to search Java files",
@@ -43,7 +45,12 @@
         "Use 'rg -l' to list only filenames",
         "Use 'rg --context 3' to show 3 lines before/after match",
         "Use 'rg -A 5' to show 5 lines after match",
-        "Use 'rg -B 5' to show 5 lines before match"
+        "Use 'rg -B 5' to show 5 lines before match",
+        "Use 'fd pattern' to find files/directories by name",
+        "Use 'fd -e ts' to find files with .ts extension",
+        "Use 'fd -t f' for files only, 'fd -t d' for directories only",
+        "Use 'fd -H' to include hidden files",
+        "Use 'fd -E node_modules' to exclude directories"
       ]
     },
     "code-quality": {
@@ -161,14 +168,16 @@
     "linux-commands": {
       "description": "Preferred Linux commands and tools",
       "icon": "terminal",
+      "tools": ["ripgrep", "fd-find", "bat", "tree", "curl", "jq"],
       "instructions": [
-        "Use 'rg' instead of 'grep' for searching",
-        "Use 'fd' instead of 'find' if available",
+        "Use 'rg' instead of 'grep' for searching file contents",
+        "Use 'fd' instead of 'find' for finding files",
         "Use 'bat' instead of 'cat' for syntax highlighting",
         "Use 'exa' or 'ls -lah' for directory listing",
         "Use 'tree' for directory structure",
         "Use 'curl' instead of 'wget' for downloads",
         "Use 'jq' for JSON parsing",
+        "Installation: sudo apt install ripgrep fd-find bat tree curl jq",
         "If command not found, suggest: sudo apt install <package>"
       ]
     },
