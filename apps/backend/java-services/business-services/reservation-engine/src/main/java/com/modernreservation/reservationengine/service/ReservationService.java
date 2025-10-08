@@ -491,6 +491,7 @@ public class ReservationService {
 
         return new ReservationSummaryDTO(
             reservation.getId(),
+            reservation.getTenantId(),
             reservation.getConfirmationNumber(),
             reservation.getGuestFirstName() + " " + reservation.getGuestLastName(),
             reservation.getGuestEmail(),
@@ -508,6 +509,7 @@ public class ReservationService {
     private ReservationResponseDTO mapToResponseDTO(Reservation reservation) {
         return new ReservationResponseDTO(
                 reservation.getId(),
+                reservation.getTenantId(),
                 reservation.getConfirmationNumber(),
                 reservation.getPropertyId(),
                 reservation.getGuestId(),

@@ -123,6 +123,13 @@
             <artifactId>httpclient5</artifactId>
         </dependency>
 
+        <!-- Internal Dependencies -->
+        <dependency>
+            <groupId>com.modernreservation</groupId>
+            <artifactId>tenant-commons</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

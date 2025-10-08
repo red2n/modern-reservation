@@ -133,6 +133,13 @@
             <version>2.0.0</version>
         </dependency>
 
+        <!-- Shared Tenant Commons -->
+        <dependency>
+            <groupId>com.modernreservation</groupId>
+            <artifactId>tenant-commons</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
         <!-- Apache HttpClient 5 for Spring Boot HTTP client -->
         <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>

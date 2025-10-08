@@ -194,8 +194,16 @@ public class TenantService {
         existingTenant.setStatus(updatedTenant.getStatus());
         existingTenant.setEmail(updatedTenant.getEmail());
         existingTenant.setPhone(updatedTenant.getPhone());
-        existingTenant.setAddress(updatedTenant.getAddress());
-        existingTenant.setBusinessInfo(updatedTenant.getBusinessInfo());
+        existingTenant.setWebsite(updatedTenant.getWebsite());
+        existingTenant.setAddressLine1(updatedTenant.getAddressLine1());
+        existingTenant.setAddressLine2(updatedTenant.getAddressLine2());
+        existingTenant.setCity(updatedTenant.getCity());
+        existingTenant.setState(updatedTenant.getState());
+        existingTenant.setPostalCode(updatedTenant.getPostalCode());
+        existingTenant.setCountry(updatedTenant.getCountry());
+        existingTenant.setTaxId(updatedTenant.getTaxId());
+        existingTenant.setBusinessLicense(updatedTenant.getBusinessLicense());
+        existingTenant.setRegistrationNumber(updatedTenant.getRegistrationNumber());
         existingTenant.setConfig(updatedTenant.getConfig());
         existingTenant.setSubscription(updatedTenant.getSubscription());
         existingTenant.setMetadata(updatedTenant.getMetadata());
