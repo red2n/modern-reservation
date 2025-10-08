@@ -108,6 +108,19 @@ show_help() {
     echo -e "  ${GREEN}ui-pgadmin${NC}               Open PgAdmin"
     echo ""
     echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}🎨 Code Quality & Formatting:${NC}"
+    echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${YELLOW}format${NC}                   Format all code with Biome"
+    echo -e "  ${YELLOW}format-check${NC}             Check code formatting"
+    echo -e "  ${YELLOW}lint${NC}                     Lint all code with Biome"
+    echo -e "  ${YELLOW}lint-fix${NC}                 Lint and fix all code"
+    echo -e "  ${YELLOW}check${NC}                    Run Biome format + lint checks"
+    echo -e "  ${YELLOW}check-fix${NC}                Run Biome format + lint with fixes"
+    echo -e "  ${YELLOW}biome-status${NC}             Show Biome installation status"
+    echo -e "  ${YELLOW}biome-setup${NC}              Setup/reinstall Biome in all projects"
+    echo ""
+    echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
     echo -e "${YELLOW}💡 Quick Examples:${NC}"
     echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
     echo ""
@@ -123,8 +136,8 @@ show_help() {
     echo -e "  ${MAGENTA}# Full clean restart for testing${NC}"
     echo -e "  ./dev.sh clean"
     echo ""
-    echo -e "  ${YELLOW}# Quick restart keeping data${NC}"
-    echo -e "  ./dev.sh clean --keep-data --skip-maven"
+    echo -e "  ${YELLOW}# Format and fix all code${NC}"
+    echo -e "  ./dev.sh check-fix"
     echo ""
     echo -e "  ${BLUE}# Check what's running${NC}"
     echo -e "  ./dev.sh status"
@@ -219,6 +232,42 @@ case "${1:-help}" in
         else
             mvn compile -pl business-services/reservation-engine,business-services/availability-calculator,business-services/rate-management,business-services/payment-processor,business-services/analytics-engine
         fi
+        ;;
+
+    # ========================================================================
+    # CODE QUALITY & FORMATTING (BIOME)
+    # ========================================================================
+    "format")
+        echo -e "${YELLOW}🎨 Formatting all code with Biome...${NC}"
+        exec "$SCRIPTS_DIR/biome-management.sh" format-all
+        ;;
+    "format-check")
+        echo -e "${YELLOW}🔍 Checking code formatting...${NC}"
+        exec "$SCRIPTS_DIR/biome-management.sh" format-check
+        ;;
+    "lint")
+        echo -e "${YELLOW}🔍 Linting all code with Biome...${NC}"
+        exec "$SCRIPTS_DIR/biome-management.sh" lint-all
+        ;;
+    "lint-fix")
+        echo -e "${YELLOW}🔧 Linting and fixing all code...${NC}"
+        exec "$SCRIPTS_DIR/biome-management.sh" lint-fix
+        ;;
+    "check")
+        echo -e "${YELLOW}✅ Running Biome checks (format + lint)...${NC}"
+        exec "$SCRIPTS_DIR/biome-management.sh" check-all
+        ;;
+    "check-fix")
+        echo -e "${YELLOW}🔧 Running Biome checks with fixes...${NC}"
+        exec "$SCRIPTS_DIR/biome-management.sh" fix-all
+        ;;
+    "biome-status")
+        echo -e "${YELLOW}📊 Checking Biome installation status...${NC}"
+        exec "$SCRIPTS_DIR/biome-management.sh" status
+        ;;
+    "biome-setup")
+        echo -e "${YELLOW}🛠️  Setting up Biome in all projects...${NC}"
+        exec "$SCRIPTS_DIR/biome-management.sh" setup
         ;;
 
     # ========================================================================
