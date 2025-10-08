@@ -262,7 +262,42 @@ for tool in "${ADDITIONAL_TOOLS[@]}"; do
     install_package "$tool"
 done
 
-# 10. Install global npm packages
+# 10. Install GitHub CLI
+print_status "Checking GitHub CLI installation..."
+if ! command -v gh &> /dev/null; then
+    print_status "Installing GitHub CLI..."
+    
+    # Add GitHub CLI repository
+    MAX_RETRIES=3
+    RETRY_COUNT=0
+    while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+        if curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg 2>/dev/null; then
+            break
+        fi
+        RETRY_COUNT=$((RETRY_COUNT + 1))
+        print_warning "Failed to download GitHub CLI GPG key, retry $RETRY_COUNT/$MAX_RETRIES"
+        sleep 2
+    done
+
+    if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+        print_error "Failed to download GitHub CLI GPG key"
+        FAILED_INSTALLATIONS+=("GitHub CLI")
+    else
+        sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+        
+        # Update and install
+        sudo apt update
+        if install_package "gh" "GitHub CLI"; then
+            print_success "GitHub CLI installed successfully"
+            print_warning "Run 'gh auth login' to authenticate with GitHub"
+        fi
+    fi
+else
+    print_success "GitHub CLI already installed"
+fi
+
+# 11. Install global npm packages
 if command -v npm &> /dev/null; then
     print_status "Installing global npm packages..."
 
@@ -397,6 +432,14 @@ else
     print_error "❌ bat not found"
 fi
 
+# Check GitHub CLI
+if gh --version &> /dev/null 2>&1; then
+    GH_VERSION=$(gh --version | head -n 1)
+    print_success "✅ GitHub CLI: $GH_VERSION"
+else
+    print_error "❌ GitHub CLI not found"
+fi
+
 # Report failed installations
 if [ ${#FAILED_INSTALLATIONS[@]} -gt 0 ]; then
     echo ""
@@ -421,8 +464,9 @@ echo ""
 echo -e "${YELLOW}Next Steps:${NC}"
 echo "1. Log out and log back in (for Docker group changes)"
 echo "2. Source your bashrc: source ~/.bashrc"
-echo "3. Run the dependency check: ./scripts/check-dependencies.sh"
-echo "4. Start the application: ./dev.sh docker-start"
+echo "3. Authenticate with GitHub: gh auth login"
+echo "4. Run the dependency check: ./scripts/check-dependencies.sh"
+echo "5. Start the application: ./dev.sh docker-start"
 echo ""
 echo -e "${CYAN}════════════════════════════════════════════════════════════════${NC}"
 

@@ -7,6 +7,7 @@
       "tools": [
         "ripgrep",
         "fd-find",
+        "gh-cli",
         "biome",
         "docker",
         "postgresql",
@@ -167,6 +168,44 @@
         "Port: 3000",
         "Use shared UI components from @modern-reservation/ui-components",
         "Use GraphQL client from @modern-reservation/graphql-client"
+      ]
+    },
+    "github-operations": {
+      "description": "GitHub CLI operations for Modern Reservation project",
+      "icon": "github",
+      "tools": ["gh-cli"],
+      "instructions": [
+        "Installation: sudo apt install gh",
+        "Authenticate: gh auth login",
+        "Use 'gh' instead of web UI for faster GitHub operations",
+        "Pull Requests:",
+        "  gh pr list - List PRs",
+        "  gh pr create --title 'feat: Title' --body 'Description' - Create PR",
+        "  gh pr view 123 - View PR details",
+        "  gh pr checks - Check CI status",
+        "  gh pr diff - View PR diff",
+        "  gh pr review 123 --approve - Approve PR",
+        "  gh pr merge 123 --squash - Merge PR (always squash)",
+        "Issues:",
+        "  gh issue list - List issues",
+        "  gh issue create --title 'Bug: Title' - Create issue",
+        "  gh issue view 123 - View issue",
+        "  gh issue close 123 - Close issue",
+        "Workflows:",
+        "  gh run list - List workflow runs",
+        "  gh run list --workflow=build-java-services.yml - Filter by workflow",
+        "  gh run view <run-id> - View run details",
+        "  gh run rerun <run-id> - Rerun workflow",
+        "Repository:",
+        "  gh repo view - View repo info",
+        "  gh browse - Open repo in browser",
+        "Releases:",
+        "  gh release list - List releases",
+        "  gh release create v1.0.0 --notes 'Notes' - Create release",
+        "Best practices:",
+        "  - Always use --squash when merging to keep history clean",
+        "  - Check PR status before merging: gh pr checks",
+        "  - Follow conventional commit format in PR titles"
       ]
     }
   }
