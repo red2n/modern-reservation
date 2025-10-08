@@ -8,6 +8,7 @@
 export * from './domains/common';
 
 // Domain-Specific Schemas
+export * from './domains/tenant';
 export * from './domains/property';
 export * from './domains/guest';
 export * from './domains/reservation';

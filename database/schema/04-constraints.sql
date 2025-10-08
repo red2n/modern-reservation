@@ -2,7 +2,67 @@
 -- 04-constraints.sql
 -- Foreign Key Constraints and Additional Constraints
 -- Date: 2025-10-06
+-- Updated: 2025-10-08 (Multi-tenancy constraints added)
 -- =====================================================
+
+-- =====================================================
+-- MULTI-TENANCY CONSTRAINTS
+-- =====================================================
+
+-- User-Tenant Association Constraints
+ALTER TABLE user_tenant_associations
+    ADD CONSTRAINT fk_user_tenant_tenant
+    FOREIGN KEY (tenant_id)
+    REFERENCES tenants(id)
+    ON DELETE CASCADE;
+
+-- Only one primary tenant per user
+CREATE UNIQUE INDEX idx_user_tenant_one_primary
+    ON user_tenant_associations (user_id)
+    WHERE is_primary = true;
+
+-- Tenant Foreign Key Constraints for all tables
+ALTER TABLE rates
+    ADD CONSTRAINT fk_rates_tenant
+    FOREIGN KEY (tenant_id)
+    REFERENCES tenants(id)
+    ON DELETE RESTRICT;
+
+ALTER TABLE reservations
+    ADD CONSTRAINT fk_reservations_tenant
+    FOREIGN KEY (tenant_id)
+    REFERENCES tenants(id)
+    ON DELETE RESTRICT;
+
+ALTER TABLE reservation_status_history
+    ADD CONSTRAINT fk_res_history_tenant
+    FOREIGN KEY (tenant_id)
+    REFERENCES tenants(id)
+    ON DELETE RESTRICT;
+
+ALTER TABLE payments
+    ADD CONSTRAINT fk_payments_tenant
+    FOREIGN KEY (tenant_id)
+    REFERENCES tenants(id)
+    ON DELETE RESTRICT;
+
+ALTER TABLE availability.room_availability
+    ADD CONSTRAINT fk_availability_tenant
+    FOREIGN KEY (tenant_id)
+    REFERENCES tenants(id)
+    ON DELETE RESTRICT;
+
+ALTER TABLE analytics_metrics
+    ADD CONSTRAINT fk_metrics_tenant
+    FOREIGN KEY (tenant_id)
+    REFERENCES tenants(id)
+    ON DELETE RESTRICT;
+
+ALTER TABLE analytics_reports
+    ADD CONSTRAINT fk_reports_tenant
+    FOREIGN KEY (tenant_id)
+    REFERENCES tenants(id)
+    ON DELETE RESTRICT;
 
 -- =====================================================
 -- RESERVATION STATUS HISTORY CONSTRAINTS

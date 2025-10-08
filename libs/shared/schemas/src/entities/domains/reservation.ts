@@ -56,6 +56,7 @@ export const ReservationSourceSchema = z.enum([
 
 export const ReservationSchema = z.object({
   id: UUIDSchema,
+  tenantId: UUIDSchema, // Multi-tenancy: Which tenant owns this reservation
   confirmationNumber: z.string().min(1).max(20),
   propertyId: UUIDSchema,
 
@@ -128,6 +129,7 @@ export const ReservationSchema = z.object({
 // Reservation Guest Assignment
 export const ReservationGuestSchema = z.object({
   id: UUIDSchema,
+  tenantId: UUIDSchema, // Multi-tenancy: Inherited from reservation
   reservationId: UUIDSchema,
   guestId: UUIDSchema,
   isPrimary: z.boolean().default(false),
@@ -141,6 +143,7 @@ export const ReservationGuestSchema = z.object({
 // Reservation Room Assignment
 export const ReservationRoomSchema = z.object({
   id: UUIDSchema,
+  tenantId: UUIDSchema, // Multi-tenancy: Inherited from reservation
   reservationId: UUIDSchema,
   roomId: UUIDSchema,
   checkInDate: DateSchema,
@@ -155,6 +158,7 @@ export const ReservationRoomSchema = z.object({
 // Reservation Modification Log
 export const ReservationModificationSchema = z.object({
   id: UUIDSchema,
+  tenantId: UUIDSchema, // Multi-tenancy: Inherited from reservation
   reservationId: UUIDSchema,
   modificationType: z.enum(['dates', 'guests', 'rooms', 'pricing', 'status', 'cancellation']),
   previousValue: z.record(z.any()),
@@ -169,6 +173,7 @@ export const ReservationModificationSchema = z.object({
 // Reservation Add-ons/Services
 export const ReservationServiceSchema = z.object({
   id: UUIDSchema,
+  tenantId: UUIDSchema, // Multi-tenancy: Inherited from reservation
   reservationId: UUIDSchema,
   serviceType: z.enum(['spa', 'restaurant', 'transport', 'activity', 'equipment', 'other']),
   serviceName: z.string().min(1).max(255),

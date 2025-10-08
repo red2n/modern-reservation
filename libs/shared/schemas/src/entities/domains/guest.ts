@@ -16,6 +16,7 @@ import {
 
 export const GuestSchema = z.object({
   id: UUIDSchema,
+  tenantId: UUIDSchema.optional(), // Multi-tenancy: Optional - guests may be shared across tenants in a chain
 
   // Personal Information
   title: z.string().max(10).optional(),
@@ -69,6 +70,7 @@ export const LoyaltyTierSchema = z.enum(['bronze', 'silver', 'gold', 'platinum',
 // Guest Preference Categories
 export const GuestPreferenceSchema = z.object({
   id: UUIDSchema,
+  tenantId: UUIDSchema, // Multi-tenancy: Preferences are tenant-specific
   guestId: UUIDSchema,
   category: z.enum(['room', 'dining', 'amenities', 'communication', 'accessibility']),
   preference: z.string().min(1).max(255),
@@ -81,6 +83,7 @@ export const GuestPreferenceSchema = z.object({
 // Guest Stay History
 export const GuestStayHistorySchema = z.object({
   id: UUIDSchema,
+  tenantId: UUIDSchema, // Multi-tenancy: Stay history is tenant-specific
   guestId: UUIDSchema,
   propertyId: UUIDSchema,
   reservationId: UUIDSchema,
@@ -96,6 +99,7 @@ export const GuestStayHistorySchema = z.object({
 // Guest Communication Log
 export const GuestCommunicationSchema = z.object({
   id: UUIDSchema,
+  tenantId: UUIDSchema, // Multi-tenancy: Communication log is tenant-specific
   guestId: UUIDSchema,
   type: z.enum(['email', 'sms', 'phone', 'in_person', 'chat']),
   direction: z.enum(['inbound', 'outbound']),

@@ -32,6 +32,10 @@ public class ReservationAudit {
     @EqualsAndHashCode.Include
     private UUID id;
 
+    // Multi-tenancy: Inherited from reservation for tenant isolation
+    @Column(name = "tenant_id", nullable = false)
+    private UUID tenantId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reservation_id", nullable = false)
     private Reservation reservation;

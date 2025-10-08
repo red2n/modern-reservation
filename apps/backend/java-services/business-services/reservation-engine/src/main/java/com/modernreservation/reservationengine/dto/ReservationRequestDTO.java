@@ -16,6 +16,10 @@ import java.util.UUID;
 @Schema(description = "Reservation creation and update request")
 public record ReservationRequestDTO(
 
+    @Schema(description = "Tenant ID - identifies which organization owns this reservation", example = "550e8400-e29b-41d4-a716-446655440099")
+    @NotNull(message = "Tenant ID is required")
+    UUID tenantId,
+
     @Schema(description = "Property ID", example = "550e8400-e29b-41d4-a716-446655440000")
     @NotNull(message = "Property ID is required")
     UUID propertyId,

@@ -8,7 +8,7 @@
 \echo '=========================================='
 \echo 'Modern Reservation System - Database Setup'
 \echo 'Generated from JPA Entity Classes'
-\echo 'Version: 1.0.0'
+\echo 'Version: 2.0.0 (Multi-Tenancy Enabled)'
 \echo '=========================================='
 \echo ''
 
@@ -40,7 +40,11 @@
 \echo '=========================================='
 \echo 'Database schema deployment complete!'
 \echo ''
-\echo 'Tables created:'
+\echo 'Multi-Tenancy Tables:'
+\echo '  - tenants (organizations)'
+\echo '  - user_tenant_associations (user-tenant many-to-many)'
+\echo ''
+\echo 'Core Business Tables:'
 \echo '  - rates'
 \echo '  - reservations'
 \echo '  - reservation_status_history'
@@ -51,7 +55,15 @@
 \echo '  - analytics_reports'
 \echo '  - report_property_ids'
 \echo ''
-\echo 'Total: 9 tables across 2 schemas (public, availability)'
+\echo 'Total: 11 tables across 2 schemas (public, availability)'
+\echo ''
+\echo 'Multi-Tenancy Features:'
+\echo '  ✓ Tenant isolation with tenant_id on all tables'
+\echo '  ✓ Subscription management (FREE, STARTER, PROFESSIONAL, ENTERPRISE, CUSTOM)'
+\echo '  ✓ Tenant types (CHAIN, INDEPENDENT, FRANCHISE, MANAGEMENT_COMPANY, VACATION_RENTAL)'
+\echo '  ✓ User-tenant associations with roles (OWNER, ADMIN, MANAGER, STAFF, ACCOUNTANT, VIEWER)'
+\echo '  ✓ JSONB configuration for flexible tenant settings'
+\echo '  ✓ Sample demo tenants for development'
 \echo '=========================================='
 \echo ''
 
@@ -59,7 +71,11 @@
 \echo 'Verifying schema deployment...'
 \echo ''
 
-SELECT 'rates' as table_name, count(*) as row_count FROM rates
+SELECT 'tenants' as table_name, count(*) as row_count FROM tenants
+UNION ALL
+SELECT 'user_tenant_associations', count(*) FROM user_tenant_associations
+UNION ALL
+SELECT 'rates', count(*) FROM rates
 UNION ALL
 SELECT 'reservations', count(*) FROM reservations
 UNION ALL

@@ -49,6 +49,10 @@ export const UserSchema = z.object({
   timezone: z.string().default('UTC'),
   language: z.string().default('en'),
 
+  // Multi-tenancy: Users can belong to multiple tenants
+  // This is populated separately via UserTenantAssociationSchema
+  // tenants: z.array(UserTenantAssociationSchema).optional(),
+
   ...AuditFieldsSchema.shape,
 });
 
@@ -73,6 +77,31 @@ export const UserRoleSchema = z.object({
   assignedAt: TimestampSchema,
   expiresAt: TimestampSchema.optional(),
   isActive: z.boolean().default(true),
+  ...AuditFieldsSchema.shape,
+});
+
+// User Tenant Association - Allows users to work across multiple tenants
+export const TenantRoleSchema = z.enum([
+  'OWNER',           // Tenant owner (full access)
+  'ADMIN',           // Tenant administrator
+  'MANAGER',         // Property/operations manager
+  'STAFF',           // Staff member
+  'ACCOUNTANT',      // Financial access
+  'VIEWER'           // Read-only access
+]);
+
+export const UserTenantAssociationSchema = z.object({
+  id: UUIDSchema,
+  userId: UUIDSchema,
+  tenantId: UUIDSchema,
+  role: TenantRoleSchema,
+  permissions: z.array(z.string()).default([]), // Additional granular permissions
+  isActive: z.boolean().default(true),
+  isPrimary: z.boolean().default(false), // Primary tenant for the user
+  assignedBy: UUIDSchema.optional(),
+  assignedAt: TimestampSchema,
+  expiresAt: TimestampSchema.optional(),
+  lastAccessedAt: TimestampSchema.optional(),
   ...AuditFieldsSchema.shape,
 });
 
@@ -190,6 +219,8 @@ export const DeviceTypeSchema = z.enum(['desktop', 'mobile', 'tablet', 'api']);
 export type User = z.infer<typeof UserSchema>;
 export type Role = z.infer<typeof RoleSchema>;
 export type UserRole = z.infer<typeof UserRoleSchema>;
+export type TenantRole = z.infer<typeof TenantRoleSchema>;
+export type UserTenantAssociation = z.infer<typeof UserTenantAssociationSchema>;
 export type Permission = z.infer<typeof PermissionSchema>;
 export type UserSession = z.infer<typeof UserSessionSchema>;
 export type PasswordResetToken = z.infer<typeof PasswordResetTokenSchema>;

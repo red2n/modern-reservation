@@ -28,6 +28,9 @@ public record ReservationSummaryDTO(
     @Schema(description = "Reservation unique identifier", example = "550e8400-e29b-41d4-a716-446655440000")
     UUID id,
 
+    @Schema(description = "Tenant ID", example = "550e8400-e29b-41d4-a716-446655440099")
+    UUID tenantId,
+
     @Schema(description = "Confirmation number", example = "MR2024001")
     String confirmationNumber,
 
@@ -69,6 +72,7 @@ public record ReservationSummaryDTO(
     public static ReservationSummaryDTO from(ReservationResponseDTO full) {
         return new ReservationSummaryDTO(
             full.id(),
+            full.tenantId(),
             full.confirmationNumber(),
             full.guestFullName(),
             full.guestEmail(),

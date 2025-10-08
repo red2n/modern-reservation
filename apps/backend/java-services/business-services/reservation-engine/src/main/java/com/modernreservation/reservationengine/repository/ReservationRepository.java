@@ -273,4 +273,86 @@ public interface ReservationRepository extends JpaRepository<Reservation, UUID> 
            "AND r.paymentStatus != 'PAID' " +
            "AND r.status IN ('CONFIRMED', 'PENDING')")
     List<Reservation> findReservationsWithOverdueDeposits(@Param("date") LocalDate date);
+
+    // ==========================================
+    // MULTI-TENANCY: Tenant-scoped query methods
+    // ==========================================
+
+    // Basic tenant-scoped finders
+    Optional<Reservation> findByTenantIdAndId(UUID tenantId, UUID id);
+
+    Optional<Reservation> findByTenantIdAndConfirmationNumber(UUID tenantId, String confirmationNumber);
+
+    List<Reservation> findByTenantIdAndGuestId(UUID tenantId, UUID guestId);
+
+    Page<Reservation> findByTenantIdAndPropertyId(UUID tenantId, UUID propertyId, Pageable pageable);
+
+    Page<Reservation> findByTenantIdAndPropertyIdAndStatus(
+        UUID tenantId,
+        UUID propertyId,
+        ReservationStatus status,
+        Pageable pageable
+    );
+
+    // Tenant-scoped date range queries
+    @Query("SELECT r FROM Reservation r WHERE r.tenantId = :tenantId " +
+           "AND r.propertyId = :propertyId " +
+           "AND r.checkInDate <= :endDate AND r.checkOutDate > :startDate " +
+           "AND r.status NOT IN ('CANCELLED', 'NO_SHOW', 'EXPIRED')")
+    List<Reservation> findOverlappingReservationsByTenant(
+        @Param("tenantId") UUID tenantId,
+        @Param("propertyId") UUID propertyId,
+        @Param("startDate") LocalDate startDate,
+        @Param("endDate") LocalDate endDate
+    );
+
+    @Query("SELECT r FROM Reservation r WHERE r.tenantId = :tenantId " +
+           "AND r.propertyId = :propertyId " +
+           "AND r.checkInDate BETWEEN :startDate AND :endDate " +
+           "AND r.status NOT IN ('CANCELLED', 'NO_SHOW')")
+    List<Reservation> findArrivingGuestsByTenant(
+        @Param("tenantId") UUID tenantId,
+        @Param("propertyId") UUID propertyId,
+        @Param("startDate") LocalDate startDate,
+        @Param("endDate") LocalDate endDate
+    );
+
+    @Query("SELECT r FROM Reservation r WHERE r.tenantId = :tenantId " +
+           "AND r.propertyId = :propertyId " +
+           "AND r.checkOutDate BETWEEN :startDate AND :endDate " +
+           "AND r.status NOT IN ('CANCELLED', 'NO_SHOW', 'CHECKED_OUT')")
+    List<Reservation> findDepartingGuestsByTenant(
+        @Param("tenantId") UUID tenantId,
+        @Param("propertyId") UUID propertyId,
+        @Param("startDate") LocalDate startDate,
+        @Param("endDate") LocalDate endDate
+    );
+
+    // Tenant-scoped status queries
+    @Query("SELECT r FROM Reservation r WHERE r.tenantId = :tenantId " +
+           "AND r.status = :status")
+    Page<Reservation> findByTenantIdAndStatus(
+        @Param("tenantId") UUID tenantId,
+        @Param("status") ReservationStatus status,
+        Pageable pageable
+    );
+
+    // Tenant-scoped count queries
+    @Query("SELECT COUNT(r) FROM Reservation r WHERE r.tenantId = :tenantId " +
+           "AND r.propertyId = :propertyId " +
+           "AND r.status = :status")
+    long countByTenantIdAndPropertyIdAndStatus(
+        @Param("tenantId") UUID tenantId,
+        @Param("propertyId") UUID propertyId,
+        @Param("status") ReservationStatus status
+    );
+
+    @Query("SELECT COUNT(r) FROM Reservation r WHERE r.tenantId = :tenantId " +
+           "AND r.checkInDate = :date " +
+           "AND r.status NOT IN ('CANCELLED', 'NO_SHOW')")
+    long countTodayArrivals(
+        @Param("tenantId") UUID tenantId,
+        @Param("date") LocalDate date
+    );
 }
+

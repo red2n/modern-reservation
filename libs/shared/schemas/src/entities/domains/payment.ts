@@ -57,6 +57,7 @@ export const TransactionTypeSchema = z.enum([
 
 export const PaymentMethodSchema = z.object({
   id: UUIDSchema,
+  tenantId: UUIDSchema.optional(), // Multi-tenancy: Optional - payment method may be shared across tenants
   guestId: UUIDSchema,
 
   // Payment Method Information
@@ -83,6 +84,7 @@ export const PaymentMethodSchema = z.object({
 
 export const PaymentTransactionSchema = z.object({
   id: UUIDSchema,
+  tenantId: UUIDSchema, // Multi-tenancy: Critical for financial isolation and reporting
   reservationId: UUIDSchema,
   paymentMethodId: UUIDSchema.optional(),
 
@@ -117,6 +119,7 @@ export const PaymentTransactionSchema = z.object({
 // Payment Gateway Configuration
 export const PaymentGatewaySchema = z.object({
   id: UUIDSchema,
+  tenantId: UUIDSchema, // Multi-tenancy: Each tenant has its own gateway configurations
   name: z.string().min(1).max(100),
   provider: z.enum(['stripe', 'square', 'paypal', 'adyen', 'braintree', 'authorize_net']),
   isActive: z.boolean().default(true),
@@ -135,6 +138,7 @@ export const PaymentGatewaySchema = z.object({
 // Payment Plan (for installments)
 export const PaymentPlanSchema = z.object({
   id: UUIDSchema,
+  tenantId: UUIDSchema, // Multi-tenancy: Payment plans are tenant-specific
   reservationId: UUIDSchema,
   planType: z.enum(['full_payment', 'deposit', 'installments']),
   totalAmount: MoneyAmountSchema,
@@ -152,6 +156,7 @@ export const PaymentPlanSchema = z.object({
 // Payment Schedule (for payment plans)
 export const PaymentScheduleSchema = z.object({
   id: UUIDSchema,
+  tenantId: UUIDSchema, // Multi-tenancy: Inherited from payment plan
   paymentPlanId: UUIDSchema,
   installmentNumber: z.number().int().min(1),
   dueDate: TimestampSchema,
@@ -168,6 +173,7 @@ export const PaymentScheduleSchema = z.object({
 // Refund Request
 export const RefundRequestSchema = z.object({
   id: UUIDSchema,
+  tenantId: UUIDSchema, // Multi-tenancy: Critical for financial isolation
   reservationId: UUIDSchema,
   originalTransactionId: UUIDSchema,
   requestedAmount: MoneyAmountSchema,

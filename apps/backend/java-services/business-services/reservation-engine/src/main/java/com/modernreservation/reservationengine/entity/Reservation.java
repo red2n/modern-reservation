@@ -42,6 +42,11 @@ public class Reservation {    @Id
     @EqualsAndHashCode.Include
     private UUID id;
 
+    // Multi-tenancy: Which tenant owns this reservation
+    @NotNull
+    @Column(name = "tenant_id", nullable = false)
+    private UUID tenantId;
+
     @NotNull
     @Column(name = "confirmation_number", unique = true, nullable = false, length = 20)
     @EqualsAndHashCode.Include

@@ -20,6 +20,7 @@ import {
 // Property Group Schema
 export const PropertyGroupSchema = z.object({
   id: UUIDSchema,
+  tenantId: UUIDSchema, // Multi-tenancy: Which tenant owns this property group
   name: z.string().min(1).max(255),
   shardKey: z.string().min(1).max(50),
   ...AuditFieldsSchema.shape,
@@ -28,6 +29,7 @@ export const PropertyGroupSchema = z.object({
 // Property Schema
 export const PropertySchema = z.object({
   id: UUIDSchema,
+  tenantId: UUIDSchema, // Multi-tenancy: Which tenant owns this property
   propertyGroupId: UUIDSchema,
   code: z.string().min(1).max(50),
   name: z.string().min(1).max(255),
@@ -60,6 +62,7 @@ export const PropertySchema = z.object({
 // Room Type Schema
 export const RoomTypeSchema = z.object({
   id: UUIDSchema,
+  tenantId: UUIDSchema, // Multi-tenancy: Inherited from property
   propertyId: UUIDSchema,
   code: z.string().min(1).max(50),
   name: z.string().min(1).max(255),
@@ -89,6 +92,7 @@ export const RoomTypeSchema = z.object({
 // Room Schema
 export const RoomSchema = z.object({
   id: UUIDSchema,
+  tenantId: UUIDSchema, // Multi-tenancy: Inherited from property
   propertyId: UUIDSchema,
   roomTypeId: UUIDSchema,
   roomNumber: z.string().min(1).max(20),

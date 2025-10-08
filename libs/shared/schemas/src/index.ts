@@ -1,6 +1,7 @@
 // Main export file for all shared schemas and types
 export * from './entities';
 export * from './events';
+export * from './utils/tenant-helpers';
 
 // Export API module separately to avoid conflicts
 export * as API from './api';

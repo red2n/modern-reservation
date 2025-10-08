@@ -114,6 +114,7 @@ export const MetricTypeSchema = z.enum([
 
 export const RatePlanSchema = z.object({
   id: UUIDSchema,
+  tenantId: UUIDSchema, // Multi-tenancy: Rate plans are tenant-specific
   propertyId: UUIDSchema,
   code: z.string().min(1).max(50),
   name: z.string().min(1).max(255),
@@ -152,6 +153,7 @@ export const RatePlanSchema = z.object({
 
 export const DailyRateSchema = z.object({
   id: UUIDSchema,
+  tenantId: UUIDSchema, // Multi-tenancy: Daily rates are tenant-specific
   propertyId: UUIDSchema,
   roomTypeId: UUIDSchema,
   ratePlanId: UUIDSchema,
@@ -180,6 +182,7 @@ export const DailyRateSchema = z.object({
 // Seasonal Rate Configuration
 export const SeasonalRateSchema = z.object({
   id: UUIDSchema,
+  tenantId: UUIDSchema, // Multi-tenancy: Seasonal rates are tenant-specific
   propertyId: UUIDSchema,
   name: z.string().min(1).max(255),
   startDate: DateSchema,
@@ -195,6 +198,7 @@ export const SeasonalRateSchema = z.object({
 // Rate Restriction Rules
 export const RateRestrictionSchema = z.object({
   id: UUIDSchema,
+  tenantId: UUIDSchema, // Multi-tenancy: Rate restrictions are tenant-specific
   propertyId: UUIDSchema,
   roomTypeId: UUIDSchema.optional(),
   ratePlanId: UUIDSchema.optional(),
@@ -211,6 +215,7 @@ export const RateRestrictionSchema = z.object({
 // Dynamic Pricing Rules
 export const DynamicPricingRuleSchema = z.object({
   id: UUIDSchema,
+  tenantId: UUIDSchema, // Multi-tenancy: Dynamic pricing rules are tenant-specific
   propertyId: UUIDSchema,
   name: z.string().min(1).max(255),
   description: z.string().optional(),
@@ -239,6 +244,7 @@ export const DynamicPricingRuleSchema = z.object({
 // Rate Calendar
 export const RateCalendarSchema = z.object({
   id: UUIDSchema,
+  tenantId: UUIDSchema, // Multi-tenancy: Rate calendar is tenant-specific
   propertyId: UUIDSchema,
   roomTypeId: UUIDSchema,
   ratePlanId: UUIDSchema,
@@ -266,6 +272,7 @@ export const RateCalendarSchema = z.object({
 // Package Rates
 export const PackageRateSchema = z.object({
   id: UUIDSchema,
+  tenantId: UUIDSchema, // Multi-tenancy: Package rates are tenant-specific
   propertyId: UUIDSchema,
   packageCode: z.string().min(1).max(50),
   packageName: z.string().min(1).max(255),

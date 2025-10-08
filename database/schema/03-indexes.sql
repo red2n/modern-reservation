@@ -3,11 +3,82 @@
 -- Index Definitions for Performance Optimization
 -- Generated from Entity @Index annotations
 -- Date: 2025-10-06
+-- Updated: 2025-10-08 (Multi-tenancy indexes added)
 -- =====================================================
+
+-- =====================================================
+-- MULTI-TENANCY INDEXES
+-- =====================================================
+
+-- Tenants Table Indexes
+CREATE INDEX idx_tenants_slug
+    ON tenants (slug);
+
+CREATE INDEX idx_tenants_type
+    ON tenants (type);
+
+CREATE INDEX idx_tenants_status
+    ON tenants (status);
+
+CREATE INDEX idx_tenants_active
+    ON tenants (status) WHERE status = 'ACTIVE';
+
+CREATE INDEX idx_tenants_email
+    ON tenants (email);
+
+CREATE INDEX idx_tenants_created_at
+    ON tenants (created_at DESC);
+
+CREATE INDEX idx_tenants_country
+    ON tenants (country) WHERE country IS NOT NULL;
+
+-- GIN index for JSONB config field (for complex queries)
+CREATE INDEX idx_tenants_config
+    ON tenants USING GIN (config);
+
+-- GIN index for JSONB subscription field
+CREATE INDEX idx_tenants_subscription
+    ON tenants USING GIN (subscription);
+
+-- Soft delete support
+CREATE INDEX idx_tenants_not_deleted
+    ON tenants (id) WHERE deleted_at IS NULL;
+
+-- User-Tenant Association Indexes
+CREATE INDEX idx_user_tenant_user_id
+    ON user_tenant_associations (user_id);
+
+CREATE INDEX idx_user_tenant_tenant_id
+    ON user_tenant_associations (tenant_id);
+
+CREATE INDEX idx_user_tenant_role
+    ON user_tenant_associations (role);
+
+CREATE INDEX idx_user_tenant_active
+    ON user_tenant_associations (user_id, tenant_id)
+    WHERE is_active = true;
+
+CREATE INDEX idx_user_tenant_primary
+    ON user_tenant_associations (user_id)
+    WHERE is_primary = true;
+
+CREATE INDEX idx_user_tenant_expires
+    ON user_tenant_associations (expires_at)
+    WHERE expires_at IS NOT NULL;
+
+CREATE INDEX idx_user_tenant_last_accessed
+    ON user_tenant_associations (tenant_id, last_accessed_at DESC);
 
 -- =====================================================
 -- RATES TABLE INDEXES
 -- =====================================================
+
+-- Add tenant_id to existing indexes
+CREATE INDEX idx_rates_tenant_id
+    ON rates (tenant_id);
+
+CREATE INDEX idx_rates_tenant_property
+    ON rates (tenant_id, property_id);
 
 CREATE INDEX idx_rates_property_room_date
     ON rates (property_id, room_type_id, effective_date);
@@ -30,6 +101,15 @@ CREATE INDEX idx_rates_currency
 -- =====================================================
 -- RESERVATIONS TABLE INDEXES
 -- =====================================================
+
+CREATE INDEX idx_reservations_tenant_id
+    ON reservations (tenant_id);
+
+CREATE INDEX idx_reservations_tenant_property
+    ON reservations (tenant_id, property_id);
+
+CREATE INDEX idx_reservations_tenant_dates
+    ON reservations (tenant_id, check_in_date, check_out_date);
 
 CREATE INDEX idx_reservations_property_id
     ON reservations (property_id);
@@ -68,6 +148,9 @@ CREATE INDEX idx_reservations_property_status
 -- RESERVATION STATUS HISTORY TABLE INDEXES
 -- =====================================================
 
+CREATE INDEX idx_res_history_tenant_id
+    ON reservation_status_history (tenant_id);
+
 CREATE INDEX idx_res_history_reservation_id
     ON reservation_status_history (reservation_id);
 
@@ -80,6 +163,15 @@ CREATE INDEX idx_res_history_changed_by
 -- =====================================================
 -- PAYMENTS TABLE INDEXES
 -- =====================================================
+
+CREATE INDEX idx_payment_tenant_id
+    ON payments (tenant_id);
+
+CREATE INDEX idx_payment_tenant_created
+    ON payments (tenant_id, created_at DESC);
+
+CREATE INDEX idx_payment_tenant_status
+    ON payments (tenant_id, status);
 
 CREATE INDEX idx_payment_reservation_id
     ON payments (reservation_id);
@@ -109,6 +201,12 @@ CREATE INDEX idx_payment_authorized_at
 -- ROOM AVAILABILITY TABLE INDEXES
 -- =====================================================
 
+CREATE INDEX idx_availability_tenant_id
+    ON availability.room_availability (tenant_id);
+
+CREATE INDEX idx_availability_tenant_property_date
+    ON availability.room_availability (tenant_id, property_id, availability_date);
+
 CREATE INDEX idx_availability_property_date
     ON availability.room_availability (property_id, availability_date);
 
@@ -130,6 +228,12 @@ CREATE INDEX idx_availability_stop_sell
 -- =====================================================
 -- ANALYTICS METRICS TABLE INDEXES
 -- =====================================================
+
+CREATE INDEX idx_metric_tenant_id
+    ON analytics_metrics (tenant_id);
+
+CREATE INDEX idx_metric_tenant_type_period
+    ON analytics_metrics (tenant_id, metric_type, period_start, period_end);
 
 CREATE INDEX idx_metric_type_period
     ON analytics_metrics (metric_type, period_start, period_end);
@@ -167,6 +271,12 @@ CREATE INDEX idx_metric_dimensions_key
 -- =====================================================
 -- ANALYTICS REPORTS TABLE INDEXES
 -- =====================================================
+
+CREATE INDEX idx_report_tenant_id
+    ON analytics_reports (tenant_id);
+
+CREATE INDEX idx_report_tenant_type_status
+    ON analytics_reports (tenant_id, report_type, status);
 
 CREATE INDEX idx_report_type_status
     ON analytics_reports (report_type, status);

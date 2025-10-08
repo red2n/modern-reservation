@@ -2,6 +2,7 @@
 -- 05-reference-data.sql
 -- Reference Data and System Configuration
 -- Date: 2025-10-06
+-- Updated: 2025-10-08 (Multi-tenancy reference data added)
 -- =====================================================
 
 -- This file intentionally left minimal.
@@ -20,7 +21,104 @@ CREATE TABLE IF NOT EXISTS schema_version (
 );
 
 INSERT INTO schema_version (version, description) VALUES
-    ('1.0.0', 'Initial schema generated from entity classes - October 2025');
+    ('1.0.0', 'Initial schema generated from entity classes - October 2025'),
+    ('2.0.0', 'Multi-tenancy support added - October 2025');
+
+-- =====================================================
+-- SAMPLE TENANT DATA (for development/testing)
+-- =====================================================
+
+-- Insert a default system tenant for development
+INSERT INTO tenants (
+    id,
+    name,
+    slug,
+    type,
+    status,
+    email,
+    config,
+    subscription,
+    created_by
+) VALUES (
+    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', -- Fixed UUID for development
+    'Demo Hotel Chain',
+    'demo-hotel-chain',
+    'CHAIN',
+    'ACTIVE',
+    'admin@demo-hotel-chain.com',
+    '{
+        "brandingEnabled": true,
+        "logoUrl": "https://example.com/logo.png",
+        "primaryColor": "#0066CC",
+        "secondaryColor": "#FF6600",
+        "enableMultiProperty": true,
+        "enableChannelManager": true,
+        "enableAdvancedReporting": true,
+        "enablePaymentProcessing": true,
+        "enableLoyaltyProgram": true,
+        "maxProperties": 50,
+        "maxUsers": 100,
+        "maxReservationsPerMonth": null,
+        "defaultCurrency": "USD",
+        "defaultLanguage": "en",
+        "defaultTimezone": "America/New_York"
+    }'::jsonb,
+    '{
+        "plan": "ENTERPRISE",
+        "startDate": "2025-01-01",
+        "endDate": "2026-01-01",
+        "trialEndDate": null,
+        "billingCycle": "YEARLY",
+        "amount": 9999.00,
+        "currency": "USD",
+        "paymentMethod": "invoice"
+    }'::jsonb,
+    'system'
+) ON CONFLICT (id) DO NOTHING;
+
+-- Insert a sample independent property tenant
+INSERT INTO tenants (
+    id,
+    name,
+    slug,
+    type,
+    status,
+    email,
+    config,
+    subscription,
+    created_by
+) VALUES (
+    'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', -- Fixed UUID for development
+    'Boutique Beach Resort',
+    'boutique-beach-resort',
+    'INDEPENDENT',
+    'TRIAL',
+    'owner@boutiquebeach.com',
+    '{
+        "brandingEnabled": true,
+        "enableMultiProperty": false,
+        "enableChannelManager": false,
+        "enableAdvancedReporting": false,
+        "enablePaymentProcessing": true,
+        "enableLoyaltyProgram": false,
+        "maxProperties": 1,
+        "maxUsers": 5,
+        "maxReservationsPerMonth": 100,
+        "defaultCurrency": "USD",
+        "defaultLanguage": "en",
+        "defaultTimezone": "America/Los_Angeles"
+    }'::jsonb,
+    '{
+        "plan": "STARTER",
+        "startDate": "2025-10-01",
+        "endDate": null,
+        "trialEndDate": "2025-11-01",
+        "billingCycle": "MONTHLY",
+        "amount": 49.00,
+        "currency": "USD"
+    }'::jsonb,
+    'system'
+) ON CONFLICT (id) DO NOTHING;
 
 -- =====================================================
 -- AUDIT LOG TRIGGER FUNCTION
@@ -41,6 +139,18 @@ COMMENT ON FUNCTION update_updated_at_column() IS
 -- =====================================================
 -- APPLY UPDATE TRIGGERS
 -- =====================================================
+
+-- Tenants table trigger
+CREATE TRIGGER trigger_tenants_updated_at
+    BEFORE UPDATE ON tenants
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- User-Tenant Association table trigger
+CREATE TRIGGER trigger_user_tenant_associations_updated_at
+    BEFORE UPDATE ON user_tenant_associations
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
 
 -- Rates table trigger
 CREATE TRIGGER trigger_rates_updated_at
@@ -83,6 +193,8 @@ CREATE TRIGGER trigger_analytics_reports_updated_at
 -- =====================================================
 
 -- Analyze all tables for query planner statistics
+ANALYZE tenants;
+ANALYZE user_tenant_associations;
 ANALYZE rates;
 ANALYZE reservations;
 ANALYZE reservation_status_history;

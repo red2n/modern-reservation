@@ -211,9 +211,62 @@ CREATE TYPE metric_type AS ENUM (
     'CUSTOM'
 );
 
+-- =====================================================
+-- MULTI-TENANCY ENUMS
+-- =====================================================
+
+-- Tenant Type Enum
+CREATE TYPE tenant_type AS ENUM (
+    'CHAIN',
+    'INDEPENDENT',
+    'FRANCHISE',
+    'MANAGEMENT_COMPANY',
+    'VACATION_RENTAL'
+);
+
+-- Tenant Status Enum
+CREATE TYPE tenant_status AS ENUM (
+    'ACTIVE',
+    'SUSPENDED',
+    'TRIAL',
+    'EXPIRED',
+    'CANCELLED'
+);
+
+-- Subscription Plan Enum
+CREATE TYPE subscription_plan AS ENUM (
+    'FREE',
+    'STARTER',
+    'PROFESSIONAL',
+    'ENTERPRISE',
+    'CUSTOM'
+);
+
+-- Tenant Role Enum (for user-tenant associations)
+CREATE TYPE tenant_role AS ENUM (
+    'OWNER',
+    'ADMIN',
+    'MANAGER',
+    'STAFF',
+    'ACCOUNTANT',
+    'VIEWER'
+);
+
+-- Billing Cycle Enum
+CREATE TYPE billing_cycle AS ENUM (
+    'MONTHLY',
+    'QUARTERLY',
+    'YEARLY'
+);
+
 COMMENT ON EXTENSION "uuid-ossp" IS 'UUID generation functions';
 COMMENT ON EXTENSION "pgcrypto" IS 'Cryptographic functions for secure data handling';
 
+COMMENT ON TYPE tenant_type IS 'Organization type for multi-tenancy';
+COMMENT ON TYPE tenant_status IS 'Tenant account status';
+COMMENT ON TYPE subscription_plan IS 'Subscription tier/plan';
+COMMENT ON TYPE tenant_role IS 'User role within a tenant organization';
+COMMENT ON TYPE billing_cycle IS 'Subscription billing frequency';
 COMMENT ON TYPE rate_status IS 'Rate lifecycle status';
 COMMENT ON TYPE rate_strategy IS 'Pricing strategy types';
 COMMENT ON TYPE season_type IS 'Seasonal pricing periods';
