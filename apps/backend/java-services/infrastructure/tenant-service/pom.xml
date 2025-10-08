@@ -105,6 +105,13 @@
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
 
+        <!-- SpringDoc OpenAPI (Swagger) -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.2.0</version>
+        </dependency>
+
         <!-- GraphQL (Optional - for future GraphQL API) -->
         <dependency>
             <groupId>com.graphql-java-kickstart</groupId>

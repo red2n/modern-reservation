@@ -121,7 +121,7 @@ public class TenantEventPublisher {
                 log.error("Failed to serialize tenant metadata to JSON", e);
             }
         }
-        
+
         return TenantEvent.builder()
                 .eventType(eventType)
                 .tenantId(tenant.getId())

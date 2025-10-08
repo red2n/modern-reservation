@@ -90,6 +90,17 @@ spring:
                 name: analytics-circuit-breaker
                 fallbackUri: forward:/fallback/analytics
 
+        # Tenant Service Routes (Infrastructure Service)
+        - id: tenant-service
+          uri: lb://tenant-service
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: tenant-circuit-breaker
+                fallbackUri: forward:/fallback/tenant
+
         # Batch Processor Routes
         - id: batch-processor
           uri: lb://batch-processor
@@ -132,6 +143,12 @@ spring:
           order: -1
           predicates:
             - Path=/rate-management/**
+
+        - id: tenant-service-api
+          uri: lb://tenant-service
+          order: -1
+          predicates:
+            - Path=/tenant-service/**
 
         # Node.js Services Routes
         - id: api-gateway-node
@@ -181,6 +198,12 @@ spring:
           predicates:
             - Path=/analytics-engine/api-docs/**
 
+        - id: tenant-service-docs
+          uri: lb://tenant-service
+          order: -1
+          predicates:
+            - Path=/tenant-service/api-docs/**
+
         # Swagger UI Routes for Business Services
         # Note: No rewriting needed - services have matching context-path configured
         - id: availability-calculator-swagger-ui
@@ -212,6 +235,12 @@ spring:
           order: -1
           predicates:
             - Path=/reservation-engine/swagger-ui/**
+
+        - id: tenant-service-swagger-ui
+          uri: lb://tenant-service
+          order: -1
+          predicates:
+            - Path=/tenant-service/swagger-ui/**
 
   # Redis Configuration for Rate Limiting
   redis:
@@ -294,6 +323,8 @@ springdoc:
     urls:
       - url: /api-docs
         name: Gateway Service
+      - url: /tenant-service/api-docs
+        name: 🏢 Tenant Service
       - url: /reservation-engine/api-docs
         name: 🏨 Reservation Engine
       - url: /availability-calculator/api-docs

@@ -278,7 +278,7 @@ start_service() {
 
     # Start the service in background
     print_status "Executing: mvn spring-boot:run for $service_name"
-    nohup mvn spring-boot:run > "$java_services_dir/logs/infrastructure/${service_name}.log" 2>&1 &
+    nohup mvn spring-boot:run -DskipTests > "$java_services_dir/logs/infrastructure/${service_name}.log" 2>&1 &
     local pid=$!
 
     # Save PID
