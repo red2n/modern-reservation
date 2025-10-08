@@ -3,8 +3,8 @@
  * Single Responsibility: Define reservation-related mutations
  */
 
-import { gql } from "@apollo/client";
-import { RESERVATION_FRAGMENT } from "../fragments/common";
+import { gql } from '@apollo/client';
+import { RESERVATION_FRAGMENT } from '../fragments/common';
 
 /**
  * Create Reservation Mutation

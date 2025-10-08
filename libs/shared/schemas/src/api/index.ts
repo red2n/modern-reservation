@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { PropertySchema, RoomSchema, GuestSchema, ReservationSchema, PaymentSchemas } from '../entities';
+import {
+  GuestSchema,
+  PaymentSchemas,
+  PropertySchema,
+  ReservationSchema,
+  RoomSchema,
+} from '../entities';
 
 // Extract the main schema from PaymentSchemas
 const { PaymentTransaction: PaymentSchema } = PaymentSchemas;
@@ -28,7 +34,19 @@ export const SortSchema = z.object({
 
 export const FilterSchema = z.object({
   field: z.string(),
-  operator: z.enum(['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'in', 'nin', 'contains', 'startsWith', 'endsWith']),
+  operator: z.enum([
+    'eq',
+    'ne',
+    'gt',
+    'gte',
+    'lt',
+    'lte',
+    'in',
+    'nin',
+    'contains',
+    'startsWith',
+    'endsWith',
+  ]),
   value: z.union([z.string(), z.number(), z.boolean(), z.array(z.any())]),
 });
 
@@ -55,8 +73,14 @@ export const CreatePropertyRequestSchema = z.object({
   phone: z.string().optional(),
   email: z.string().email().optional(),
   website: z.string().url().optional(),
-  checkInTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).default('15:00'),
-  checkOutTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).default('11:00'),
+  checkInTime: z
+    .string()
+    .regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
+    .default('15:00'),
+  checkOutTime: z
+    .string()
+    .regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
+    .default('11:00'),
   currency: z.string().length(3).default('USD'),
   taxRate: z.number().min(0).max(1).default(0),
   amenities: z.array(z.string()).default([]),
@@ -117,12 +141,14 @@ export const AvailableRoomSchema = RoomSchema.extend({
   availableDate: z.string().date(),
   currentPrice: z.number().positive(),
   isAvailable: z.boolean(),
-  restrictions: z.object({
-    minStay: z.number().int().positive().optional(),
-    maxStay: z.number().int().positive().optional(),
-    closedToArrival: z.boolean().default(false),
-    closedToDeparture: z.boolean().default(false),
-  }).optional(),
+  restrictions: z
+    .object({
+      minStay: z.number().int().positive().optional(),
+      maxStay: z.number().int().positive().optional(),
+      closedToArrival: z.boolean().default(false),
+      closedToDeparture: z.boolean().default(false),
+    })
+    .optional(),
 });
 
 export const RoomSearchResponseSchema = ApiResponseSchema.extend({
@@ -144,18 +170,22 @@ export const CreateGuestRequestSchema = z.object({
   passportNumber: z.string().max(50).optional(),
   loyaltyNumber: z.string().max(50).optional(),
   preferences: z.record(z.string()).default({}),
-  emergencyContact: z.object({
-    name: z.string(),
-    phone: z.string(),
-    relationship: z.string(),
-  }).optional(),
-  address: z.object({
-    street: z.string(),
-    city: z.string(),
-    state: z.string().optional(),
-    country: z.string(),
-    postalCode: z.string().optional(),
-  }).optional(),
+  emergencyContact: z
+    .object({
+      name: z.string(),
+      phone: z.string(),
+      relationship: z.string(),
+    })
+    .optional(),
+  address: z
+    .object({
+      street: z.string(),
+      city: z.string(),
+      state: z.string().optional(),
+      country: z.string(),
+      postalCode: z.string().optional(),
+    })
+    .optional(),
 });
 
 export const UpdateGuestRequestSchema = CreateGuestRequestSchema.partial();
@@ -175,18 +205,24 @@ export const CreateReservationRequestSchema = z.object({
   checkOutDate: z.string().date(),
   adults: z.number().int().positive(),
   children: z.number().int().nonnegative().default(0),
-  source: z.enum(['direct', 'booking_dot_com', 'expedia', 'airbnb', 'phone', 'walk_in']).default('direct'),
+  source: z
+    .enum(['direct', 'booking_dot_com', 'expedia', 'airbnb', 'phone', 'walk_in'])
+    .default('direct'),
   rateCode: z.string().optional(),
   specialRequests: z.string().max(1000).optional(),
   guestNotes: z.string().max(1000).optional(),
   corporateCode: z.string().optional(),
   groupCode: z.string().optional(),
   marketSegment: z.string().optional(),
-  additionalGuests: z.array(z.object({
-    firstName: z.string(),
-    lastName: z.string(),
-    age: z.number().int().nonnegative().optional(),
-  })).default([]),
+  additionalGuests: z
+    .array(
+      z.object({
+        firstName: z.string(),
+        lastName: z.string(),
+        age: z.number().int().nonnegative().optional(),
+      })
+    )
+    .default([]),
 });
 
 export const UpdateReservationRequestSchema = z.object({
@@ -196,11 +232,15 @@ export const UpdateReservationRequestSchema = z.object({
   children: z.number().int().nonnegative().optional(),
   specialRequests: z.string().max(1000).optional(),
   guestNotes: z.string().max(1000).optional(),
-  additionalGuests: z.array(z.object({
-    firstName: z.string(),
-    lastName: z.string(),
-    age: z.number().int().nonnegative().optional(),
-  })).optional(),
+  additionalGuests: z
+    .array(
+      z.object({
+        firstName: z.string(),
+        lastName: z.string(),
+        age: z.number().int().nonnegative().optional(),
+      })
+    )
+    .optional(),
 });
 
 export const ReservationResponseSchema = ApiResponseSchema.extend({
@@ -223,12 +263,18 @@ export const CheckInRequestSchema = z.object({
 export const CheckOutRequestSchema = z.object({
   reservationId: z.string().uuid(),
   actualDepartureTime: z.string().datetime().optional(),
-  roomCondition: z.enum(['good', 'needs_cleaning', 'maintenance_required', 'damaged']).default('good'),
-  additionalCharges: z.array(z.object({
-    description: z.string(),
-    amount: z.number().positive(),
-    category: z.string(),
-  })).default([]),
+  roomCondition: z
+    .enum(['good', 'needs_cleaning', 'maintenance_required', 'damaged'])
+    .default('good'),
+  additionalCharges: z
+    .array(
+      z.object({
+        description: z.string(),
+        amount: z.number().positive(),
+        category: z.string(),
+      })
+    )
+    .default([]),
   guestSatisfactionScore: z.number().min(1).max(5).optional(),
   feedback: z.string().max(1000).optional(),
 });
@@ -239,20 +285,24 @@ export const CreatePaymentRequestSchema = z.object({
   amount: z.number().positive(),
   currency: z.string().length(3),
   paymentMethod: z.enum(['credit_card', 'debit_card', 'cash', 'bank_transfer', 'digital_wallet']),
-  paymentDetails: z.object({
-    cardNumber: z.string().optional(),
-    expiryMonth: z.number().int().min(1).max(12).optional(),
-    expiryYear: z.number().int().optional(),
-    cvv: z.string().optional(),
-    cardHolderName: z.string().optional(),
-    billingAddress: z.object({
-      street: z.string(),
-      city: z.string(),
-      state: z.string().optional(),
-      country: z.string(),
-      postalCode: z.string().optional(),
-    }).optional(),
-  }).optional(),
+  paymentDetails: z
+    .object({
+      cardNumber: z.string().optional(),
+      expiryMonth: z.number().int().min(1).max(12).optional(),
+      expiryYear: z.number().int().optional(),
+      cvv: z.string().optional(),
+      cardHolderName: z.string().optional(),
+      billingAddress: z
+        .object({
+          street: z.string(),
+          city: z.string(),
+          state: z.string().optional(),
+          country: z.string(),
+          postalCode: z.string().optional(),
+        })
+        .optional(),
+    })
+    .optional(),
   description: z.string().optional(),
   reference: z.string().optional(),
 });
@@ -268,7 +318,9 @@ export const CreateRefundRequestSchema = z.object({
   paymentId: z.string().uuid(),
   amount: z.number().positive(),
   reason: z.string().min(1).max(500),
-  refundMethod: z.enum(['original_payment_method', 'bank_transfer', 'cash']).default('original_payment_method'),
+  refundMethod: z
+    .enum(['original_payment_method', 'bank_transfer', 'cash'])
+    .default('original_payment_method'),
 });
 
 // Availability API Schemas
@@ -306,15 +358,17 @@ export const AvailabilityResponseSchema = ApiResponseSchema.extend({
 export const UpdateAvailabilityRequestSchema = z.object({
   propertyId: z.string().uuid(),
   roomId: z.string().uuid(),
-  updates: z.array(z.object({
-    date: z.string().date(),
-    isAvailable: z.boolean().optional(),
-    price: z.number().positive().optional(),
-    minStay: z.number().int().positive().optional(),
-    maxStay: z.number().int().positive().optional(),
-    closedToArrival: z.boolean().optional(),
-    closedToDeparture: z.boolean().optional(),
-  })),
+  updates: z.array(
+    z.object({
+      date: z.string().date(),
+      isAvailable: z.boolean().optional(),
+      price: z.number().positive().optional(),
+      minStay: z.number().int().positive().optional(),
+      maxStay: z.number().int().positive().optional(),
+      closedToArrival: z.boolean().optional(),
+      closedToDeparture: z.boolean().optional(),
+    })
+  ),
 });
 
 // Rate Management Schemas
@@ -393,10 +447,12 @@ export const WebhookConfigSchema = z.object({
   isActive: z.boolean(),
   secret: z.string(),
   headers: z.record(z.string()).optional(),
-  retryPolicy: z.object({
-    maxRetries: z.number().int().nonnegative().default(3),
-    retryDelay: z.number().int().positive().default(1000), // milliseconds
-  }).optional(),
+  retryPolicy: z
+    .object({
+      maxRetries: z.number().int().nonnegative().default(3),
+      retryDelay: z.number().int().positive().default(1000), // milliseconds
+    })
+    .optional(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 });
@@ -406,10 +462,12 @@ export const CreateWebhookRequestSchema = z.object({
   url: z.string().url(),
   events: z.array(z.string()).min(1),
   headers: z.record(z.string()).optional(),
-  retryPolicy: z.object({
-    maxRetries: z.number().int().nonnegative().default(3),
-    retryDelay: z.number().int().positive().default(1000),
-  }).optional(),
+  retryPolicy: z
+    .object({
+      maxRetries: z.number().int().nonnegative().default(3),
+      retryDelay: z.number().int().positive().default(1000),
+    })
+    .optional(),
   isActive: z.boolean().default(true),
 });
 
@@ -431,11 +489,13 @@ export const ValidationErrorSchema = ErrorResponseSchema.extend({
     code: z.literal('VALIDATION_ERROR'),
     message: z.string(),
     details: z.object({
-      fieldErrors: z.array(z.object({
-        field: z.string(),
-        message: z.string(),
-        value: z.any().optional(),
-      })),
+      fieldErrors: z.array(
+        z.object({
+          field: z.string(),
+          message: z.string(),
+          value: z.any().optional(),
+        })
+      ),
     }),
     requestId: z.string().uuid(),
     timestamp: z.string().datetime(),
@@ -447,17 +507,21 @@ export const HealthCheckResponseSchema = z.object({
   status: z.enum(['healthy', 'degraded', 'unhealthy']),
   timestamp: z.string().datetime(),
   version: z.string(),
-  services: z.record(z.object({
-    status: z.enum(['up', 'down', 'degraded']),
-    responseTime: z.number().nonnegative().optional(),
-    lastCheck: z.string().datetime(),
-    details: z.record(z.any()).optional(),
-  })),
+  services: z.record(
+    z.object({
+      status: z.enum(['up', 'down', 'degraded']),
+      responseTime: z.number().nonnegative().optional(),
+      lastCheck: z.string().datetime(),
+      details: z.record(z.any()).optional(),
+    })
+  ),
 });
 
 // Export all types
 export type ApiResponse = z.infer<typeof ApiResponseSchema>;
-export type PaginatedResponse<T> = z.infer<ReturnType<typeof PaginatedResponseSchema<z.ZodType<T>>>>;
+export type PaginatedResponse<T> = z.infer<
+  ReturnType<typeof PaginatedResponseSchema<z.ZodType<T>>>
+>;
 export type CreatePropertyRequest = z.infer<typeof CreatePropertyRequestSchema>;
 export type UpdatePropertyRequest = z.infer<typeof UpdatePropertyRequestSchema>;
 export type PropertyResponse = z.infer<typeof PropertyResponseSchema>;

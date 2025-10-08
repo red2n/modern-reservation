@@ -1,0 +1,170 @@
+{
+  "folders": [
+    {
+      "path": ".."
+    }
+  ],
+  "settings": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "biomejs.biome",
+    "editor.codeActionsOnSave": {
+      "quickfix.biome": "explicit",
+      "source.organizeImports.biome": "explicit"
+    },
+    "[typescript]": {
+      "editor.defaultFormatter": "biomejs.biome"
+    },
+    "[javascript]": {
+      "editor.defaultFormatter": "biomejs.biome"
+    },
+    "[typescriptreact]": {
+      "editor.defaultFormatter": "biomejs.biome"
+    },
+    "[javascriptreact]": {
+      "editor.defaultFormatter": "biomejs.biome"
+    },
+    "[json]": {
+      "editor.defaultFormatter": "biomejs.biome"
+    },
+    "[jsonc]": {
+      "editor.defaultFormatter": "biomejs.biome"
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "biomejs.biome",
+      "apollographql.vscode-apollo",
+      "bradlc.vscode-tailwindcss",
+      "eamodio.gitlens",
+      "ms-azuretools.vscode-docker",
+      "vscjava.vscode-java-pack",
+      "vscjava.vscode-spring-boot-dashboard",
+      "dbaeumer.vscode-eslint"
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "🚀 Start All Services",
+        "type": "shell",
+        "command": "./dev.sh start",
+        "problemMatcher": [],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        }
+      },
+      {
+        "label": "🛑 Stop All Services",
+        "type": "shell",
+        "command": "./dev.sh stop",
+        "problemMatcher": []
+      },
+      {
+        "label": "🔍 Check Status",
+        "type": "shell",
+        "command": "./dev.sh status",
+        "problemMatcher": []
+      },
+      {
+        "label": "🧹 Clean Restart",
+        "type": "shell",
+        "command": "./dev.sh clean",
+        "problemMatcher": []
+      },
+      {
+        "label": "🐳 Start Docker Infrastructure",
+        "type": "shell",
+        "command": "./dev.sh docker-start",
+        "problemMatcher": []
+      },
+      {
+        "label": "✨ Biome Check",
+        "type": "shell",
+        "command": "./dev.sh biome-check",
+        "problemMatcher": []
+      },
+      {
+        "label": "🔧 Biome Fix",
+        "type": "shell",
+        "command": "./dev.sh biome-fix",
+        "problemMatcher": []
+      },
+      {
+        "label": "📊 Check Infrastructure",
+        "type": "shell",
+        "command": "scripts/check-infrastructure.sh",
+        "problemMatcher": []
+      },
+      {
+        "label": "🏢 Check Business Services",
+        "type": "shell",
+        "command": "scripts/check-business-services.sh",
+        "problemMatcher": []
+      },
+      {
+        "label": "💾 Backup Database",
+        "type": "shell",
+        "command": "scripts/backup-database.sh",
+        "problemMatcher": []
+      }
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "type": "java",
+        "name": "🏨 Reservation Service",
+        "request": "launch",
+        "mainClass": "com.modernreservation.reservation.ReservationServiceApplication",
+        "projectName": "reservation-service"
+      },
+      {
+        "type": "java",
+        "name": "💰 Payment Service",
+        "request": "launch",
+        "mainClass": "com.modernreservation.payment.PaymentServiceApplication",
+        "projectName": "payment-service"
+      },
+      {
+        "type": "node",
+        "name": "🌐 API Gateway",
+        "request": "launch",
+        "runtimeExecutable": "npm",
+        "runtimeArgs": ["run", "dev"],
+        "cwd": "${workspaceFolder}/apps/backend/node-services/api-gateway"
+      },
+      {
+        "type": "node",
+        "name": "🔔 Notification Service",
+        "request": "launch",
+        "runtimeExecutable": "npm",
+        "runtimeArgs": ["run", "dev"],
+        "cwd": "${workspaceFolder}/apps/backend/node-services/notification-service"
+      },
+      {
+        "type": "node",
+        "name": "🌐 WebSocket Service",
+        "request": "launch",
+        "runtimeExecutable": "npm",
+        "runtimeArgs": ["run", "dev"],
+        "cwd": "${workspaceFolder}/apps/backend/node-services/websocket-service"
+      },
+      {
+        "type": "node",
+        "name": "👥 Guest Portal (Next.js)",
+        "request": "launch",
+        "runtimeExecutable": "npm",
+        "runtimeArgs": ["run", "dev"],
+        "cwd": "${workspaceFolder}/apps/frontend/guest-portal",
+        "serverReadyAction": {
+          "pattern": "ready - started server on .+, url: (https?://.+)",
+          "uriFormat": "%s",
+          "action": "openExternally"
+        }
+      }
+    ]
+  }
+}

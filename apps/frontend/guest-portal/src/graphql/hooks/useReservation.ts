@@ -3,18 +3,18 @@
  * Single Responsibility: Custom hooks for reservation queries and mutations
  */
 
-"use client";
+'use client';
 
-import { useMutation, useQuery } from "@apollo/client/react";
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   CANCEL_RESERVATION,
   CHECK_AVAILABILITY,
   CREATE_RESERVATION,
-  UPDATE_RESERVATION,
   GET_MY_RESERVATIONS,
   GET_RESERVATION_BY_CONFIRMATION,
   GET_RESERVATION_DETAILS,
-} from "@modern-reservation/graphql-client";
+  UPDATE_RESERVATION,
+} from '@modern-reservation/graphql-client';
 
 /**
  * Hook to get user's reservations
@@ -54,7 +54,7 @@ export function useReservationByConfirmation(confirmationNumber: string) {
  */
 export function useCreateReservation() {
   return useMutation(CREATE_RESERVATION, {
-    refetchQueries: ["GetMyReservations"],
+    refetchQueries: ['GetMyReservations'],
     awaitRefetchQueries: true,
   });
 }
@@ -64,7 +64,7 @@ export function useCreateReservation() {
  */
 export function useUpdateReservation() {
   return useMutation(UPDATE_RESERVATION, {
-    refetchQueries: ["GetReservationDetails"],
+    refetchQueries: ['GetReservationDetails'],
   });
 }
 
@@ -73,7 +73,7 @@ export function useUpdateReservation() {
  */
 export function useCancelReservation() {
   return useMutation(CANCEL_RESERVATION, {
-    refetchQueries: ["GetMyReservations", "GetReservationDetails"],
+    refetchQueries: ['GetMyReservations', 'GetReservationDetails'],
   });
 }
 

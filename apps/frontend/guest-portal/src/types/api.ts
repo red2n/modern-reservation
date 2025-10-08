@@ -31,4 +31,4 @@ export interface ValidationError {
   message: string;
 }
 
-export type ApiStatus = "idle" | "loading" | "success" | "error";
+export type ApiStatus = 'idle' | 'loading' | 'success' | 'error';

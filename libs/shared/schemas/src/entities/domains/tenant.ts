@@ -3,8 +3,8 @@
  * Multi-tenancy support for hotel chains, franchises, and independent properties
  */
 
-import { z } from "zod";
-import { AuditFieldsSchema, SoftDeleteFieldsSchema, UUIDSchema } from "./common";
+import { z } from 'zod';
+import { AuditFieldsSchema, SoftDeleteFieldsSchema, UUIDSchema } from './common';
 
 // =============================================================================
 // ENUMS
@@ -14,11 +14,11 @@ import { AuditFieldsSchema, SoftDeleteFieldsSchema, UUIDSchema } from "./common"
  * Tenant type classification
  */
 export const TenantTypeSchema = z.enum([
-  "CHAIN", // Hotel chain (e.g., Marriott, Hilton)
-  "INDEPENDENT", // Independent hotel/property
-  "FRANCHISE", // Franchised property
-  "MANAGEMENT_COMPANY", // Property management company
-  "VACATION_RENTAL", // Vacation rental company (Airbnb host, etc.)
+  'CHAIN', // Hotel chain (e.g., Marriott, Hilton)
+  'INDEPENDENT', // Independent hotel/property
+  'FRANCHISE', // Franchised property
+  'MANAGEMENT_COMPANY', // Property management company
+  'VACATION_RENTAL', // Vacation rental company (Airbnb host, etc.)
 ]);
 
 export type TenantType = z.infer<typeof TenantTypeSchema>;
@@ -27,11 +27,11 @@ export type TenantType = z.infer<typeof TenantTypeSchema>;
  * Subscription plan tiers
  */
 export const SubscriptionPlanSchema = z.enum([
-  "FREE", // Free tier (limited properties)
-  "STARTER", // Small properties (1-5 properties)
-  "PROFESSIONAL", // Medium properties (6-20 properties)
-  "ENTERPRISE", // Large chains (unlimited properties)
-  "CUSTOM", // Custom enterprise plan
+  'FREE', // Free tier (limited properties)
+  'STARTER', // Small properties (1-5 properties)
+  'PROFESSIONAL', // Medium properties (6-20 properties)
+  'ENTERPRISE', // Large chains (unlimited properties)
+  'CUSTOM', // Custom enterprise plan
 ]);
 
 export type SubscriptionPlan = z.infer<typeof SubscriptionPlanSchema>;
@@ -40,11 +40,11 @@ export type SubscriptionPlan = z.infer<typeof SubscriptionPlanSchema>;
  * Tenant status
  */
 export const TenantStatusSchema = z.enum([
-  "ACTIVE", // Active and operational
-  "SUSPENDED", // Temporarily suspended
-  "TRIAL", // Trial period
-  "EXPIRED", // Subscription expired
-  "CANCELLED", // Account cancelled
+  'ACTIVE', // Active and operational
+  'SUSPENDED', // Temporarily suspended
+  'TRIAL', // Trial period
+  'EXPIRED', // Subscription expired
+  'CANCELLED', // Account cancelled
 ]);
 
 export type TenantStatus = z.infer<typeof TenantStatusSchema>;
@@ -60,8 +60,14 @@ export const TenantConfigSchema = z.object({
   // Branding
   brandingEnabled: z.boolean().default(true),
   logoUrl: z.string().url().optional(),
-  primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
-  secondaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
+  primaryColor: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/)
+    .optional(),
+  secondaryColor: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/)
+    .optional(),
 
   // Features
   enableMultiProperty: z.boolean().default(true),
@@ -76,9 +82,9 @@ export const TenantConfigSchema = z.object({
   maxReservationsPerMonth: z.number().int().positive().optional(),
 
   // Localization
-  defaultCurrency: z.string().length(3).default("USD"),
-  defaultLanguage: z.string().length(2).default("en"),
-  defaultTimezone: z.string().default("America/New_York"),
+  defaultCurrency: z.string().length(3).default('USD'),
+  defaultLanguage: z.string().length(2).default('en'),
+  defaultTimezone: z.string().default('America/New_York'),
 
   // Notifications
   enableEmailNotifications: z.boolean().default(true),
@@ -104,9 +110,9 @@ export const TenantSubscriptionSchema = z.object({
   paymentMethod: z.string().optional(), // Stripe payment method ID
 
   // Billing
-  billingCycle: z.enum(["MONTHLY", "YEARLY", "CUSTOM"]).default("MONTHLY"),
+  billingCycle: z.enum(['MONTHLY', 'YEARLY', 'CUSTOM']).default('MONTHLY'),
   amount: z.number().nonnegative(),
-  currency: z.string().length(3).default("USD"),
+  currency: z.string().length(3).default('USD'),
   nextBillingDate: z.coerce.date().optional(),
 
   // Status
@@ -132,7 +138,7 @@ export const TenantSchema = z.object({
   name: z.string().min(1).max(200),
   slug: z.string().regex(/^[a-z0-9-]+$/), // URL-friendly identifier
   type: TenantTypeSchema,
-  status: TenantStatusSchema.default("ACTIVE"),
+  status: TenantStatusSchema.default('ACTIVE'),
 
   // Contact Info
   email: z.string().email(),

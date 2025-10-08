@@ -1,0 +1,14 @@
+{
+  "recommendations": [
+    "biomejs.biome",
+    "apollographql.vscode-apollo",
+    "bradlc.vscode-tailwindcss",
+    "eamodio.gitlens",
+    "ms-azuretools.vscode-docker",
+    "vscjava.vscode-java-pack",
+    "vscjava.vscode-spring-boot-dashboard",
+    "dbaeumer.vscode-eslint",
+    "Prisma.prisma",
+    "redhat.vscode-yaml"
+  ]
+}

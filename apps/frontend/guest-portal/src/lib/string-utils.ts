@@ -8,7 +8,7 @@
  */
 export function truncate(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
-  return text.slice(0, maxLength) + "...";
+  return `${text.slice(0, maxLength)}...`;
 }
 
 /**
@@ -17,9 +17,9 @@ export function truncate(text: string, maxLength: number): string {
 export function slugify(text: string): string {
   return text
     .toLowerCase()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/[\s_-]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
 
 /**
@@ -36,16 +36,16 @@ export function capitalize(text: string): string {
 export function toTitleCase(text: string): string {
   return text
     .toLowerCase()
-    .split(" ")
+    .split(' ')
     .map((word) => capitalize(word))
-    .join(" ");
+    .join(' ');
 }
 
 /**
  * Remove extra whitespace from string
  */
 export function normalizeWhitespace(text: string): string {
-  return text.replace(/\s+/g, " ").trim();
+  return text.replace(/\s+/g, ' ').trim();
 }
 
 /**
@@ -53,8 +53,8 @@ export function normalizeWhitespace(text: string): string {
  */
 export function getInitials(name: string): string {
   return name
-    .split(" ")
+    .split(' ')
     .map((part) => part.charAt(0).toUpperCase())
     .slice(0, 2)
-    .join("");
+    .join('');
 }

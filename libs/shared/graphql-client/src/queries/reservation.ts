@@ -3,8 +3,8 @@
  * Single Responsibility: Define reservation-related queries
  */
 
-import { gql } from "@apollo/client";
-import { RESERVATION_FRAGMENT } from "../fragments/common";
+import { gql } from '@apollo/client';
+import { RESERVATION_FRAGMENT } from '../fragments/common';
 
 /**
  * Get My Reservations Query

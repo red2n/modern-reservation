@@ -24,6 +24,9 @@
       "style": {
         "noNegationElse": "off",
         "useConst": "error"
+      },
+      "suspicious": {
+        "noUnknownAtRules": "off"
       }
     }
   },

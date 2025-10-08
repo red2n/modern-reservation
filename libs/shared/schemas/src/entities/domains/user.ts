@@ -1,11 +1,11 @@
 import { z } from 'zod';
 import {
-  UUIDSchema,
-  TimestampSchema,
+  AddressSchema,
   AuditFieldsSchema,
   EmailSchema,
   PhoneSchema,
-  AddressSchema,
+  TimestampSchema,
+  UUIDSchema,
 } from './common';
 
 // =============================================================================
@@ -30,7 +30,9 @@ export const UserSchema = z.object({
   lastPasswordChange: TimestampSchema.optional(),
 
   // Status
-  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'PENDING_VERIFICATION']).default('PENDING_VERIFICATION'),
+  status: z
+    .enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'PENDING_VERIFICATION'])
+    .default('PENDING_VERIFICATION'),
   emailVerified: z.boolean().default(false),
   emailVerifiedAt: TimestampSchema.optional(),
   phoneVerified: z.boolean().default(false),
@@ -82,12 +84,12 @@ export const UserRoleSchema = z.object({
 
 // User Tenant Association - Allows users to work across multiple tenants
 export const TenantRoleSchema = z.enum([
-  'OWNER',           // Tenant owner (full access)
-  'ADMIN',           // Tenant administrator
-  'MANAGER',         // Property/operations manager
-  'STAFF',           // Staff member
-  'ACCOUNTANT',      // Financial access
-  'VIEWER'           // Read-only access
+  'OWNER', // Tenant owner (full access)
+  'ADMIN', // Tenant administrator
+  'MANAGER', // Property/operations manager
+  'STAFF', // Staff member
+  'ACCOUNTANT', // Financial access
+  'VIEWER', // Read-only access
 ]);
 
 export const UserTenantAssociationSchema = z.object({
@@ -202,12 +204,7 @@ export const UserPreferencesSchema = z.object({
 });
 
 // User Status Enumeration
-export const UserStatusSchema = z.enum([
-  'active',
-  'inactive',
-  'suspended',
-  'pending_verification'
-]);
+export const UserStatusSchema = z.enum(['active', 'inactive', 'suspended', 'pending_verification']);
 
 // Device Type Enumeration
 export const DeviceTypeSchema = z.enum(['desktop', 'mobile', 'tablet', 'api']);

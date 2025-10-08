@@ -1,13 +1,12 @@
 // Main export file for all shared schemas and types
-export * from './entities';
-export * from './events';
-export * from './utils/tenant-helpers';
-
-// Export API module separately to avoid conflicts
-export * as API from './api';
 
 // Re-export commonly used Zod utilities
 export { z } from 'zod';
+// Export API module separately to avoid conflicts
+export * as API from './api';
+export * from './entities';
+export * from './events';
+export * from './utils/tenant-helpers';
 
 // Version information
 export const SCHEMA_VERSION = '2.0.0';
@@ -43,12 +42,12 @@ export const VALIDATION_PATTERNS = {
 // Schema transformation utilities
 import { z } from 'zod';
 
-export const transformToUpperCase = z.string().transform(str => str.toUpperCase());
-export const transformToLowerCase = z.string().transform(str => str.toLowerCase());
-export const transformTrimString = z.string().transform(str => str.trim());
+export const transformToUpperCase = z.string().transform((str) => str.toUpperCase());
+export const transformToLowerCase = z.string().transform((str) => str.toLowerCase());
+export const transformTrimString = z.string().transform((str) => str.trim());
 
 export const createOptionalWithDefault = <T>(schema: z.ZodSchema<T>, defaultValue: T) =>
-  schema.optional().transform(val => val ?? defaultValue);
+  schema.optional().transform((val) => val ?? defaultValue);
 
 // Environment-specific schema configurations
 export const createSchemaConfig = (environment: 'development' | 'staging' | 'production') => ({
@@ -171,7 +170,8 @@ export const convertCamelCaseToDbRow = (obj: Record<string, any>): Record<string
   );
 
   for (const [key, value] of Object.entries(obj)) {
-    const snakeKey = reverseMapping[key] || key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+    const snakeKey =
+      reverseMapping[key] || key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
     converted[snakeKey] = value;
   }
 

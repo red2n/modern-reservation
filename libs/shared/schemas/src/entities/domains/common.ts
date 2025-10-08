@@ -8,17 +8,25 @@ import { z } from 'zod';
 export const UUIDSchema = z.string().uuid('Invalid UUID format');
 
 // Date/Time Schemas
-export const DateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)');
+export const DateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)');
 export const TimeSchema = z.string().regex(/^\d{2}:\d{2}:\d{2}$/, 'Invalid time format (HH:MM:SS)');
 export const TimestampSchema = z.string().datetime('Invalid datetime format');
 
 // Currency and Money
-export const CurrencyCodeSchema = z.string().length(3, 'Currency code must be 3 characters').toUpperCase();
-export const MoneyAmountSchema = z.number().nonnegative('Amount must be non-negative').multipleOf(0.01);
+export const CurrencyCodeSchema = z
+  .string()
+  .length(3, 'Currency code must be 3 characters')
+  .toUpperCase();
+export const MoneyAmountSchema = z
+  .number()
+  .nonnegative('Amount must be non-negative')
+  .multipleOf(0.01);
 
 // Contact Information
 export const EmailSchema = z.string().email('Invalid email format').max(255);
-export const PhoneSchema = z.string().regex(/^\+?[\d\s\-\(\)]{7,20}$/, 'Invalid phone number format');
+export const PhoneSchema = z.string().regex(/^\+?[\d\s\-()]{7,20}$/, 'Invalid phone number format');
 
 // Address Schema
 export const AddressSchema = z.object({

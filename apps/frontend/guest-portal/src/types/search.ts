@@ -3,27 +3,27 @@
  * Single Responsibility: Define search-related types only
  */
 
-import type { GuestCount, Property, PropertyType } from "./index";
+import type { GuestCount, Property, PropertyType } from './index';
 
 // Amenity types (frontend-specific until backend schema is updated)
 export type AmenityCategory =
-  | "wifi"
-  | "parking"
-  | "pool"
-  | "gym"
-  | "spa"
-  | "restaurant"
-  | "bar"
-  | "room_service"
-  | "concierge"
-  | "pet_friendly";
+  | 'wifi'
+  | 'parking'
+  | 'pool'
+  | 'gym'
+  | 'spa'
+  | 'restaurant'
+  | 'bar'
+  | 'room_service'
+  | 'concierge'
+  | 'pet_friendly';
 
 export type SortOption =
-  | "PRICE_LOW_TO_HIGH"
-  | "PRICE_HIGH_TO_LOW"
-  | "RATING"
-  | "POPULARITY"
-  | "DISTANCE";
+  | 'PRICE_LOW_TO_HIGH'
+  | 'PRICE_HIGH_TO_LOW'
+  | 'RATING'
+  | 'POPULARITY'
+  | 'DISTANCE';
 
 // =============================================================================
 // Base search interfaces (Interface Segregation Principle)
@@ -90,6 +90,6 @@ export interface SearchFilters {
 export interface LocationSuggestion {
   id: string;
   name: string;
-  type: "CITY" | "COUNTRY" | "PROPERTY";
+  type: 'CITY' | 'COUNTRY' | 'PROPERTY';
   description?: string;
 }

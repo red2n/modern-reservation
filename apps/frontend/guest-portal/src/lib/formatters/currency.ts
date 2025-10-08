@@ -8,11 +8,11 @@
  */
 export function formatCurrency(
   amount: number,
-  currency: string = "USD",
-  locale: string = "en-US",
+  currency: string = 'USD',
+  locale: string = 'en-US'
 ): string {
   return new Intl.NumberFormat(locale, {
-    style: "currency",
+    style: 'currency',
     currency: currency,
   }).format(amount);
 }
@@ -22,13 +22,13 @@ export function formatCurrency(
  */
 export function formatCompactCurrency(
   amount: number,
-  currency: string = "USD",
-  locale: string = "en-US",
+  currency: string = 'USD',
+  locale: string = 'en-US'
 ): string {
   return new Intl.NumberFormat(locale, {
-    style: "currency",
+    style: 'currency',
     currency: currency,
-    notation: "compact",
+    notation: 'compact',
     maximumFractionDigits: 1,
   }).format(amount);
 }
@@ -37,5 +37,5 @@ export function formatCompactCurrency(
  * Parse currency string to number
  */
 export function parseCurrency(value: string): number {
-  return Number.parseFloat(value.replace(/[^0-9.-]+/g, ""));
+  return Number.parseFloat(value.replace(/[^0-9.-]+/g, ''));
 }

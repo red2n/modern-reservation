@@ -3,7 +3,7 @@
  * Types are inferred from Zod schemas for single source of truth
  */
 
-import type { z } from "zod";
+import type { z } from 'zod';
 import type {
   AddressSchema,
   GuestSchema,
@@ -16,7 +16,7 @@ import type {
   RoomSchema,
   RoomStatusSchema,
   RoomTypeSchema,
-} from "../schemas";
+} from '../schemas';
 
 // =============================================================================
 // CORE ENTITY TYPES (from shared schemas)
@@ -44,9 +44,7 @@ export type ReservationStatus = z.infer<typeof ReservationStatusSchema>;
 
 // Payment types
 export type PaymentMethod = z.infer<typeof PaymentSchemas.PaymentMethod>;
-export type PaymentTransaction = z.infer<
-  typeof PaymentSchemas.PaymentTransaction
->;
+export type PaymentTransaction = z.infer<typeof PaymentSchemas.PaymentTransaction>;
 export type PaymentStatus = z.infer<typeof PaymentSchemas.PaymentStatus>;
 
 // =============================================================================
@@ -67,7 +65,7 @@ export type {
   ApiStatus,
   PaginatedResponse,
   ValidationError,
-} from "./api";
+} from './api';
 
 // Review types (UI-specific)
 export type {
@@ -76,7 +74,7 @@ export type {
   Review,
   ReviewResponse,
   ReviewSummary,
-} from "./review";
+} from './review';
 // Search types (UI-specific)
 export type {
   LocationSuggestion,
@@ -85,7 +83,7 @@ export type {
   SearchParams,
   SearchResults,
   SortOption,
-} from "./search";
+} from './search';
 
 // UI state types
 export type {
@@ -99,4 +97,4 @@ export type {
   TabState,
   ToastState,
   ToastType,
-} from "./ui";
+} from './ui';

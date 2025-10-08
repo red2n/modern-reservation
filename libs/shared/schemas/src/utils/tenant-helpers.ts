@@ -1,12 +1,4 @@
-import { z } from 'zod';
-import {
-  TenantSchema,
-  TenantStatusSchema,
-  TenantContextSchema,
-  type Tenant,
-  type TenantStatus,
-  type TenantContext,
-} from '../entities/domains/tenant';
+import { type Tenant, type TenantContext, TenantContextSchema } from '../entities/domains/tenant';
 
 // =============================================================================
 // TENANT VALIDATION HELPERS
@@ -19,10 +11,7 @@ import {
  * @returns boolean - true if access is allowed
  * @throws Error if access is denied
  */
-export function validateTenantAccess(
-  context: TenantContext,
-  resourceTenantId: string
-): boolean {
+export function validateTenantAccess(context: TenantContext, resourceTenantId: string): boolean {
   if (!context.tenantId) {
     throw new Error('No tenant context available');
   }
@@ -30,7 +19,7 @@ export function validateTenantAccess(
   if (context.tenantId !== resourceTenantId) {
     throw new Error(
       `Access denied: Resource belongs to different tenant. ` +
-      `User tenant: ${context.tenantId}, Resource tenant: ${resourceTenantId}`
+        `User tenant: ${context.tenantId}, Resource tenant: ${resourceTenantId}`
     );
   }
 
@@ -43,10 +32,7 @@ export function validateTenantAccess(
  * @param resourceTenantId - The tenant ID of the resource being accessed
  * @returns boolean - true if access is allowed, false otherwise
  */
-export function hasTenantAccess(
-  context: TenantContext,
-  resourceTenantId: string
-): boolean {
+export function hasTenantAccess(context: TenantContext, resourceTenantId: string): boolean {
   try {
     return validateTenantAccess(context, resourceTenantId);
   } catch {
@@ -330,12 +316,12 @@ export function validateTenantConsistency(
   items: Array<{ tenantId: string }>,
   expectedTenantId: string
 ): boolean {
-  const invalidItems = items.filter(item => item.tenantId !== expectedTenantId);
+  const invalidItems = items.filter((item) => item.tenantId !== expectedTenantId);
 
   if (invalidItems.length > 0) {
     throw new Error(
       `Tenant consistency violation: Found ${invalidItems.length} items ` +
-      `belonging to different tenants`
+        `belonging to different tenants`
     );
   }
 

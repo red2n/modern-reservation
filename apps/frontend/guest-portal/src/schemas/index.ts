@@ -3,7 +3,7 @@
  * Single source of truth for all entity schemas and types
  */
 
-import type { z } from "zod";
+import type { z } from 'zod';
 
 // Import all entity schemas from shared package
 export {
@@ -38,10 +38,10 @@ export {
   TimeSchema,
   TimestampSchema,
   UUIDSchema,
-} from "@modern-reservation/schemas";
+} from '@modern-reservation/schemas';
 
 // Re-export Zod for convenience
-export { z } from "zod";
+export { z } from 'zod';
 
 // Helper to infer types from schemas
 export type InferSchema<T extends z.ZodType> = z.infer<T>;

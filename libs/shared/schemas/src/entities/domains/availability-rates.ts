@@ -1,12 +1,10 @@
 import { z } from 'zod';
 import {
-  UUIDSchema,
-  DateSchema,
-  TimestampSchema,
   AuditFieldsSchema,
-  SoftDeleteFieldsSchema,
+  DateSchema,
   MoneyAmountSchema,
-  CurrencyCodeSchema,
+  SoftDeleteFieldsSchema,
+  UUIDSchema,
 } from './common';
 
 // =============================================================================
@@ -14,13 +12,7 @@ import {
 // =============================================================================
 
 // Rate Status - Matches DB enum (UPPERCASE)
-export const RateStatusSchema = z.enum([
-  'DRAFT',
-  'ACTIVE',
-  'SUSPENDED',
-  'EXPIRED',
-  'ARCHIVED'
-]);
+export const RateStatusSchema = z.enum(['DRAFT', 'ACTIVE', 'SUSPENDED', 'EXPIRED', 'ARCHIVED']);
 
 // Rate Strategy - Matches DB enum (UPPERCASE)
 export const RateStrategySchema = z.enum([
@@ -33,17 +25,11 @@ export const RateStrategySchema = z.enum([
   'OCCUPANCY_BASED',
   'REVENUE_OPTIMIZATION',
   'COMPETITIVE',
-  'PROMOTIONAL'
+  'PROMOTIONAL',
 ]);
 
 // Season Type - Matches DB enum (UPPERCASE)
-export const SeasonTypeSchema = z.enum([
-  'PEAK',
-  'HIGH',
-  'REGULAR',
-  'LOW',
-  'OFF_PEAK'
-]);
+export const SeasonTypeSchema = z.enum(['PEAK', 'HIGH', 'REGULAR', 'LOW', 'OFF_PEAK']);
 
 // Availability Status - Matches DB enum (UPPERCASE)
 export const AvailabilityStatusSchema = z.enum([
@@ -51,7 +37,7 @@ export const AvailabilityStatusSchema = z.enum([
   'OCCUPIED',
   'MAINTENANCE',
   'BLOCKED',
-  'RESERVED'
+  'RESERVED',
 ]);
 
 // Room Category - Matches DB enum (UPPERCASE)
@@ -60,16 +46,11 @@ export const RoomCategorySchema = z.enum([
   'DELUXE',
   'SUITE',
   'EXECUTIVE',
-  'PRESIDENTIAL'
+  'PRESIDENTIAL',
 ]);
 
 // Pricing Method - Matches DB enum (UPPERCASE)
-export const PricingMethodSchema = z.enum([
-  'FIXED',
-  'DYNAMIC',
-  'SEASONAL',
-  'OCCUPANCY_BASED'
-]);
+export const PricingMethodSchema = z.enum(['FIXED', 'DYNAMIC', 'SEASONAL', 'OCCUPANCY_BASED']);
 
 // Time Granularity - Matches DB enum (UPPERCASE)
 export const TimeGranularitySchema = z.enum([
@@ -78,7 +59,7 @@ export const TimeGranularitySchema = z.enum([
   'WEEKLY',
   'MONTHLY',
   'QUARTERLY',
-  'YEARLY'
+  'YEARLY',
 ]);
 
 // Analytics Status - Matches DB enum (UPPERCASE)
@@ -88,7 +69,7 @@ export const AnalyticsStatusSchema = z.enum([
   'COMPLETED',
   'FAILED',
   'EXPIRED',
-  'CACHED'
+  'CACHED',
 ]);
 
 // Metric Type - Matches DB enum (UPPERCASE)
@@ -109,7 +90,7 @@ export const MetricTypeSchema = z.enum([
   'CONVERSION_RATE',
   'CHANNEL_CONTRIBUTION',
   'MARKET_SEGMENT_MIX',
-  'CUSTOM'
+  'CUSTOM',
 ]);
 
 export const RatePlanSchema = z.object({
@@ -202,7 +183,13 @@ export const RateRestrictionSchema = z.object({
   propertyId: UUIDSchema,
   roomTypeId: UUIDSchema.optional(),
   ratePlanId: UUIDSchema.optional(),
-  restrictionType: z.enum(['min_stay', 'max_stay', 'closed_arrival', 'closed_departure', 'stop_sell']),
+  restrictionType: z.enum([
+    'min_stay',
+    'max_stay',
+    'closed_arrival',
+    'closed_departure',
+    'stop_sell',
+  ]),
   value: z.number().int().optional(),
   startDate: DateSchema,
   endDate: DateSchema,
@@ -255,13 +242,15 @@ export const RateCalendarSchema = z.object({
 
   // Rates by Date
   rates: z.record(MoneyAmountSchema), // Date string as key, rate as value
-  restrictions: z.record(z.object({
-    minStay: z.number().int().optional(),
-    maxStay: z.number().int().optional(),
-    closedArrival: z.boolean().default(false),
-    closedDeparture: z.boolean().default(false),
-    stopSell: z.boolean().default(false),
-  })),
+  restrictions: z.record(
+    z.object({
+      minStay: z.number().int().optional(),
+      maxStay: z.number().int().optional(),
+      closedArrival: z.boolean().default(false),
+      closedDeparture: z.boolean().default(false),
+      stopSell: z.boolean().default(false),
+    })
+  ),
 
   // Availability by Date
   availability: z.record(z.number().int().min(0)), // Date string as key, available rooms as value
@@ -281,11 +270,13 @@ export const PackageRateSchema = z.object({
   // Package Components
   includesAccommodation: z.boolean().default(true),
   includedServices: z.array(z.string()),
-  additionalCharges: z.array(z.object({
-    serviceName: z.string(),
-    amount: MoneyAmountSchema,
-    isOptional: z.boolean().default(false),
-  })),
+  additionalCharges: z.array(
+    z.object({
+      serviceName: z.string(),
+      amount: MoneyAmountSchema,
+      isOptional: z.boolean().default(false),
+    })
+  ),
 
   // Pricing
   basePackageRate: MoneyAmountSchema,

@@ -4,16 +4,15 @@
 // This file exports all domain-specific Zod schemas from individual modules
 // for improved development workflow and maintainability
 
+export * from './domains/availability-rates';
 // Common/Shared Schemas
 export * from './domains/common';
-
+export * from './domains/guest';
+export * from './domains/payment';
+export * from './domains/property';
+export * from './domains/reservation';
 // Domain-Specific Schemas
 export * from './domains/tenant';
-export * from './domains/property';
-export * from './domains/guest';
-export * from './domains/reservation';
-export * from './domains/payment';
-export * from './domains/availability-rates';
 export * from './domains/user';
 
 // =============================================================================
@@ -21,94 +20,90 @@ export * from './domains/user';
 // =============================================================================
 
 import {
-  // Common Schemas
-  UUIDSchema,
-  DateSchema,
-  TimeSchema,
-  TimestampSchema,
-  CurrencyCodeSchema,
-  MoneyAmountSchema,
-  EmailSchema,
-  PhoneSchema,
+  AnalyticsStatusSchema,
+  AvailabilityStatusSchema,
+  DailyRateSchema,
+  DynamicPricingRuleSchema,
+  MetricTypeSchema,
+  PackageRateSchema,
+  PricingMethodSchema,
+  RateCalendarSchema,
+  RatePlanSchema,
+  RatePlanTypeSchema,
+  RateRestrictionSchema,
+  RateStatusSchema,
+  RateStrategySchema,
+  RoomCategorySchema,
+  SeasonalRateSchema,
+  SeasonTypeSchema,
+  TimeGranularitySchema,
+} from './domains/availability-rates';
+import {
   AddressSchema,
   AuditFieldsSchema,
+  CurrencyCodeSchema,
+  DateSchema,
+  EmailSchema,
+  MoneyAmountSchema,
+  PhoneSchema,
   SoftDeleteFieldsSchema,
   StatusSchema,
+  TimeSchema,
+  TimestampSchema,
+  // Common Schemas
+  UUIDSchema,
 } from './domains/common';
 
 import {
+  GenderSchema,
+  GuestCommunicationSchema,
+  GuestPreferenceSchema,
+  GuestSchema,
+  GuestStayHistorySchema,
+  LoyaltyTierSchema,
+} from './domains/guest';
+import {
+  PaymentGatewaySchema,
+  PaymentMethodSchema,
+  PaymentMethodTypeSchema,
+  PaymentPlanSchema,
+  PaymentScheduleSchema,
+  PaymentStatusSchema,
+  PaymentTransactionSchema,
+  RefundRequestSchema,
+  TransactionTypeSchema,
+} from './domains/payment';
+import {
   PropertyGroupSchema,
   PropertySchema,
-  RoomTypeSchema,
-  RoomSchema,
   PropertyTypeSchema,
+  RoomSchema,
   RoomStatusSchema,
+  RoomTypeSchema,
 } from './domains/property';
-
 import {
-  GuestSchema,
-  GenderSchema,
-  LoyaltyTierSchema,
-  GuestPreferenceSchema,
-  GuestStayHistorySchema,
-  GuestCommunicationSchema,
-} from './domains/guest';
-
-import {
-  ReservationStatusSchema,
-  ReservationSourceSchema,
-  ReservationSchema,
-  ReservationGuestSchema,
-  ReservationRoomSchema,
-  ReservationModificationSchema,
-  ReservationServiceSchema,
   GuestTypeSchema,
+  ReservationGuestSchema,
+  ReservationModificationSchema,
+  ReservationRoomSchema,
+  ReservationSchema,
+  ReservationServiceSchema,
+  ReservationSourceSchema,
+  ReservationStatusSchema,
 } from './domains/reservation';
 
 import {
-  PaymentStatusSchema,
-  PaymentMethodSchema,
-  PaymentTransactionSchema,
-  PaymentGatewaySchema,
-  PaymentPlanSchema,
-  PaymentScheduleSchema,
-  RefundRequestSchema,
-  PaymentMethodTypeSchema,
-  TransactionTypeSchema,
-} from './domains/payment';
-
-import {
-  RatePlanSchema,
-  DailyRateSchema,
-  SeasonalRateSchema,
-  RateRestrictionSchema,
-  DynamicPricingRuleSchema,
-  RateCalendarSchema,
-  PackageRateSchema,
-  RatePlanTypeSchema,
-  RateStatusSchema,
-  RateStrategySchema,
-  SeasonTypeSchema,
-  AvailabilityStatusSchema,
-  RoomCategorySchema,
-  PricingMethodSchema,
-  TimeGranularitySchema,
-  AnalyticsStatusSchema,
-  MetricTypeSchema,
-} from './domains/availability-rates';
-
-import {
-  UserSchema,
-  RoleSchema,
-  UserRoleSchema,
-  PermissionSchema,
-  UserSessionSchema,
-  PasswordResetTokenSchema,
+  DeviceTypeSchema,
   EmailVerificationTokenSchema,
+  PasswordResetTokenSchema,
+  PermissionSchema,
+  RoleSchema,
   UserAuditLogSchema,
   UserPreferencesSchema,
+  UserRoleSchema,
+  UserSchema,
+  UserSessionSchema,
   UserStatusSchema,
-  DeviceTypeSchema,
 } from './domains/user';
 
 // =============================================================================
@@ -250,13 +245,13 @@ export const EntitySchemas = {
  * Validates data against a specific domain schema collection
  */
 export const validateDomain = {
-  common: (data: unknown) => CommonSchemas,
-  property: (data: unknown) => PropertySchemas,
-  guest: (data: unknown) => GuestSchemas,
-  reservation: (data: unknown) => ReservationSchemas,
-  payment: (data: unknown) => PaymentSchemas,
-  availabilityRates: (data: unknown) => AvailabilityRateSchemas,
-  user: (data: unknown) => UserSchemas,
+  common: (_data: unknown) => CommonSchemas,
+  property: (_data: unknown) => PropertySchemas,
+  guest: (_data: unknown) => GuestSchemas,
+  reservation: (_data: unknown) => ReservationSchemas,
+  payment: (_data: unknown) => PaymentSchemas,
+  availabilityRates: (_data: unknown) => AvailabilityRateSchemas,
+  user: (_data: unknown) => UserSchemas,
 };
 
 /**
@@ -264,13 +259,21 @@ export const validateDomain = {
  */
 export const getDomainSchemas = (domain: keyof typeof validateDomain) => {
   switch (domain) {
-    case 'common': return CommonSchemas;
-    case 'property': return PropertySchemas;
-    case 'guest': return GuestSchemas;
-    case 'reservation': return ReservationSchemas;
-    case 'payment': return PaymentSchemas;
-    case 'availabilityRates': return AvailabilityRateSchemas;
-    case 'user': return UserSchemas;
-    default: throw new Error(`Unknown domain: ${domain}`);
+    case 'common':
+      return CommonSchemas;
+    case 'property':
+      return PropertySchemas;
+    case 'guest':
+      return GuestSchemas;
+    case 'reservation':
+      return ReservationSchemas;
+    case 'payment':
+      return PaymentSchemas;
+    case 'availabilityRates':
+      return AvailabilityRateSchemas;
+    case 'user':
+      return UserSchemas;
+    default:
+      throw new Error(`Unknown domain: ${domain}`);
   }
 };

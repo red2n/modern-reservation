@@ -3,12 +3,8 @@
  * Single Responsibility: Define property-related queries
  */
 
-import { gql } from "@apollo/client";
-import {
-  IMAGE_FRAGMENT,
-  PROPERTY_BASIC_FRAGMENT,
-  ROOM_TYPE_FRAGMENT,
-} from "../fragments/common";
+import { gql } from '@apollo/client';
+import { IMAGE_FRAGMENT, PROPERTY_BASIC_FRAGMENT, ROOM_TYPE_FRAGMENT } from '../fragments/common';
 
 /**
  * Search Properties Query

@@ -3,26 +3,20 @@
  * Single Responsibility: Configure and create Apollo Client instance
  */
 
-import {
-  ApolloClient,
-  ApolloLink,
-  from,
-  HttpLink,
-  InMemoryCache,
-} from "@apollo/client";
-import { onError } from "@apollo/client/link/error/index.js";
-import { RetryLink } from "@apollo/client/link/retry/index.js";
+import { ApolloClient, ApolloLink, from, HttpLink, InMemoryCache } from '@apollo/client';
+import { onError } from '@apollo/client/link/error/index.js';
+import { RetryLink } from '@apollo/client/link/retry/index.js';
 
 // GraphQL API endpoint
 const GRAPHQL_ENDPOINT =
-  process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:8080/graphql";
+  process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'http://localhost:8080/graphql';
 
 /**
  * HTTP Link for GraphQL requests
  */
 const httpLink = new HttpLink({
   uri: GRAPHQL_ENDPOINT,
-  credentials: "include", // Include cookies for authentication
+  credentials: 'include', // Include cookies for authentication
 });
 
 /**
@@ -33,19 +27,19 @@ const errorLink = onError((errorResponse: any) => {
 
   if (graphQLErrors && Array.isArray(graphQLErrors)) {
     graphQLErrors.forEach((error: any) => {
-      console.error("[GraphQL error]:", error.message, error.extensions);
+      console.error('[GraphQL error]:', error.message, error.extensions);
 
       // Handle authentication errors
-      if (error.extensions?.code === "UNAUTHENTICATED") {
-        if (typeof window !== "undefined") {
-          window.location.href = "/login";
+      if (error.extensions?.code === 'UNAUTHENTICATED') {
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
         }
       }
     });
   }
 
   if (networkError) {
-    console.error("[Network error]:", networkError);
+    console.error('[Network error]:', networkError);
   }
 });
 
@@ -62,9 +56,7 @@ const retryLink = new RetryLink({
     max: 3,
     retryIf: (error) => {
       // Retry on network errors and 5xx server errors
-      return (
-        !!error && "statusCode" in error && (error.statusCode as number) >= 500
-      );
+      return !!error && 'statusCode' in error && (error.statusCode as number) >= 500;
     },
   },
 });
@@ -74,8 +66,7 @@ const retryLink = new RetryLink({
  */
 const authLink = new ApolloLink((operation, forward) => {
   // Get token from localStorage or cookies
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
 
   // Add authorization header if token exists
   operation.setContext(({ headers = {} }) => ({
@@ -97,7 +88,7 @@ const cache = new InMemoryCache({
       fields: {
         // Pagination for properties
         searchProperties: {
-          keyArgs: ["filters", "sort"],
+          keyArgs: ['filters', 'sort'],
           merge(existing, incoming, { args }) {
             if (!existing || args?.pagination?.page === 1) {
               return incoming;
@@ -110,7 +101,7 @@ const cache = new InMemoryCache({
         },
         // Pagination for reservations
         myReservations: {
-          keyArgs: ["filters"],
+          keyArgs: ['filters'],
           merge(existing, incoming, { args }) {
             if (!existing || args?.pagination?.page === 1) {
               return incoming;
@@ -124,16 +115,16 @@ const cache = new InMemoryCache({
       },
     },
     Property: {
-      keyFields: ["id"],
+      keyFields: ['id'],
     },
     Room: {
-      keyFields: ["id"],
+      keyFields: ['id'],
     },
     Reservation: {
-      keyFields: ["id"],
+      keyFields: ['id'],
     },
     Guest: {
-      keyFields: ["id"],
+      keyFields: ['id'],
     },
   },
 });
@@ -147,15 +138,15 @@ export function createApolloClient() {
     cache,
     defaultOptions: {
       watchQuery: {
-        fetchPolicy: "cache-and-network",
-        errorPolicy: "all",
+        fetchPolicy: 'cache-and-network',
+        errorPolicy: 'all',
       },
       query: {
-        fetchPolicy: "network-only",
-        errorPolicy: "all",
+        fetchPolicy: 'network-only',
+        errorPolicy: 'all',
       },
       mutate: {
-        errorPolicy: "all",
+        errorPolicy: 'all',
       },
     },
   });

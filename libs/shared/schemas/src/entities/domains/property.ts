@@ -1,16 +1,14 @@
 import { z } from 'zod';
 import {
-  UUIDSchema,
-  TimestampSchema,
-  AuditFieldsSchema,
-  SoftDeleteFieldsSchema,
-  CurrencyCodeSchema,
-  MoneyAmountSchema,
-  DateSchema,
-  TimeSchema,
-  EmailSchema,
-  PhoneSchema,
   AddressSchema,
+  AuditFieldsSchema,
+  CurrencyCodeSchema,
+  EmailSchema,
+  MoneyAmountSchema,
+  PhoneSchema,
+  SoftDeleteFieldsSchema,
+  TimeSchema,
+  UUIDSchema,
 } from './common';
 
 // =============================================================================
@@ -103,7 +101,9 @@ export const RoomSchema = z.object({
   maintenanceNotes: z.string().optional(),
 
   // Status
-  status: z.enum(['available', 'occupied', 'maintenance', 'out_of_order', 'cleaning']).default('available'),
+  status: z
+    .enum(['available', 'occupied', 'maintenance', 'out_of_order', 'cleaning'])
+    .default('available'),
 
   ...AuditFieldsSchema.shape,
   ...SoftDeleteFieldsSchema.shape,
@@ -111,7 +111,13 @@ export const RoomSchema = z.object({
 
 // Property-specific enums
 export const PropertyTypeSchema = z.enum(['hotel', 'resort', 'apartment', 'villa', 'hostel']);
-export const RoomStatusSchema = z.enum(['available', 'occupied', 'maintenance', 'out_of_order', 'cleaning']);
+export const RoomStatusSchema = z.enum([
+  'available',
+  'occupied',
+  'maintenance',
+  'out_of_order',
+  'cleaning',
+]);
 
 // =============================================================================
 // TYPE EXPORTS

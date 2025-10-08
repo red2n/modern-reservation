@@ -9,16 +9,13 @@ type DateInput = Date | string;
  * Parse date input to Date object
  */
 function parseDate(date: DateInput): Date {
-  return typeof date === "string" ? new Date(date) : date;
+  return typeof date === 'string' ? new Date(date) : date;
 }
 
 /**
  * Calculate number of nights between check-in and check-out dates
  */
-export function calculateNights(
-  checkIn: DateInput,
-  checkOut: DateInput,
-): number {
+export function calculateNights(checkIn: DateInput, checkOut: DateInput): number {
   const checkInDate = parseDate(checkIn);
   const checkOutDate = parseDate(checkOut);
 

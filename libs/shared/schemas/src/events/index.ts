@@ -151,8 +151,22 @@ export const ReservationStatusChangedEventSchema = BaseEventSchema.extend({
     propertyId: z.string().uuid(),
     roomId: z.string().uuid(),
     guestId: z.string().uuid(),
-    oldStatus: z.enum(['pending', 'confirmed', 'checked_in', 'checked_out', 'cancelled', 'no_show']),
-    newStatus: z.enum(['pending', 'confirmed', 'checked_in', 'checked_out', 'cancelled', 'no_show']),
+    oldStatus: z.enum([
+      'pending',
+      'confirmed',
+      'checked_in',
+      'checked_out',
+      'cancelled',
+      'no_show',
+    ]),
+    newStatus: z.enum([
+      'pending',
+      'confirmed',
+      'checked_in',
+      'checked_out',
+      'cancelled',
+      'no_show',
+    ]),
     reason: z.string().optional(),
     changedBy: z.string().uuid(),
   }),
@@ -200,7 +214,9 @@ export const CheckOutEventSchema = BaseEventSchema.extend({
     actualCheckOutTime: z.string().datetime(),
     finalBill: z.number().positive(),
     outstandingCharges: z.number().nonnegative().default(0),
-    roomCondition: z.enum(['good', 'needs_cleaning', 'maintenance_required', 'damaged']).default('good'),
+    roomCondition: z
+      .enum(['good', 'needs_cleaning', 'maintenance_required', 'damaged'])
+      .default('good'),
     checkedOutBy: z.string().uuid(),
   }),
 });

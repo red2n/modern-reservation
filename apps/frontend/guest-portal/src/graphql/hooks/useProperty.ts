@@ -3,15 +3,15 @@
  * Single Responsibility: Custom hooks for property queries
  */
 
-"use client";
+'use client';
 
-import { useQuery, useSuspenseQuery } from "@apollo/client/react";
+import { useQuery, useSuspenseQuery } from '@apollo/client/react';
 import {
   GET_AVAILABLE_ROOMS,
   GET_PROPERTY_DETAILS,
   GET_PROPERTY_REVIEWS,
   SEARCH_PROPERTIES,
-} from "@modern-reservation/graphql-client";
+} from '@modern-reservation/graphql-client';
 
 /**
  * Hook to search properties
@@ -31,7 +31,7 @@ export function useSearchProperties(
     page?: number;
     limit?: number;
   },
-  options?: Omit<Parameters<typeof useQuery>[1], "variables">,
+  options?: Omit<Parameters<typeof useQuery>[1], 'variables'>
 ) {
   return useQuery(SEARCH_PROPERTIES, {
     variables,
@@ -72,7 +72,7 @@ export function usePropertyReviews(
     page?: number;
     limit?: number;
     sortBy?: string;
-  },
+  }
 ) {
   return useQuery(GET_PROPERTY_REVIEWS, {
     variables: {

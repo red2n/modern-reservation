@@ -3,7 +3,7 @@
  * Single Responsibility: Define reusable GraphQL fragments
  */
 
-import { gql } from "@apollo/client";
+import { gql } from '@apollo/client';
 
 /**
  * Address Fragment

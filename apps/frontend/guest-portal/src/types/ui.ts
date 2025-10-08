@@ -2,11 +2,11 @@
  * UI state type definitions
  */
 
-export type LoadingState = "idle" | "loading" | "success" | "error";
+export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
 
-export type ModalType = "login" | "signup" | "booking" | "gallery" | "confirm";
+export type ModalType = 'login' | 'signup' | 'booking' | 'gallery' | 'confirm';
 
-export type ToastType = "success" | "error" | "warning" | "info";
+export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
 export interface ModalState {
   isOpen: boolean;
@@ -46,5 +46,5 @@ export interface DropdownState {
 export interface DatePickerState {
   startDate?: Date;
   endDate?: Date;
-  focusedInput?: "startDate" | "endDate";
+  focusedInput?: 'startDate' | 'endDate';
 }

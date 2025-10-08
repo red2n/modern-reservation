@@ -1,0 +1,190 @@
+{
+  "$schema": "https://aka.ms/copilot/toolsets-schema",
+  "version": "1.0",
+  "description": "GitHub Copilot toolsets configuration for Modern Reservation project",
+  "toolsets": {
+    "modern-reservation": {
+      "description": "Modern Reservation project-specific tools and conventions",
+      "icon": "tools",
+      "tools": [
+        "ripgrep",
+        "biome",
+        "dev.sh",
+        "docker",
+        "postgresql",
+        "maven",
+        "npm"
+      ],
+      "instructions": [
+        "Read core principles from .github/instructions/00-core-principles.md",
+        "Read project instructions from .github/copilot-instructions.md",
+        "Always use ripgrep (rg) instead of grep for searching files",
+        "Use Biome.js for code formatting and linting, never ESLint or Prettier",
+        "Use ./dev.sh script for all service operations (start, stop, status, clean)",
+        "Use UPPERCASE enum values to match PostgreSQL (e.g., 'PENDING', 'CONFIRMED')",
+        "Use file: protocol for monorepo dependencies, never npm link or workspace:*",
+        "Always import from shared packages: @modern-reservation/schemas, @modern-reservation/graphql-client",
+        "Never create local schema definitions, use @modern-reservation/schemas",
+        "Never create separate Apollo clients, use @modern-reservation/graphql-client",
+        "Code style: single quotes, 2-space indent, 100 char line width, always semicolons"
+      ]
+    },
+    "search-tools": {
+      "description": "Fast searching with ripgrep",
+      "icon": "search",
+      "tools": ["ripgrep"],
+      "instructions": [
+        "Use 'rg' instead of 'grep' for faster file searching",
+        "Use 'rg --type-list' to see available file types",
+        "Use 'rg -t ts' to search TypeScript files",
+        "Use 'rg -t java' to search Java files",
+        "Use 'rg -g \"*.json\"' for JSON files",
+        "Use 'rg -i' for case-insensitive search",
+        "Use 'rg -l' to list only filenames",
+        "Use 'rg --context 3' to show 3 lines before/after match",
+        "Use 'rg -A 5' to show 5 lines after match",
+        "Use 'rg -B 5' to show 5 lines before match"
+      ]
+    },
+    "code-quality": {
+      "description": "Code formatting and linting with Biome.js",
+      "icon": "sparkle",
+      "tools": ["biome"],
+      "instructions": [
+        "Use 'npx biome check .' to check code quality",
+        "Use 'npx biome check --write .' to auto-fix issues",
+        "Use 'npx biome check --write --unsafe .' for unsafe fixes",
+        "Use './dev.sh biome-check' to check all projects",
+        "Use './dev.sh biome-fix' to fix all projects",
+        "Never suggest ESLint, Prettier, or other formatters",
+        "Biome config: single quotes, 2-space indent, 100 char line width",
+        "Always include semicolons and ES5 trailing commas",
+        "Organize imports automatically"
+      ]
+    },
+    "service-management": {
+      "description": "Service lifecycle management using dev.sh",
+      "icon": "rocket",
+      "tools": ["dev.sh"],
+      "instructions": [
+        "Always use './dev.sh' script for service operations",
+        "Use './dev.sh start' to start all services",
+        "Use './dev.sh stop' to stop all services",
+        "Use './dev.sh status' to check status",
+        "Use './dev.sh clean' for clean restart",
+        "Use './dev.sh docker-start' for infrastructure only",
+        "Use './dev.sh logs <service>' to view service logs",
+        "Use './dev.sh biome-check' to check code quality",
+        "Use './dev.sh biome-fix' to fix code issues",
+        "Never suggest running docker-compose, mvn, or npm commands directly",
+        "All scripts are in ./scripts/ directory"
+      ]
+    },
+    "database": {
+      "description": "PostgreSQL database operations",
+      "icon": "database",
+      "tools": ["postgresql", "psql"],
+      "instructions": [
+        "Use 'psql -h localhost -U modernreservation -d modernreservation' to connect",
+        "Use './scripts/setup-database.sh' to initialize schema",
+        "Use './scripts/backup-database.sh' to backup database",
+        "All enum values must be UPPERCASE to match database",
+        "Use snake_case for database column names",
+        "Use camelCase in TypeScript/JavaScript code",
+        "Database schemas are in database/schema/",
+        "Migrations are in database/migrations/",
+        "Multi-tenant architecture with tenant_id in all tables"
+      ]
+    },
+    "monorepo": {
+      "description": "Monorepo workspace management",
+      "icon": "package",
+      "tools": ["npm", "nx"],
+      "instructions": [
+        "Use 'file:' protocol for local package dependencies",
+        "Never use 'npm link' or 'workspace:*' protocol",
+        "Example: '@modern-reservation/schemas': 'file:../../../libs/shared/schemas'",
+        "Run 'npm install' at root to sync all packages",
+        "Shared packages: schemas, graphql-client, ui-components, backend-utils",
+        "Never create duplicate schemas or GraphQL clients in individual apps",
+        "Check libs/shared/ before creating new shared code",
+        "Frontend: apps/frontend/guest-portal",
+        "Backend: apps/backend/java-services/ and apps/backend/node-services/",
+        "Shared: libs/shared/"
+      ]
+    },
+    "graphql": {
+      "description": "GraphQL operations and Apollo client",
+      "icon": "graph",
+      "tools": ["apollo"],
+      "instructions": [
+        "Use '@modern-reservation/graphql-client' for all GraphQL operations",
+        "Never create separate Apollo clients",
+        "Import hooks: useGetPropertiesQuery, useCreateReservationMutation, etc.",
+        "GraphQL endpoint: http://localhost:8080/graphql",
+        "GraphQL schemas are in libs/shared/graphql-schemas/",
+        "Use Apollo DevTools for debugging",
+        "Always include error handling in GraphQL operations",
+        "Use optimistic updates for better UX"
+      ]
+    },
+    "docker": {
+      "description": "Docker and container management",
+      "icon": "container",
+      "tools": ["docker", "docker-compose"],
+      "instructions": [
+        "Use './dev.sh docker-start' to start infrastructure",
+        "Use 'docker-compose -f infrastructure/docker/docker-compose-infrastructure.yml' if needed",
+        "PostgreSQL: localhost:5432 (modernreservation/modernreservation)",
+        "Redis: localhost:6379",
+        "Kafka: localhost:9092",
+        "pgAdmin: localhost:5050 (admin@modernreservation.com/admin)",
+        "Use 'docker ps' to check running containers",
+        "Use 'docker logs <container>' to view logs",
+        "Use 'docker exec -it <container> bash' to access container shell"
+      ]
+    },
+    "git-conventions": {
+      "description": "Git commit and branch conventions",
+      "icon": "git-commit",
+      "instructions": [
+        "Use conventional commit messages: feat:, fix:, docs:, chore:, refactor:, test:, style:",
+        "Example: 'feat: add user authentication to guest portal'",
+        "Use descriptive branch names: feature/*, bugfix/*, hotfix/*",
+        "Always pull before push: 'git pull --rebase'",
+        "Use 'git status' frequently",
+        "Use 'git log --oneline --graph' for history",
+        "Commit often, push after review",
+        "Never commit node_modules, target, dist, .env files"
+      ]
+    },
+    "linux-commands": {
+      "description": "Preferred Linux commands and tools",
+      "icon": "terminal",
+      "instructions": [
+        "Use 'rg' instead of 'grep' for searching",
+        "Use 'fd' instead of 'find' if available",
+        "Use 'bat' instead of 'cat' for syntax highlighting",
+        "Use 'exa' or 'ls -lah' for directory listing",
+        "Use 'tree' for directory structure",
+        "Use 'curl' instead of 'wget' for downloads",
+        "Use 'jq' for JSON parsing",
+        "If command not found, suggest: sudo apt install <package>"
+      ]
+    },
+    "testing": {
+      "description": "Testing guidelines and tools",
+      "icon": "beaker",
+      "instructions": [
+        "Use Jest for JavaScript/TypeScript testing",
+        "Use JUnit for Java testing",
+        "Test file naming: *.test.ts, *.spec.ts, *Test.java",
+        "Write tests for: business logic, utilities, API endpoints",
+        "Use descriptive test names: 'should return error when invalid input'",
+        "Aim for >80% code coverage",
+        "Mock external dependencies",
+        "Test edge cases and error conditions"
+      ]
+    }
+  }
+}

@@ -20,7 +20,7 @@ export function toBackendCase<T extends string>(value: T): Lowercase<T> {
  * Transform object keys from snake_case to camelCase
  */
 export function toCamelCase<T extends Record<string, any>>(obj: T): any {
-  if (obj === null || typeof obj !== "object") return obj;
+  if (obj === null || typeof obj !== 'object') return obj;
 
   if (Array.isArray(obj)) {
     return obj.map((item) => toCamelCase(item));
@@ -29,10 +29,8 @@ export function toCamelCase<T extends Record<string, any>>(obj: T): any {
   const result: Record<string, any> = {};
 
   for (const [key, value] of Object.entries(obj)) {
-    const camelKey = key.replace(/_([a-z])/g, (_, letter) =>
-      letter.toUpperCase(),
-    );
-    result[camelKey] = typeof value === "object" ? toCamelCase(value) : value;
+    const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+    result[camelKey] = typeof value === 'object' ? toCamelCase(value) : value;
   }
 
   return result;
@@ -42,7 +40,7 @@ export function toCamelCase<T extends Record<string, any>>(obj: T): any {
  * Transform object keys from camelCase to snake_case
  */
 export function toSnakeCase<T extends Record<string, any>>(obj: T): any {
-  if (obj === null || typeof obj !== "object") return obj;
+  if (obj === null || typeof obj !== 'object') return obj;
 
   if (Array.isArray(obj)) {
     return obj.map((item) => toSnakeCase(item));
@@ -51,11 +49,8 @@ export function toSnakeCase<T extends Record<string, any>>(obj: T): any {
   const result: Record<string, any> = {};
 
   for (const [key, value] of Object.entries(obj)) {
-    const snakeKey = key.replace(
-      /[A-Z]/g,
-      (letter) => `_${letter.toLowerCase()}`,
-    );
-    result[snakeKey] = typeof value === "object" ? toSnakeCase(value) : value;
+    const snakeKey = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+    result[snakeKey] = typeof value === 'object' ? toSnakeCase(value) : value;
   }
 
   return result;

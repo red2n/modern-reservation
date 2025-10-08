@@ -1,0 +1,146 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "🚀 Start All Services",
+      "type": "shell",
+      "command": "./dev.sh start",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "🛑 Stop All Services",
+      "type": "shell",
+      "command": "./dev.sh stop",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "🔍 Check Status",
+      "type": "shell",
+      "command": "./dev.sh status",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "🧹 Clean Restart",
+      "type": "shell",
+      "command": "./dev.sh clean",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "🐳 Start Docker Infrastructure",
+      "type": "shell",
+      "command": "./dev.sh docker-start",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "✨ Biome Check All",
+      "type": "shell",
+      "command": "./dev.sh biome-check",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "🔧 Biome Fix All",
+      "type": "shell",
+      "command": "./dev.sh biome-fix",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "✨ Biome Check (Current Directory)",
+      "type": "shell",
+      "command": "npx biome check .",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "🔧 Biome Fix (Current Directory)",
+      "type": "shell",
+      "command": "npx biome check --write --unsafe .",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "📊 Check Infrastructure",
+      "type": "shell",
+      "command": "scripts/check-infrastructure.sh",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "🏢 Check Business Services",
+      "type": "shell",
+      "command": "scripts/check-business-services.sh",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "💾 Backup Database",
+      "type": "shell",
+      "command": "scripts/backup-database.sh",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "🔄 Setup Database",
+      "type": "shell",
+      "command": "scripts/setup-database.sh",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "📦 Install Dependencies (Root)",
+      "type": "shell",
+      "command": "npm install",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "🔨 Build All Packages",
+      "type": "shell",
+      "command": "npm run build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always"
+      }
+    }
+  ]
+}

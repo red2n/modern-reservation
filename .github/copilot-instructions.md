@@ -89,6 +89,37 @@ In package.json:
 - Shared: `libs/shared/*`
 - Database: PostgreSQL with UPPERCASE enums
 
+## Code Quality
+
+### Biome.js (Formatter & Linter)
+All Node.js projects use **Biome.js v2.2.5** for formatting and linting:
+
+```bash
+# ✅ CORRECT: Use Biome commands
+npx biome check .              # Check code
+npx biome check --write .      # Fix issues
+./dev.sh biome-check          # Check all projects
+./dev.sh biome-fix            # Fix all projects
+
+# ❌ WRONG: Don't use old tools
+eslint .
+prettier --write .
+```
+
+**Code Style**:
+- Indent: 2 spaces
+- Line width: 100 characters
+- Quotes: Single quotes (`'`)
+- Semicolons: Always
+- Trailing commas: ES5 style
+
+### VS Code Configuration
+The project has comprehensive VS Code configuration in `.vscode/`:
+- **Auto-format on save** enabled
+- **Quick tasks** via `Ctrl+Shift+B`
+- **Recommended extensions** for Biome, GraphQL, Tailwind
+- See `docs/VSCODE_CONFIGURATION_COMPLETE.md` for details
+
 ## When Suggesting Code
 
 1. Check if shared schemas exist before creating new ones
@@ -97,6 +128,7 @@ In package.json:
 4. Use file: protocol for internal dependencies
 5. Don't suggest creating README files unless specifically requested
 6. If a Linux command is missing, recommend: `sudo apt install <package-name>`
+7. Ensure code follows Biome.js formatting standards (single quotes, 2-space indent)
 
 ## System Packages
 

@@ -3,7 +3,7 @@
  * Single Responsibility: Define payment-related mutations
  */
 
-import { gql } from "@apollo/client";
+import { gql } from '@apollo/client';
 
 /**
  * Process Payment Mutation

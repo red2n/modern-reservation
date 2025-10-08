@@ -1,11 +1,11 @@
 import { z } from 'zod';
 import {
-  UUIDSchema,
-  TimestampSchema,
-  AuditFieldsSchema,
-  MoneyAmountSchema,
-  CurrencyCodeSchema,
   AddressSchema,
+  AuditFieldsSchema,
+  CurrencyCodeSchema,
+  MoneyAmountSchema,
+  TimestampSchema,
+  UUIDSchema,
 } from './common';
 
 // =============================================================================
@@ -24,7 +24,7 @@ export const PaymentStatusSchema = z.enum([
   'PARTIALLY_REFUNDED',
   'EXPIRED',
   'PROCESSING',
-  'DECLINED'
+  'DECLINED',
 ]);
 
 // Payment Method - Matches DB enum (UPPERCASE)
@@ -40,7 +40,7 @@ export const PaymentMethodTypeSchema = z.enum([
   'CRYPTOCURRENCY',
   'CHECK',
   'WIRE_TRANSFER',
-  'OTHER'
+  'OTHER',
 ]);
 
 // Transaction Type - Matches DB enum (UPPERCASE)
@@ -52,7 +52,7 @@ export const TransactionTypeSchema = z.enum([
   'VOID',
   'ADJUSTMENT',
   'CHARGEBACK',
-  'REVERSAL'
+  'REVERSAL',
 ]);
 
 export const PaymentMethodSchema = z.object({
@@ -183,7 +183,9 @@ export const RefundRequestSchema = z.object({
   requestedBy: UUIDSchema,
   approvedBy: UUIDSchema.optional(),
   processedBy: UUIDSchema.optional(),
-  status: z.enum(['requested', 'approved', 'processed', 'completed', 'rejected', 'failed']).default('requested'),
+  status: z
+    .enum(['requested', 'approved', 'processed', 'completed', 'rejected', 'failed'])
+    .default('requested'),
   requestedAt: TimestampSchema,
   approvedAt: TimestampSchema.optional(),
   processedAt: TimestampSchema.optional(),
