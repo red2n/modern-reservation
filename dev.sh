@@ -63,6 +63,15 @@ show_help() {
     echo -e "  ${MAGENTA}clean --help${NC}             Show all clean restart options"
     echo ""
     echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}🔨 Build Commands:${NC}"
+    echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${YELLOW}build${NC}                    Build all services (Maven compile)"
+    echo -e "  ${YELLOW}build --clean${NC}            Clean build all services"
+    echo -e "  ${YELLOW}build --test${NC}             Build and run tests"
+    echo -e "  ${YELLOW}build-business${NC}           Build only business services"
+    echo ""
+    echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
     echo -e "${YELLOW}🧪 Testing & Verification:${NC}"
     echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
     echo ""
@@ -101,6 +110,12 @@ show_help() {
     echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
     echo -e "${YELLOW}💡 Quick Examples:${NC}"
     echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${YELLOW}# Build all services${NC}"
+    echo -e "  ./dev.sh build"
+    echo ""
+    echo -e "  ${YELLOW}# Clean build with tests${NC}"
+    echo -e "  ./dev.sh build --clean --test"
     echo ""
     echo -e "  ${GREEN}# Quick start everything${NC}"
     echo -e "  ./dev.sh start"
@@ -171,6 +186,39 @@ case "${1:-help}" in
     "clean"|"clean-restart"|"restart-clean")
         echo -e "${MAGENTA}🔄 Performing clean restart...${NC}"
         exec "$SCRIPTS_DIR/clean-restart.sh" "${@:2}"
+        ;;
+
+    # ========================================================================
+    # BUILD COMMANDS
+    # ========================================================================
+    "build")
+        cd "$SCRIPT_DIR/apps/backend/java-services"
+        
+        if [[ " ${@:2} " =~ " --clean " ]]; then
+            echo -e "${YELLOW}🔨 Clean building all services...${NC}"
+            if [[ " ${@:2} " =~ " --test " ]]; then
+                mvn clean install
+            else
+                mvn clean compile
+            fi
+        elif [[ " ${@:2} " =~ " --test " ]]; then
+            echo -e "${YELLOW}🔨 Building and testing all services...${NC}"
+            mvn install
+        else
+            echo -e "${YELLOW}🔨 Building all services...${NC}"
+            mvn compile
+        fi
+        ;;
+    
+    "build-business")
+        cd "$SCRIPT_DIR/apps/backend/java-services"
+        
+        echo -e "${YELLOW}🔨 Building business services...${NC}"
+        if [[ " ${@:2} " =~ " --clean " ]]; then
+            mvn clean compile -pl business-services/reservation-engine,business-services/availability-calculator,business-services/rate-management,business-services/payment-processor,business-services/analytics-engine
+        else
+            mvn compile -pl business-services/reservation-engine,business-services/availability-calculator,business-services/rate-management,business-services/payment-processor,business-services/analytics-engine
+        fi
         ;;
 
     # ========================================================================
