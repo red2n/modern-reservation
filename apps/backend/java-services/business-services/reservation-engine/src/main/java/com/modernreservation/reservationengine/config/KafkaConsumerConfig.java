@@ -41,8 +41,6 @@ public class KafkaConsumerConfig {
         props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
-        props.put(JsonDeserializer.TRUSTED_PACKAGES, "com.modernreservation.tenant.commons.events");
-        props.put(JsonDeserializer.VALUE_DEFAULT_TYPE, TenantEvent.class.getName());
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, true);
         props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000");
@@ -78,5 +76,14 @@ public class KafkaConsumerConfig {
         factory.setConcurrency(3); // 3 concurrent consumers
         factory.getContainerProperties().setPollTimeout(3000);
         return factory;
+    }
+
+    /**
+     * Tenant event Kafka listener container factory
+     * Used specifically for tenant event consumers
+     */
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, TenantEvent> tenantEventKafkaListenerContainerFactory() {
+        return kafkaListenerContainerFactory();
     }
 }
