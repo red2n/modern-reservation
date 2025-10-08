@@ -1,14 +1,43 @@
 {
   "recommendations": [
+    // Code Quality & Formatting
     "biomejs.biome",
+
+    // GraphQL Support
     "apollographql.vscode-apollo",
+
+    // Frontend Development
     "bradlc.vscode-tailwindcss",
+
+    // Git & Version Control
     "eamodio.gitlens",
+    "github.vscode-pull-request-github",
+
+    // Docker & Containers
     "ms-azuretools.vscode-docker",
+
+    // Java & Spring Boot
     "vscjava.vscode-java-pack",
     "vscjava.vscode-spring-boot-dashboard",
+    "vscjava.vscode-maven",
+
+    // Configuration Files
+    "redhat.vscode-yaml",
+
+    // Database
+    "ckolkman.vscode-postgres",
+
+    // Useful Utilities
+    "usernamehw.errorlens",
+    "PKief.material-icon-theme",
+    "oderwat.indent-rainbow"
+  ],
+  "unwantedRecommendations": [
+    // We use Biome.js instead
     "dbaeumer.vscode-eslint",
-    "Prisma.prisma",
-    "redhat.vscode-yaml"
+    "esbenp.prettier-vscode",
+
+    // We don't use Prisma
+    "Prisma.prisma"
   ]
 }
