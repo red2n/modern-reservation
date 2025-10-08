@@ -175,6 +175,39 @@ build_parent_project() {
     fi
 }
 
+# Function to build shared libraries (backend-utils and tenant-commons)
+build_shared_libraries() {
+    local shared_dir="$BASE_DIR/libs/shared"
+    local java_services_dir="$BASE_DIR/apps/backend/java-services"
+
+    print_status "Building shared libraries (backend-utils and tenant-commons)..."
+
+    # Create centralized logs directory if it doesn't exist
+    mkdir -p "$java_services_dir/logs/infrastructure"
+
+    # Build backend-utils
+    print_status "Building backend-utils..."
+    cd "$shared_dir/backend-utils"
+    if mvn clean install -DskipTests > "$java_services_dir/logs/infrastructure/backend-utils-build.log" 2>&1; then
+        print_success "Backend-utils built successfully"
+    else
+        print_error "Failed to build backend-utils. Check $java_services_dir/logs/infrastructure/backend-utils-build.log for details"
+        return 1
+    fi
+
+    # Build tenant-commons
+    print_status "Building tenant-commons..."
+    cd "$shared_dir/tenant-commons"
+    if mvn clean install -DskipTests > "$java_services_dir/logs/infrastructure/tenant-commons-build.log" 2>&1; then
+        print_success "Tenant-commons built successfully"
+    else
+        print_error "Failed to build tenant-commons. Check $java_services_dir/logs/infrastructure/tenant-commons-build.log for details"
+        return 1
+    fi
+
+    return 0
+}
+
 # Function to start a service
 start_service() {
     local service_name=$1
@@ -318,6 +351,12 @@ main() {
         exit 1
     fi
 
+    # Build shared libraries (backend-utils and tenant-commons)
+    if ! build_shared_libraries; then
+        print_error "❌ Failed to build shared libraries. Cannot proceed with service startup."
+        exit 1
+    fi
+
     # Start Docker infrastructure services first
     if ! start_docker_infrastructure; then
         print_error "❌ Failed to start Docker infrastructure services. Cannot proceed."
@@ -329,6 +368,7 @@ main() {
         "config-server:config-server:8888:15"
         "eureka-server:eureka-server:8761:20"
         "gateway-service:gateway-service:8080:15"
+        "tenant-service:tenant-service:8085:15"
     )
 
     local success_count=1  # Docker services already started

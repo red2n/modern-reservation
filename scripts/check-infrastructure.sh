@@ -350,6 +350,7 @@ main() {
         "config-server:8888"
         "eureka-server:8761"
         "gateway-service:8080"
+        "tenant-service:8085"
     )
 
     local healthy_count=0

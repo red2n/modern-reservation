@@ -1,7 +1,9 @@
 package com.modernreservation.tenantservice.kafka;
 
-import com.modernreservation.tenant.commons.dto.TenantEvent;
-import com.modernreservation.tenant.commons.enums.TenantEventType;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.modernreservation.tenant.commons.events.TenantEvent;
+import com.modernreservation.tenant.commons.events.TenantEvent.TenantEventType;
 import com.modernreservation.tenantservice.entity.Tenant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +35,7 @@ import java.util.concurrent.CompletableFuture;
 public class TenantEventPublisher {
 
     private final KafkaTemplate<String, TenantEvent> kafkaTemplate;
+    private final ObjectMapper objectMapper;
 
     @Value("${kafka.topics.tenant-created}")
     private String tenantCreatedTopic;
@@ -110,6 +113,15 @@ public class TenantEventPublisher {
      * Build Tenant Event DTO from Tenant entity
      */
     private TenantEvent buildEvent(Tenant tenant, TenantEventType eventType) {
+        String metadataJson = null;
+        if (tenant.getMetadata() != null) {
+            try {
+                metadataJson = objectMapper.writeValueAsString(tenant.getMetadata());
+            } catch (JsonProcessingException e) {
+                log.error("Failed to serialize tenant metadata to JSON", e);
+            }
+        }
+        
         return TenantEvent.builder()
                 .eventType(eventType)
                 .tenantId(tenant.getId())
@@ -124,7 +136,7 @@ public class TenantEventPublisher {
                 .updatedAt(tenant.getUpdatedAt())
                 .deletedAt(tenant.getDeletedAt())
                 .eventTimestamp(LocalDateTime.now())
-                .metadata(tenant.getMetadata())
+                .metadata(metadataJson)
                 .build();
     }
 

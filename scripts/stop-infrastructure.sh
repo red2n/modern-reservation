@@ -190,6 +190,7 @@ main() {
 
     # Services to stop (in reverse order of startup)
     declare -a SERVICES=(
+        "tenant-service:infrastructure/tenant-service.*TenantServiceApplication"
         "gateway-service:infrastructure/gateway-service.*GatewayServiceApplication"
         "zipkin-server:docker"
         "eureka-server:infrastructure/eureka-server.*EurekaServerApplication"
