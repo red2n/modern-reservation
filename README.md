@@ -17,6 +17,7 @@ The Modern Reservation Management System is a comprehensive, enterprise-grade pl
 
 ### **🎯 Key Achievements**
 - **Ultra-High Performance**: 10,000+ reservations per minute sustained throughput
+- **Enterprise Multi-Tenancy**: Complete data isolation with defense-in-depth security
 - **GraphQL Federation**: 4x faster dashboard loads with unified data graph
 - **Event-Driven Architecture**: Zero service coupling via Apache Kafka
 - **Hybrid Technology Stack**: Best-of-breed Node.js + Java microservices
@@ -691,7 +692,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **📋 [Project Development Plan](docs/project-development-plan.md)**
 - **🚀 [Quick Start Guide](docs/guides/DEV_QUICK_REFERENCE.md)**
 - **🏗️ [Architecture Overview](docs/architecture/event-driven-architecture-diagram.md)**
-- **🚀 [Deployment Guide](docs/deployment/network-isolation-guide.md)**
+- **� [Multi-Tenancy Guide](docs/MULTI_TENANCY.md)** - **NEW!** Enterprise multi-tenancy implementation
+- **�🚀 [Deployment Guide](docs/deployment/network-isolation-guide.md)**
 
 ### **Community**
 - **🐛 [Report Issues](https://github.com/red2n/modern-reservation/issues)**
