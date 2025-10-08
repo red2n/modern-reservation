@@ -28,6 +28,7 @@ echo "📁 Loading schema files in dependency order..."
 # Load files in correct dependency order
 FILES=(
     "common.graphql"
+    "tenant.graphql"
     "property.graphql"
     "guest.graphql"
     "user.graphql"

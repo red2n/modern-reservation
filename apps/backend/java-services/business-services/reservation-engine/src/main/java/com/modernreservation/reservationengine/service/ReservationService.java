@@ -1,5 +1,6 @@
 package com.modernreservation.reservationengine.service;
 
+import com.modernreservation.reservationengine.context.TenantContext;
 import com.modernreservation.reservationengine.dto.ReservationAuditDTO;
 import com.modernreservation.reservationengine.dto.ReservationRequestDTO;
 import com.modernreservation.reservationengine.dto.ReservationResponseDTO;
@@ -44,6 +45,7 @@ public class ReservationService {
 
     private final ReservationRepository reservationRepository;
     private final ReservationAuditRepository auditRepository;
+    private final TenantService tenantService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final EventPublisher eventPublisher;
 
@@ -54,6 +56,16 @@ public class ReservationService {
     public ReservationResponseDTO createReservation(ReservationRequestDTO request) {
         log.info("Creating new reservation for guest: {} {}",
                 request.guestFirstName(), request.guestLastName());
+
+        // ✅ MULTI-TENANCY: Validate tenant context
+        tenantService.validateCurrentTenantActive();
+        UUID tenantId = TenantContext.getCurrentTenantId();
+
+        // ✅ Validate request tenant matches context tenant
+        if (!tenantId.equals(request.tenantId())) {
+            log.error("Tenant mismatch: context={}, request={}", tenantId, request.tenantId());
+            throw new IllegalArgumentException("Cannot create reservation for another tenant");
+        }
 
         // Validate availability
         validateAvailability(request.propertyId(), request.roomTypeId(),
@@ -69,6 +81,7 @@ public class ReservationService {
 
         // Build reservation entity
         Reservation reservation = Reservation.builder()
+                .tenantId(tenantId)  // ✅ Set tenant ID
                 .confirmationNumber(generateConfirmationNumber())
                 .propertyId(request.propertyId())
                 .guestId(request.guestId())
@@ -120,36 +133,52 @@ public class ReservationService {
     }
 
     /**
-     * Get reservation by ID
+     * Get reservation by ID (tenant-scoped)
      */
-    @Cacheable(value = "reservations", key = "#id")
+    @Cacheable(value = "reservations", key = "T(com.modernreservation.reservationengine.context.TenantContext).getCurrentTenantId() + ':' + #id")
     @Transactional(readOnly = true)
     public Optional<ReservationResponseDTO> getReservationById(UUID id) {
-        log.debug("Fetching reservation by ID: {}", id);
-        return reservationRepository.findById(id)
+        // ✅ MULTI-TENANCY: Tenant-scoped query
+        UUID tenantId = TenantContext.getCurrentTenantId();
+        log.debug("Fetching reservation by ID: {} for tenant: {}", id, tenantId);
+
+        return reservationRepository.findByTenantIdAndId(tenantId, id)
                 .map(this::mapToResponseDTO);
     }
 
     /**
-     * Get reservation by confirmation number
+     * Get reservation by confirmation number (tenant-scoped)
      */
-    @Cacheable(value = "reservations", key = "#confirmationNumber")
+    @Cacheable(value = "reservations", key = "T(com.modernreservation.reservationengine.context.TenantContext).getCurrentTenantId() + ':' + #confirmationNumber")
     @Transactional(readOnly = true)
     public Optional<ReservationResponseDTO> getReservationByConfirmationNumber(String confirmationNumber) {
-        log.debug("Fetching reservation by confirmation number: {}", confirmationNumber);
-        return reservationRepository.findByConfirmationNumber(confirmationNumber)
+        // ✅ MULTI-TENANCY: Tenant-scoped query
+        UUID tenantId = TenantContext.getCurrentTenantId();
+        log.debug("Fetching reservation by confirmation number: {} for tenant: {}", confirmationNumber, tenantId);
+
+        return reservationRepository.findByTenantIdAndConfirmationNumber(tenantId, confirmationNumber)
                 .map(this::mapToResponseDTO);
     }
 
     /**
-     * Update reservation
+     * Update reservation (tenant-scoped)
      */
     @CacheEvict(value = "reservations", allEntries = true)
     public ReservationResponseDTO updateReservation(UUID id, ReservationRequestDTO request) {
         log.info("Updating reservation: {}", id);
 
-        Reservation existingReservation = reservationRepository.findById(id)
+        // ✅ MULTI-TENANCY: Validate tenant and fetch reservation
+        UUID tenantId = TenantContext.getCurrentTenantId();
+        tenantService.validateCurrentTenantActive();
+
+        // ✅ Tenant-scoped query
+        Reservation existingReservation = reservationRepository.findByTenantIdAndId(tenantId, id)
                 .orElseThrow(() -> new RuntimeException("Reservation not found: " + id));
+
+        // ✅ Validate request tenant matches
+        if (!tenantId.equals(request.tenantId())) {
+            throw new IllegalArgumentException("Cannot update reservation for another tenant");
+        }
 
         ReservationStatus oldStatus = existingReservation.getStatus();
 

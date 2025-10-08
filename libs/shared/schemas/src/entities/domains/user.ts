@@ -30,7 +30,7 @@ export const UserSchema = z.object({
   lastPasswordChange: TimestampSchema.optional(),
 
   // Status
-  status: z.enum(['active', 'inactive', 'suspended', 'pending_verification']).default('pending_verification'),
+  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'PENDING_VERIFICATION']).default('PENDING_VERIFICATION'),
   emailVerified: z.boolean().default(false),
   emailVerifiedAt: TimestampSchema.optional(),
   phoneVerified: z.boolean().default(false),

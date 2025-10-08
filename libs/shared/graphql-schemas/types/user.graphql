@@ -36,8 +36,6 @@ enum UserStatus {
   INACTIVE
   SUSPENDED
   PENDING_VERIFICATION
-  LOCKED
-  DELETED
 }
 
 """

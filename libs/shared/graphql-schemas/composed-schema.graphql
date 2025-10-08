@@ -101,6 +101,515 @@ input AddressInput {
 }
 
 # =============================================================================
+# TENANT SCHEMA
+# =============================================================================
+
+# Tenant Management & Multi-Tenancy Schema
+# Domain: Tenant organizations, subscriptions, multi-tenancy support
+
+"""
+Tenant organization (hotel chain, franchise, independent property, etc.)
+"""
+type Tenant implements Node & Timestamped & SoftDeletable & Auditable @key(fields: "id") {
+  id: UUID!
+  name: String!
+  slug: String!
+  type: TenantType!
+  status: TenantStatus!
+  email: EmailAddress!
+  phone: PhoneNumber
+  website: URL
+  
+  # Business Information
+  businessInfo: TenantBusinessInfo!
+  address: Address!
+  
+  # Subscription & Billing
+  subscription: TenantSubscription!
+  
+  # Configuration & Settings
+  config: TenantConfig!
+  
+  # Relationships
+  properties: [Property!]! @requires(fields: "id")
+  users: [UserTenantAssociation!]! @requires(fields: "id")
+  
+  # Metadata
+  metadata: JSON
+  
+  # Timestamps and audit
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  isDeleted: Boolean!
+  deletedAt: DateTime
+  createdBy: UUID
+  updatedBy: UUID
+}
+
+"""
+Tenant type classification
+"""
+enum TenantType {
+  CHAIN                  # Hotel chain (e.g., Marriott, Hilton)
+  INDEPENDENT           # Independent hotel/property
+  FRANCHISE             # Franchised property
+  MANAGEMENT_COMPANY    # Property management company
+  VACATION_RENTAL       # Vacation rental company (Airbnb host, etc.)
+}
+
+"""
+Tenant account status
+"""
+enum TenantStatus {
+  ACTIVE      # Active and operational
+  SUSPENDED   # Temporarily suspended
+  TRIAL       # Trial period
+  EXPIRED     # Subscription expired
+  CANCELLED   # Account cancelled
+}
+
+"""
+Subscription plan tiers
+"""
+enum SubscriptionPlan {
+  FREE          # Free tier (limited properties)
+  STARTER       # Small properties (1-5 properties)
+  PROFESSIONAL  # Medium properties (6-20 properties)
+  ENTERPRISE    # Large chains (unlimited properties)
+  CUSTOM        # Custom enterprise plan
+}
+
+"""
+Billing cycle options
+"""
+enum BillingCycle {
+  MONTHLY   # Monthly billing
+  YEARLY    # Annual billing
+  CUSTOM    # Custom billing arrangement
+}
+
+"""
+Tenant business information
+"""
+type TenantBusinessInfo {
+  legalName: String!
+  taxId: String
+  registrationNumber: String
+  industry: String
+  numberOfEmployees: Int
+  yearEstablished: Int
+}
+
+"""
+Tenant subscription details
+"""
+type TenantSubscription {
+  plan: SubscriptionPlan!
+  startDate: DateTime!
+  endDate: DateTime
+  billingCycle: BillingCycle!
+  billingEmail: EmailAddress!
+  billingAddress: Address
+  isActive: Boolean!
+  trialEndsAt: DateTime
+  nextBillingDate: DateTime
+  autoRenew: Boolean!
+  
+  # Billing amounts
+  monthlyPrice: Float
+  yearlyPrice: Float
+  currency: Currency!
+  
+  # Payment status
+  lastPaymentDate: DateTime
+  lastPaymentAmount: Float
+  nextPaymentAmount: Float
+  
+  # Usage & Limits
+  propertiesUsed: Int!
+  propertiesLimit: Int!
+  usersUsed: Int!
+  usersLimit: Int!
+  reservationsThisMonth: Int!
+  reservationsLimit: Int
+}
+
+"""
+Tenant configuration and feature flags
+"""
+type TenantConfig {
+  # Branding
+  brandingEnabled: Boolean!
+  logoUrl: URL
+  primaryColor: String
+  secondaryColor: String
+  
+  # Features
+  enableMultiProperty: Boolean!
+  enableChannelManager: Boolean!
+  enableAdvancedReporting: Boolean!
+  enablePaymentProcessing: Boolean!
+  enableLoyaltyProgram: Boolean!
+  
+  # Limits
+  maxProperties: Int!
+  maxUsers: Int!
+  maxReservationsPerMonth: Int
+  
+  # Localization
+  defaultCurrency: Currency!
+  defaultLanguage: String!
+  defaultTimezone: String!
+  
+  # Notifications
+  enableEmailNotifications: Boolean!
+  enableSmsNotifications: Boolean!
+  enablePushNotifications: Boolean!
+}
+
+"""
+User-Tenant association (multi-tenancy support)
+"""
+type UserTenantAssociation implements Node & Timestamped & Auditable @key(fields: "id") {
+  id: UUID!
+  userId: UUID!
+  tenantId: UUID!
+  role: TenantRole!
+  permissions: [String!]!
+  isActive: Boolean!
+  isPrimary: Boolean!
+  
+  # Relationships
+  user: User! @requires(fields: "userId")
+  tenant: Tenant! @requires(fields: "tenantId")
+  
+  # Assignment tracking
+  assignedBy: UUID
+  assignedAt: DateTime!
+  expiresAt: DateTime
+  lastAccessedAt: DateTime
+  
+  # Timestamps and audit
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  createdBy: UUID!
+  updatedBy: UUID!
+}
+
+"""
+User roles within a tenant organization
+"""
+enum TenantRole {
+  OWNER       # Tenant owner (full access)
+  ADMIN       # Tenant administrator
+  MANAGER     # Property/operations manager
+  STAFF       # Staff member
+  ACCOUNTANT  # Financial access
+  VIEWER      # Read-only access
+}
+
+# ============================================================================
+# QUERIES
+# ============================================================================
+
+extend type Query {
+  """
+  Get tenant by ID
+  """
+  tenant(id: UUID!): Tenant
+  
+  """
+  Get tenant by slug
+  """
+  tenantBySlug(slug: String!): Tenant
+  
+  """
+  Get all tenants (admin only)
+  """
+  tenants(
+    filter: TenantFilterInput
+    pagination: PaginationInput
+    sort: SortInput
+  ): TenantConnection!
+  
+  """
+  Get current user's tenants
+  """
+  myTenants: [UserTenantAssociation!]!
+  
+  """
+  Get tenant users
+  """
+  tenantUsers(tenantId: UUID!): [UserTenantAssociation!]!
+  
+  """
+  Check tenant slug availability
+  """
+  isTenantSlugAvailable(slug: String!): Boolean!
+}
+
+# ============================================================================
+# MUTATIONS
+# ============================================================================
+
+extend type Mutation {
+  """
+  Create a new tenant
+  """
+  createTenant(input: CreateTenantInput!): TenantPayload!
+  
+  """
+  Update tenant information
+  """
+  updateTenant(id: UUID!, input: UpdateTenantInput!): TenantPayload!
+  
+  """
+  Update tenant status
+  """
+  updateTenantStatus(id: UUID!, status: TenantStatus!): TenantPayload!
+  
+  """
+  Update tenant subscription
+  """
+  updateTenantSubscription(id: UUID!, input: UpdateTenantSubscriptionInput!): TenantPayload!
+  
+  """
+  Update tenant configuration
+  """
+  updateTenantConfig(id: UUID!, input: UpdateTenantConfigInput!): TenantPayload!
+  
+  """
+  Delete tenant (soft delete)
+  """
+  deleteTenant(id: UUID!): TenantPayload!
+  
+  """
+  Add user to tenant
+  """
+  addUserToTenant(input: AddUserToTenantInput!): UserTenantAssociationPayload!
+  
+  """
+  Update user role in tenant
+  """
+  updateUserTenantRole(id: UUID!, role: TenantRole!): UserTenantAssociationPayload!
+  
+  """
+  Remove user from tenant
+  """
+  removeUserFromTenant(id: UUID!): UserTenantAssociationPayload!
+}
+
+# ============================================================================
+# SUBSCRIPTIONS
+# ============================================================================
+
+extend type Subscription {
+  """
+  Subscribe to tenant changes
+  """
+  tenantUpdated(tenantId: UUID!): Tenant!
+  
+  """
+  Subscribe to tenant status changes
+  """
+  tenantStatusChanged(tenantId: UUID!): TenantStatusChangeEvent!
+  
+  """
+  Subscribe to user-tenant association changes
+  """
+  tenantUsersChanged(tenantId: UUID!): UserTenantAssociation!
+}
+
+# ============================================================================
+# INPUT TYPES
+# ============================================================================
+
+"""
+Input for creating a new tenant
+"""
+input CreateTenantInput {
+  name: String!
+  slug: String!
+  type: TenantType!
+  email: EmailAddress!
+  phone: PhoneNumber
+  website: URL
+  address: AddressInput!
+  businessInfo: TenantBusinessInfoInput!
+  subscription: CreateTenantSubscriptionInput!
+  config: TenantConfigInput
+  metadata: JSON
+}
+
+"""
+Input for updating tenant information
+"""
+input UpdateTenantInput {
+  name: String
+  slug: String
+  email: EmailAddress
+  phone: PhoneNumber
+  website: URL
+  address: AddressInput
+  businessInfo: TenantBusinessInfoInput
+  metadata: JSON
+}
+
+"""
+Input for tenant business information
+"""
+input TenantBusinessInfoInput {
+  legalName: String!
+  taxId: String
+  registrationNumber: String
+  industry: String
+  numberOfEmployees: Int
+  yearEstablished: Int
+}
+
+"""
+Input for creating tenant subscription
+"""
+input CreateTenantSubscriptionInput {
+  plan: SubscriptionPlan!
+  billingCycle: BillingCycle!
+  billingEmail: EmailAddress!
+  billingAddress: AddressInput
+  autoRenew: Boolean = true
+}
+
+"""
+Input for updating tenant subscription
+"""
+input UpdateTenantSubscriptionInput {
+  plan: SubscriptionPlan
+  billingCycle: BillingCycle
+  billingEmail: EmailAddress
+  billingAddress: AddressInput
+  autoRenew: Boolean
+  endDate: DateTime
+}
+
+"""
+Input for tenant configuration
+"""
+input TenantConfigInput {
+  # Branding
+  brandingEnabled: Boolean
+  logoUrl: URL
+  primaryColor: String
+  secondaryColor: String
+  
+  # Features
+  enableMultiProperty: Boolean
+  enableChannelManager: Boolean
+  enableAdvancedReporting: Boolean
+  enablePaymentProcessing: Boolean
+  enableLoyaltyProgram: Boolean
+  
+  # Limits
+  maxProperties: Int
+  maxUsers: Int
+  maxReservationsPerMonth: Int
+  
+  # Localization
+  defaultCurrency: Currency
+  defaultLanguage: String
+  defaultTimezone: String
+  
+  # Notifications
+  enableEmailNotifications: Boolean
+  enableSmsNotifications: Boolean
+  enablePushNotifications: Boolean
+}
+
+"""
+Input for filtering tenants
+"""
+input TenantFilterInput {
+  type: TenantType
+  status: TenantStatus
+  subscriptionPlan: SubscriptionPlan
+  search: String
+  createdAfter: DateTime
+  createdBefore: DateTime
+}
+
+"""
+Input for adding user to tenant
+"""
+input AddUserToTenantInput {
+  userId: UUID!
+  tenantId: UUID!
+  role: TenantRole!
+  permissions: [String!]
+  isPrimary: Boolean = false
+  expiresAt: DateTime
+}
+
+# ============================================================================
+# RESPONSE TYPES
+# ============================================================================
+
+"""
+Tenant payload response
+"""
+type TenantPayload {
+  success: Boolean!
+  message: String
+  tenant: Tenant
+  errors: [Error!]
+}
+
+"""
+User-tenant association payload response
+"""
+type UserTenantAssociationPayload {
+  success: Boolean!
+  message: String
+  association: UserTenantAssociation
+  errors: [Error!]
+}
+
+"""
+Paginated tenant connection
+"""
+type TenantConnection {
+  edges: [TenantEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+"""
+Tenant edge
+"""
+type TenantEdge {
+  node: Tenant!
+  cursor: String!
+}
+
+"""
+Tenant status change event
+"""
+type TenantStatusChangeEvent {
+  tenantId: UUID!
+  oldStatus: TenantStatus!
+  newStatus: TenantStatus!
+  changedAt: DateTime!
+  changedBy: UUID!
+  reason: String
+}
+
+"""
+Error type
+"""
+type Error {
+  field: String
+  message: String!
+  code: String
+}
+
+# =============================================================================
 # PROPERTY SCHEMA
 # =============================================================================
 
@@ -531,8 +1040,6 @@ enum UserStatus {
   INACTIVE
   SUSPENDED
   PENDING_VERIFICATION
-  LOCKED
-  DELETED
 }
 
 """
