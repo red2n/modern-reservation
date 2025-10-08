@@ -193,7 +193,7 @@ case "${1:-help}" in
     # ========================================================================
     "build")
         cd "$SCRIPT_DIR/apps/backend/java-services"
-        
+
         if [[ " ${@:2} " =~ " --clean " ]]; then
             echo -e "${YELLOW}🔨 Clean building all services...${NC}"
             if [[ " ${@:2} " =~ " --test " ]]; then
@@ -209,10 +209,10 @@ case "${1:-help}" in
             mvn compile
         fi
         ;;
-    
+
     "build-business")
         cd "$SCRIPT_DIR/apps/backend/java-services"
-        
+
         echo -e "${YELLOW}🔨 Building business services...${NC}"
         if [[ " ${@:2} " =~ " --clean " ]]; then
             mvn clean compile -pl business-services/reservation-engine,business-services/availability-calculator,business-services/rate-management,business-services/payment-processor,business-services/analytics-engine
