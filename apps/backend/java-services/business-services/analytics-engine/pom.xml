@@ -70,8 +70,8 @@
         <!-- Tenant Commons -->
         <dependency>
             <groupId>com.modernreservation</groupId>
-            <artifactId>tenant-commons</artifactId>
-            <version>1.0.0</version>
+<artifactId>tenant-commons</artifactId>
+<version>1.0.0</version>
         </dependency>
 
         <!-- API Documentation -->
@@ -104,14 +104,18 @@
             <version>4.4</version>
         </dependency>
 
-        <!-- Observability & Tracing -->
+        <!-- OpenTelemetry Observability & Tracing -->
         <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-tracing-bridge-brave</artifactId>
+            <groupId>io.opentelemetry.instrumentation</groupId>
+            <artifactId>opentelemetry-spring-boot-starter</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.zipkin.reporter2</groupId>
-            <artifactId>zipkin-reporter-brave</artifactId>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-otel</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-exporter-otlp</artifactId>
         </dependency>
         <dependency>
             <groupId>io.micrometer</groupId>

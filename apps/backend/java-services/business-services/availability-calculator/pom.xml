@@ -6,25 +6,16 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.0</version>
-        <relativePath/>
+        <groupId>com.modernreservation</groupId>
+        <artifactId>java-services-parent</artifactId>
+        <version>2.0.0</version>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <groupId>com.modernreservation</groupId>
     <artifactId>availability-calculator</artifactId>
-    <version>2.0.0</version>
     <packaging>jar</packaging>
     <name>Modern Reservation - Availability Calculator</name>
     <description>Microservice for room availability calculations and pricing</description>
-
-    <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <spring-cloud.version>2023.0.0</spring-cloud.version>
-    </properties>
 
     <dependencies>
         <!-- Spring Boot Starters -->
@@ -64,14 +55,18 @@
             <artifactId>spring-cloud-starter-config</artifactId>
         </dependency>
 
-        <!-- Tracing (replaces Sleuth in Spring Boot 3.x) -->
+        <!-- OpenTelemetry Observability & Tracing -->
         <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-tracing-bridge-brave</artifactId>
+            <groupId>io.opentelemetry.instrumentation</groupId>
+            <artifactId>opentelemetry-spring-boot-starter</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.zipkin.reporter2</groupId>
-            <artifactId>zipkin-reporter-brave</artifactId>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-otel</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-exporter-otlp</artifactId>
         </dependency>
 
         <!-- Database -->
@@ -96,8 +91,8 @@
         <!-- Tenant Commons -->
         <dependency>
             <groupId>com.modernreservation</groupId>
-            <artifactId>tenant-commons</artifactId>
-            <version>1.0.0</version>
+<artifactId>tenant-commons</artifactId>
+<version>1.0.0</version>
         </dependency>
 
         <!-- Documentation -->

@@ -46,6 +46,24 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+        <!-- OpenTelemetry Observability & Tracing -->
+        <dependency>
+            <groupId>io.opentelemetry.instrumentation</groupId>
+            <artifactId>opentelemetry-spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-otel</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-exporter-otlp</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-cache</artifactId>
@@ -83,8 +101,8 @@
         <!-- Shared Libraries -->
         <dependency>
             <groupId>com.modernreservation</groupId>
-            <artifactId>tenant-commons</artifactId>
-            <version>1.0.0</version>
+<artifactId>tenant-commons</artifactId>
+<version>1.0.0</version>
         </dependency>
 
         <!-- Lombok -->

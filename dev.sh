@@ -86,16 +86,18 @@ show_help() {
     echo -e "  ${BLUE}db-setup${NC}                 Initialize database schema"
     echo -e "  ${BLUE}db-backup${NC}                Backup database"
     echo -e "  ${BLUE}db-connect${NC}               Connect to database (psql)"
+    echo -e "  ${BLUE}redis-connect${NC}            Connect to Redis (redis-cli)"
+    echo -e "  ${BLUE}kafka-topics${NC}             List Kafka topics"
     echo ""
     echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
     echo -e "${CYAN}🐳 Docker Operations:${NC}"
     echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
     echo ""
-    echo -e "  ${CYAN}docker-start${NC}             Start Docker infrastructure"
-    echo -e "  ${CYAN}docker-stop${NC}              Stop Docker infrastructure"
-    echo -e "  ${CYAN}docker-status${NC}            Check Docker services status"
+    echo -e "  ${CYAN}docker-start${NC}             Start complete Docker stack (infrastructure + observability)"
+    echo -e "  ${CYAN}docker-stop${NC}              Stop Docker stack"
+    echo -e "  ${CYAN}docker-status${NC}            Check Docker services status with credentials"
     echo -e "  ${CYAN}docker-logs [service]${NC}    View Docker service logs"
-    echo -e "  ${CYAN}docker-clean${NC}             Clean up Docker resources"
+    echo -e "  ${CYAN}docker-clean${NC}             🧹 COMPLETE Docker cleanup (containers, images, volumes, networks)"
     echo ""
     echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
     echo -e "${GREEN}📊 Monitoring & Logs:${NC}"
@@ -104,7 +106,9 @@ show_help() {
     echo -e "  ${GREEN}logs [service]${NC}           View service logs"
     echo -e "  ${GREEN}ui-kafka${NC}                 Open Kafka UI"
     echo -e "  ${GREEN}ui-eureka${NC}                Open Eureka Dashboard"
-    echo -e "  ${GREEN}ui-zipkin${NC}                Open Zipkin UI"
+    echo -e "  ${GREEN}ui-jaeger${NC}                Open Jaeger Tracing UI"
+    echo -e "  ${GREEN}ui-prometheus${NC}            Open Prometheus Metrics"
+    echo -e "  ${GREEN}ui-grafana${NC}               Open Grafana Dashboards"
     echo -e "  ${GREEN}ui-pgadmin${NC}               Open PgAdmin"
     echo ""
     echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
@@ -306,17 +310,37 @@ case "${1:-help}" in
         echo -e "${BLUE}💾 Connecting to database...${NC}"
         docker exec -it modern-reservation-postgres psql -U postgres -d modern_reservation_dev
         ;;
+    "redis-connect"|"redis-cli")
+        echo -e "${BLUE}🔴 Connecting to Redis...${NC}"
+        docker exec -it modern-reservation-redis redis-cli
+        ;;
+    "kafka-topics")
+        echo -e "${BLUE}📡 Listing Kafka topics...${NC}"
+        docker exec modern-reservation-kafka kafka-topics --bootstrap-server localhost:9092 --list
+        ;;
 
     # ========================================================================
     # DOCKER OPERATIONS
     # ========================================================================
     "docker-start"|"docker-up")
-        echo -e "${CYAN}🐳 Starting Docker infrastructure...${NC}"
-        exec "$SCRIPTS_DIR/docker-infra.sh" infra-start
+        echo -e "${CYAN}🐳 Starting complete Docker stack (infrastructure + observability)...${NC}"
+        cd "$SCRIPT_DIR/infrastructure/docker"
+        docker compose -f docker-compose.yml up -d postgres redis kafka schema-registry kafka-ui pgadmin otel-collector jaeger prometheus grafana
+        echo -e "${GREEN}✅ Complete Docker stack started!${NC}"
+        echo -e "${CYAN}Access points:${NC}"
+        echo -e "  🐘 PostgreSQL: localhost:5432"
+        echo -e "  🔴 Redis: localhost:6379"
+        echo -e "  📊 Kafka UI: http://localhost:8090"
+        echo -e "  🗄️  PgAdmin: http://localhost:5050"
+        echo -e "  📊 Jaeger: http://localhost:16686"
+        echo -e "  📈 Prometheus: http://localhost:9090"
+        echo -e "  📊 Grafana: http://localhost:3000 (admin/admin123)"
         ;;
     "docker-stop"|"docker-down")
-        echo -e "${CYAN}🐳 Stopping Docker infrastructure...${NC}"
-        exec "$SCRIPTS_DIR/docker-infra.sh" infra-stop
+        echo -e "${CYAN}🐳 Stopping Docker stack...${NC}"
+        cd "$SCRIPT_DIR/infrastructure/docker"
+        docker compose -f docker-compose.yml down
+        echo -e "${GREEN}✅ Docker stack stopped!${NC}"
         ;;
     "docker-status")
         echo -e "${CYAN}🐳 Checking Docker status...${NC}"
@@ -327,8 +351,56 @@ case "${1:-help}" in
         exec "$SCRIPTS_DIR/docker-infra.sh" logs "$2"
         ;;
     "docker-clean"|"docker-cleanup")
-        echo -e "${CYAN}🐳 Cleaning Docker resources...${NC}"
-        exec "$SCRIPTS_DIR/docker-infra.sh" cleanup
+        echo -e "${CYAN}🐳 Performing comprehensive Docker cleanup...${NC}"
+        echo -e "${YELLOW}This will remove ALL containers, images, volumes, and networks!${NC}"
+
+        # Step 1: Stop and remove compose services
+        echo -e "${BLUE}Step 1/7: Stopping Docker Compose services...${NC}"
+        cd "$SCRIPT_DIR/infrastructure/docker"
+        docker compose -f docker-compose.yml down -v --remove-orphans 2>/dev/null || true
+
+        # Step 2: Remove all containers
+        echo -e "${BLUE}Step 2/7: Removing all containers...${NC}"
+        docker container prune -f
+
+        # Step 3: Remove all images
+        echo -e "${BLUE}Step 3/7: Removing all images...${NC}"
+        docker image prune -a -f
+
+        # Step 4: Remove all networks
+        echo -e "${BLUE}Step 4/7: Removing unused networks...${NC}"
+        docker network prune -f
+
+        # Step 5: Current state verification
+        echo -e "${BLUE}Step 5/7: Current Docker state...${NC}"
+        echo -e "${CYAN}=== CONTAINERS ===${NC}"
+        docker ps -a
+        echo -e "${CYAN}=== IMAGES ===${NC}"
+        docker images
+        echo -e "${CYAN}=== VOLUMES ===${NC}"
+        docker volume ls
+        echo -e "${CYAN}=== NETWORKS ===${NC}"
+        docker network ls
+
+        # Step 6: Remove all volumes
+        echo -e "${BLUE}Step 6/7: Removing all volumes...${NC}"
+        docker volume prune -f
+
+        # Remove specific named volumes if they exist
+        echo -e "${BLUE}Removing legacy named volumes...${NC}"
+        docker volume rm docker_kafka_data docker_pgadmin_data docker_postgres_data 2>/dev/null || true
+
+        # Step 7: Final verification
+        echo -e "${BLUE}Step 7/7: Final verification...${NC}"
+        echo -e "${GREEN}🧹 DOCKER COMPLETELY FLUSHED - FRESH SLATE READY${NC}"
+        echo ""
+        echo -e "${CYAN}=== FINAL VERIFICATION ===${NC}"
+        echo -e "Containers: $(docker ps -a --format '{{.Names}}' | wc -l)"
+        echo -e "Images: $(docker images --format '{{.Repository}}' | wc -l)"
+        echo -e "Volumes: $(docker volume ls --format '{{.Name}}' | wc -l)"
+        echo -e "Networks: $(docker network ls --format '{{.Name}}' | grep -v -E '^(bridge|host|none)$' | wc -l)"
+        echo ""
+        echo -e "${GREEN}✅ Complete Docker cleanup finished! Ready for fresh start.${NC}"
         ;;
 
     # ========================================================================
@@ -370,10 +442,20 @@ case "${1:-help}" in
         echo "http://localhost:8761"
         xdg-open http://localhost:8761 2>/dev/null || open http://localhost:8761 2>/dev/null || echo "Please open http://localhost:8761 in your browser"
         ;;
-    "ui-zipkin"|"zipkin")
-        echo -e "${GREEN}📊 Opening Zipkin UI...${NC}"
-        echo "http://localhost:9411"
-        xdg-open http://localhost:9411 2>/dev/null || open http://localhost:9411 2>/dev/null || echo "Please open http://localhost:9411 in your browser"
+    "ui-jaeger"|"jaeger")
+        echo -e "${GREEN}📊 Opening Jaeger UI...${NC}"
+        echo "http://localhost:16686"
+        xdg-open http://localhost:16686 2>/dev/null || open http://localhost:16686 2>/dev/null || echo "Please open http://localhost:16686 in your browser"
+        ;;
+    "ui-prometheus"|"prometheus")
+        echo -e "${GREEN}📊 Opening Prometheus...${NC}"
+        echo "http://localhost:9090"
+        xdg-open http://localhost:9090 2>/dev/null || open http://localhost:9090 2>/dev/null || echo "Please open http://localhost:9090 in your browser"
+        ;;
+    "ui-grafana"|"grafana")
+        echo -e "${GREEN}📊 Opening Grafana...${NC}"
+        echo "http://localhost:3000 (admin/admin123)"
+        xdg-open http://localhost:3000 2>/dev/null || open http://localhost:3000 2>/dev/null || echo "Please open http://localhost:3000 in your browser"
         ;;
     "ui-pgadmin"|"pgadmin")
         echo -e "${GREEN}📊 Opening PgAdmin...${NC}"
