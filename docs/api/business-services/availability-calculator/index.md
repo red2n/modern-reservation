@@ -91,7 +91,7 @@ X-Tenant-ID: <tenant-id>
       }
     },
     {
-      "typeId": "deluxe", 
+      "typeId": "deluxe",
       "typeName": "Deluxe Room",
       "available": 8,
       "total": 15,
@@ -131,7 +131,7 @@ Content-Type: application/json
       "rooms": 2
     },
     {
-      "propertyId": "prop-124", 
+      "propertyId": "prop-124",
       "checkIn": "2025-10-20",
       "checkOut": "2025-10-22",
       "roomType": "deluxe",
@@ -275,7 +275,7 @@ Purpose: Reduce available inventory when booking is confirmed
 **Reservation Cancellation**
 ```yaml
 Topic: reservation.cancelled
-Handler: restoreInventoryOnCancellation()  
+Handler: restoreInventoryOnCancellation()
 Purpose: Restore inventory when booking is cancelled
 ```
 
@@ -309,16 +309,16 @@ availability:
   cache:
     ttl: 300s              # Cache availability for 5 minutes
     max-entries: 10000     # Maximum cache entries
-    
+
   processing:
     parallel-threads: 8    # Parallel processing threads
     batch-size: 100        # Bulk check batch size
-    
+
   holds:
     default-duration: 600s # Default hold duration (10 minutes)
     max-duration: 3600s    # Maximum hold duration (1 hour)
     cleanup-interval: 60s  # Expired hold cleanup interval
-    
+
   inventory:
     overbooking-limit: 5   # Overbooking percentage
     lookahead-days: 365    # Inventory lookahead period
@@ -329,7 +329,7 @@ spring:
     url: jdbc:postgresql://localhost:5432/availability
     username: availability_user
     password: ${AVAILABILITY_DB_PASSWORD}
-    
+
   jpa:
     hibernate:
       ddl-auto: validate
@@ -340,7 +340,7 @@ spring:
         order_inserts: true
         order_updates: true
 
-# Redis Configuration  
+# Redis Configuration
 spring:
   redis:
     host: localhost
@@ -405,7 +405,7 @@ public void warmAvailabilityCache()
 ```java
 // Parallel availability checks
 CompletableFuture<AvailabilityResult>[] futures = requests.stream()
-    .map(request -> CompletableFuture.supplyAsync(() -> 
+    .map(request -> CompletableFuture.supplyAsync(() ->
         checkSingleAvailability(request), executor))
     .toArray(CompletableFuture[]::new);
 ```
@@ -418,7 +418,7 @@ cd apps/backend/java-services/business-services/availability-calculator
 mvn test
 ```
 
-### Integration Tests  
+### Integration Tests
 ```bash
 mvn verify -P integration-tests
 ```
@@ -446,7 +446,7 @@ scenarios:
       - get:
           url: "/api/v1/availability/check"
           qs:
-            propertyId: "prop-123" 
+            propertyId: "prop-123"
             checkIn: "2025-10-15"
             checkOut: "2025-10-17"
 ```
@@ -540,7 +540,7 @@ CREATE TABLE inventory_holds (
 # Check database connection pool
 curl http://localhost:8081/actuator/metrics/hikaricp.connections.active
 
-# Monitor cache performance  
+# Monitor cache performance
 curl http://localhost:8081/actuator/metrics/cache.gets
 
 # Check parallel processing metrics

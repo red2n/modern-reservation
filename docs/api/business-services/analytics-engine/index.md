@@ -207,7 +207,7 @@ The Analytics Engine consumes the following Kafka events:
 ### Reservation Events
 ```yaml
 Topic: reservation.created
-Schema: 
+Schema:
   - reservationId: string
   - guestId: string
   - propertyId: string
@@ -237,11 +237,11 @@ analytics:
   retention:
     raw-data: 90d        # Raw event data retention
     aggregated: 365d     # Aggregated metrics retention
-  
+
   processing:
     batch-size: 1000
     parallel-workers: 4
-    
+
   cache:
     metrics-ttl: 300s    # Cache metrics for 5 minutes
     dashboard-ttl: 60s   # Cache dashboard data for 1 minute
@@ -325,7 +325,7 @@ Key metrics exposed:
 http_requests_total{service="analytics-engine"}
 http_request_duration_seconds{service="analytics-engine"}
 
-# Business metrics  
+# Business metrics
 analytics_events_processed_total
 analytics_query_duration_seconds
 analytics_cache_hits_total
