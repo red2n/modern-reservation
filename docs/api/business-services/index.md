@@ -10,12 +10,12 @@ Our business services are built using **Java Spring Boot** with **OpenTelemetry*
 
 | Service | Purpose | Port | Status | Documentation |
 |---------|---------|------|--------|---------------|
-| [**Analytics Engine**](./analytics-engine/) | Real-time analytics and reporting | 8080 | ✅ Active | [API Docs](./analytics-engine/api.md) |
-| [**Availability Calculator**](./availability-calculator/) | Room availability computation | 8081 | ✅ Active | [API Docs](./availability-calculator/api.md) |
-| [**Payment Processor**](./payment-processor/) | Secure payment handling | 8082 | ✅ Active | [API Docs](./payment-processor/api.md) |
-| [**Rate Management**](./rate-management/) | Dynamic pricing engine | 8083 | ✅ Active | [API Docs](./rate-management/api.md) |
-| [**Reservation Engine**](./reservation-engine/) | Core booking logic | 8084 | ✅ Active | [API Docs](./reservation-engine/api.md) |
-| [**Batch Processor**](./batch-processor/) | Background job processing | 8085 | 🚧 Development | [API Docs](./batch-processor/api.md) |
+| [**Analytics Engine**](./analytics-engine/) | Real-time analytics and reporting | 8080 | ✅ Active | [API Docs](./analytics-engine/) |
+| [**Availability Calculator**](./availability-calculator/) | Room availability computation | 8081 | ✅ Active | [API Docs](./availability-calculator/) |
+| [**Payment Processor**](./payment-processor/) | Secure payment handling | 8082 | ✅ Active | [API Docs](./payment-processor/) |
+| [**Rate Management**](./rate-management/) | Dynamic pricing engine | 8083 | ✅ Active | [API Docs](./rate-management/) |
+| [**Reservation Engine**](./reservation-engine/) | Core booking logic | 8084 | ✅ Active | [API Docs](./reservation-engine/) |
+| [**Batch Processor**](./batch-processor/) | Background job processing | 8085 | 🚧 Development | [API Docs](./batch-processor/) |
 
 ## 🚀 Getting Started
 
@@ -57,7 +57,7 @@ All services include distributed tracing:
 # Check all service health
 ./dev.sh status
 
-# View service logs  
+# View service logs
 ./dev.sh logs <service-name>
 ```
 
@@ -146,7 +146,7 @@ docker logs modern-reservation-<service-name>
 ./dev.sh setup-database
 ```
 
-**Kafka Connection Issues** 
+**Kafka Connection Issues**
 ```bash
 # Check Kafka cluster health
 ./dev.sh kafka-status
