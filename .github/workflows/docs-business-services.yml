@@ -48,7 +48,7 @@ jobs:
           else
             echo "services=false" >> $GITHUB_OUTPUT
           fi
-          
+
           if git diff --name-only HEAD~1 HEAD | grep -E '^docs/api/business-services/'; then
             echo "docs=true" >> $GITHUB_OUTPUT
           else
@@ -73,7 +73,7 @@ jobs:
       matrix:
         service: [
           'analytics-engine',
-          'availability-calculator', 
+          'availability-calculator',
           'payment-processor',
           'rate-management',
           'reservation-engine'
@@ -99,11 +99,11 @@ jobs:
       - name: 📖 Generate Javadoc for ${{ matrix.service }}
         run: |
           cd apps/backend/java-services/business-services/${{ matrix.service }}
-          
+
           # Check if service has Java source files
           if [ -d "src/main/java" ] && [ "$(find src/main/java -name '*.java' | wc -l)" -gt 0 ]; then
             echo "📚 Generating Javadoc for ${{ matrix.service }}..."
-            
+
             # Generate Javadoc with custom styling
             mvn javadoc:javadoc \
               -Dshow=private \
@@ -113,7 +113,7 @@ jobs:
               -Dbottom="Generated for Modern Reservation System" \
               -Dadditionalparam="-Xdoclint:none" \
               -Dmaven.javadoc.failOnError=false
-              
+
           else
             echo "⚠️ No Java source files found for ${{ matrix.service }}, creating placeholder..."
             mkdir -p target/site/apidocs
@@ -157,7 +157,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
 
       - name: 📥 Download all Javadoc artifacts
         if: needs.generate-javadoc.result == 'success'
@@ -168,10 +167,10 @@ jobs:
       - name: 🏗️ Prepare documentation structure
         run: |
           echo "🏗️ Setting up documentation structure..."
-          
+
           # Create API docs directory structure
           mkdir -p docs/api/business-services/javadoc
-          
+
           # Copy Javadoc artifacts if they exist
           if [ -d "./javadoc-artifacts" ]; then
             for service in analytics-engine availability-calculator payment-processor rate-management reservation-engine; do
@@ -186,87 +185,87 @@ jobs:
         run: |
           cat > docs/api/index.md << 'EOF'
           # Modern Reservation System API Documentation
-          
+
           Welcome to the comprehensive API documentation for the Modern Reservation System.
-          
+
           ## 🏗️ Architecture
-          
+
           Our system follows a **microservices architecture** with:
           - **Hybrid Technology Stack**: Node.js + Java services
           - **Event-Driven Communication**: Apache Kafka
           - **Service Discovery**: Eureka Server
           - **API Gateway**: GraphQL Federation + REST
-          
+
           ## 📋 Service Categories
-          
+
           ### 🏢 Business Services (Java Spring Boot)
           Core business logic and domain services:
           - [**Business Services Overview**](./business-services/) - Complete business services documentation
-          - [**Analytics Engine**](./business-services/analytics-engine/) - Real-time analytics and reporting  
+          - [**Analytics Engine**](./business-services/analytics-engine/) - Real-time analytics and reporting
           - [**Availability Calculator**](./business-services/availability-calculator/) - Room availability computation
           - [**Payment Processor**](./business-services/payment-processor/) - Secure payment handling
           - [**Rate Management**](./business-services/rate-management/) - Dynamic pricing engine
           - [**Reservation Engine**](./business-services/reservation-engine/) - Core booking logic
-          
+
           ### 🌐 API Services (Node.js)
           High-performance I/O services:
           - **GraphQL Gateway** - Unified data graph and federation
           - **WebSocket Service** - Real-time communication
           - **Notification Service** - Multi-channel messaging
-          
+
           ### 🏗️ Infrastructure Services
           Platform and infrastructure:
           - **Eureka Server** - Service discovery and registration
           - **Config Server** - Centralized configuration management
-          
+
           ## 🚀 Getting Started
-          
+
           ### Quick Start
           ```bash
           # Start all infrastructure
           ./dev.sh docker-start
-          
-          # Start business services  
+
+          # Start business services
           ./dev.sh start-business-services
-          
+
           # Check service health
           ./dev.sh status
           ```
-          
+
           ### Service URLs
           | Service | URL | Health Check |
           |---------|-----|--------------|
           | Eureka Dashboard | http://localhost:8761 | ✅ Active |
           | GraphQL Playground | http://localhost:4000/graphql | ✅ Active |
           | API Gateway | http://localhost:3001 | ✅ Active |
-          
+
           ## 📊 Observability
-          
+
           ### Monitoring Stack
           - **Jaeger Tracing**: http://localhost:16686
-          - **Prometheus Metrics**: http://localhost:9090  
+          - **Prometheus Metrics**: http://localhost:9090
           - **Grafana Dashboards**: http://localhost:3000 (admin/admin123)
-          
+
           ### OpenTelemetry
           All services include distributed tracing with automatic instrumentation.
-          
+
           ## 🔐 Authentication
-          
+
           ### JWT Authentication
           ```bash
           # Get JWT token
           curl -X POST http://localhost:3001/auth/login \
             -H "Content-Type: application/json" \
             -d '{"username": "admin", "password": "admin123"}'
-          
+
           # Use token in requests
           curl -H "Authorization: Bearer <jwt-token>" \
                -H "X-Tenant-ID: <tenant-id>" \
                http://localhost:8080/api/v1/analytics/overview
           ```
-          
+
           ## 📡 GraphQL Federation
-          
+
           ### Unified Schema
           Access all services through a single GraphQL endpoint:
           ```graphql
@@ -285,26 +284,26 @@ jobs:
             }
           }
           ```
-          
+
           ## 🔗 Event-Driven Architecture
-          
+
           ### Kafka Topics
           | Topic | Purpose | Schema |
           |-------|---------|--------|
           | `reservation.created` | New reservations | [Avro Schema](../references/AVRO_QUICK_REFERENCE.md) |
           | `payment.processed` | Payment confirmations | [Avro Schema](../references/AVRO_QUICK_REFERENCE.md) |
           | `availability.updated` | Room availability changes | [Avro Schema](../references/AVRO_QUICK_REFERENCE.md) |
-          
+
           ## 📚 Additional Resources
-          
+
           - [**Architecture Documentation**](../architecture/)
-          - [**Deployment Guide**](../deployment/)  
+          - [**Deployment Guide**](../deployment/)
           - [**Multi-Tenancy Implementation**](../MULTI_TENANCY.md)
           - [**Development Guide**](../guides/DEV_QUICK_REFERENCE.md)
-          
+
           ---
-          
-          **Generated**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")  
+
+          **Generated**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
           **Version**: $(git rev-parse --short HEAD)
           EOF
 
@@ -312,7 +311,7 @@ jobs:
         run: |
           # Update Jekyll config for API docs
           cat >> docs/_config.yml << 'EOF'
-          
+
           # API Documentation Configuration
           api_docs:
             base_path: "/api"
@@ -323,7 +322,7 @@ jobs:
               - name: "GraphQL API"
                 path: "/api/graphql"
                 description: "Unified GraphQL endpoint"
-            
+
           # Navigation
           navigation:
             - title: "Home"
@@ -339,7 +338,7 @@ jobs:
               url: "/architecture/"
             - title: "Deployment"
               url: "/deployment/"
-          
+
           # Plugins for enhanced functionality
           plugins:
             - jekyll-toc
@@ -408,13 +407,13 @@ jobs:
           echo "| **Site Build** | ${{ needs.build-documentation-site.result }} | Documentation site compilation |" >> $GITHUB_STEP_SUMMARY
           echo "| **Pages Deployment** | ${{ needs.deploy-to-pages.result }} | GitHub Pages deployment |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [[ "${{ needs.deploy-to-pages.result }}" == "success" ]]; then
             echo "🎉 **Documentation successfully deployed!**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "📖 **Access your documentation at**: https://red2n.github.io/modern-reservation/api/business-services/" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
           echo "**Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
