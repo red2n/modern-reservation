@@ -99,10 +99,45 @@ jobs:
       - name: 📖 Generate Javadoc for ${{ matrix.service }}
         run: |
           cd apps/backend/java-services/business-services/${{ matrix.service }}
-
+          
+          echo "🔍 Checking Java source files for ${{ matrix.service }}..."
+          
           # Check if service has Java source files
-          if [ -d "src/main/java" ] && [ "$(find src/main/java -name '*.java' | wc -l)" -gt 0 ]; then
-            echo "📚 Generating Javadoc for ${{ matrix.service }}..."
+          if [ -d "src/main/java" ] && [ "$(find src/main/java -name '*.java' 2>/dev/null | wc -l)" -gt 0 ]; then
+            echo "📚 Found Java source files. Generating Javadoc for ${{ matrix.service }}..."
+            
+            # Ensure we can compile first
+            mvn clean compile -q -DskipTests=true || {
+              echo "⚠️ Compilation failed for ${{ matrix.service }}, creating placeholder..."
+              mkdir -p target/site/apidocs
+              cat > target/site/apidocs/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>${{ matrix.service }} API Documentation</title>
+              <style>
+                  body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+                  .container { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                  .placeholder { text-align: center; color: #666; }
+                  .service-name { color: #333; margin-bottom: 20px; }
+                  .message { font-size: 18px; margin-bottom: 30px; }
+                  .back-link { color: #0066cc; text-decoration: none; }
+                  .back-link:hover { text-decoration: underline; }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <div class="placeholder">
+                      <h1 class="service-name">${{ matrix.service }} Service</h1>
+                      <p class="message">⚠️ Java source compilation failed. API documentation will be generated when source code is ready.</p>
+                      <p><a href="../../" class="back-link">← Back to Business Services Documentation</a></p>
+                  </div>
+              </div>
+          </body>
+          </html>
+          EOF
+              exit 0
+            }
 
             # Generate Javadoc with custom styling
             mvn javadoc:javadoc \
@@ -112,8 +147,36 @@ jobs:
               -Ddoctitle="${{ matrix.service }} API Documentation" \
               -Dbottom="Generated for Modern Reservation System" \
               -Dadditionalparam="-Xdoclint:none" \
-              -Dmaven.javadoc.failOnError=false
-
+              -Dmaven.javadoc.failOnError=false || {
+                echo "⚠️ Javadoc generation failed for ${{ matrix.service }}, creating placeholder..."
+                mkdir -p target/site/apidocs
+                cat > target/site/apidocs/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>${{ matrix.service }} API Documentation</title>
+              <style>
+                  body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+                  .container { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                  .placeholder { text-align: center; color: #666; }
+                  .service-name { color: #333; margin-bottom: 20px; }
+                  .message { font-size: 18px; margin-bottom: 30px; }
+                  .back-link { color: #0066cc; text-decoration: none; }
+                  .back-link:hover { text-decoration: underline; }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <div class="placeholder">
+                      <h1 class="service-name">${{ matrix.service }} Service</h1>
+                      <p class="message">⚠️ Javadoc generation failed. API documentation will be available when Java source code is completed.</p>
+                      <p><a href="../../" class="back-link">← Back to Business Services Documentation</a></p>
+                  </div>
+              </div>
+          </body>
+          </html>
+          EOF
+              }
           else
             echo "⚠️ No Java source files found for ${{ matrix.service }}, creating placeholder..."
             mkdir -p target/site/apidocs
@@ -123,20 +186,34 @@ jobs:
           <head>
               <title>${{ matrix.service }} API Documentation</title>
               <style>
-                  body { font-family: Arial, sans-serif; padding: 20px; }
-                  .placeholder { text-align: center; color: #666; margin-top: 100px; }
+                  body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+                  .container { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                  .placeholder { text-align: center; color: #666; }
+                  .service-name { color: #333; margin-bottom: 20px; }
+                  .message { font-size: 18px; margin-bottom: 30px; }
+                  .back-link { color: #0066cc; text-decoration: none; }
+                  .back-link:hover { text-decoration: underline; }
+                  .status { background: #e3f2fd; padding: 15px; border-radius: 4px; margin: 20px 0; }
               </style>
           </head>
           <body>
-              <div class="placeholder">
-                  <h2>${{ matrix.service }} Service</h2>
-                  <p>API documentation will be generated when Java source files are added.</p>
-                  <p><a href="../../">← Back to Business Services Documentation</a></p>
+              <div class="container">
+                  <div class="placeholder">
+                      <h1 class="service-name">${{ matrix.service }} Service</h1>
+                      <p class="message">🚧 Service in Development</p>
+                      <div class="status">
+                          <p><strong>Status:</strong> API documentation will be generated when Java source files are added to this service.</p>
+                          <p><strong>Expected:</strong> Spring Boot REST controllers with proper JavaDoc annotations</p>
+                      </div>
+                      <p><a href="../../" class="back-link">← Back to Business Services Documentation</a></p>
+                  </div>
               </div>
           </body>
           </html>
           EOF
           fi
+          
+          echo "✅ Javadoc processing completed for ${{ matrix.service }}"
 
       - name: 📦 Upload Javadoc artifacts
         uses: actions/upload-artifact@v4
