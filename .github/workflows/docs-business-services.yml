@@ -1,0 +1,421 @@
+name: Generate and Deploy Business Services Documentation
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'apps/backend/java-services/business-services/**'
+      - 'docs/api/business-services/**'
+      - '.github/workflows/docs-business-services.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'apps/backend/java-services/business-services/**'
+      - 'docs/api/business-services/**'
+  workflow_dispatch:
+    inputs:
+      deploy_to_pages:
+        description: 'Deploy to GitHub Pages'
+        required: false
+        default: 'true'
+        type: boolean
+
+env:
+  JAVA_VERSION: '21'
+  NODE_VERSION: '20'
+
+jobs:
+  analyze-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      services-changed: ${{ steps.changes.outputs.services }}
+      docs-changed: ${{ steps.changes.outputs.docs }}
+      should-deploy: ${{ steps.deploy-check.outputs.should-deploy }}
+    steps:
+      - name: 🔍 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: 📋 Detect changes
+        id: changes
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -E '^apps/backend/java-services/business-services/'; then
+            echo "services=true" >> $GITHUB_OUTPUT
+          else
+            echo "services=false" >> $GITHUB_OUTPUT
+          fi
+          
+          if git diff --name-only HEAD~1 HEAD | grep -E '^docs/api/business-services/'; then
+            echo "docs=true" >> $GITHUB_OUTPUT
+          else
+            echo "docs=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🚀 Check deployment conditions
+        id: deploy-check
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.deploy_to_pages }}" == "true" ]] || \
+             [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+          else
+            echo "should-deploy=false" >> $GITHUB_OUTPUT
+          fi
+
+  generate-javadoc:
+    needs: analyze-changes
+    if: needs.analyze-changes.outputs.services-changed == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [
+          'analytics-engine',
+          'availability-calculator', 
+          'payment-processor',
+          'rate-management',
+          'reservation-engine'
+        ]
+    steps:
+      - name: 🔍 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: ☕ Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: maven
+
+      - name: 🔧 Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: 📖 Generate Javadoc for ${{ matrix.service }}
+        run: |
+          cd apps/backend/java-services/business-services/${{ matrix.service }}
+          
+          # Check if service has Java source files
+          if [ -d "src/main/java" ] && [ "$(find src/main/java -name '*.java' | wc -l)" -gt 0 ]; then
+            echo "📚 Generating Javadoc for ${{ matrix.service }}..."
+            
+            # Generate Javadoc with custom styling
+            mvn javadoc:javadoc \
+              -Dshow=private \
+              -Dnohelp \
+              -Dwindowtitle="${{ matrix.service }} API Documentation" \
+              -Ddoctitle="${{ matrix.service }} API Documentation" \
+              -Dbottom="Generated for Modern Reservation System" \
+              -Dadditionalparam="-Xdoclint:none" \
+              -Dmaven.javadoc.failOnError=false
+              
+          else
+            echo "⚠️ No Java source files found for ${{ matrix.service }}, creating placeholder..."
+            mkdir -p target/site/apidocs
+            cat > target/site/apidocs/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>${{ matrix.service }} API Documentation</title>
+              <style>
+                  body { font-family: Arial, sans-serif; padding: 20px; }
+                  .placeholder { text-align: center; color: #666; margin-top: 100px; }
+              </style>
+          </head>
+          <body>
+              <div class="placeholder">
+                  <h2>${{ matrix.service }} Service</h2>
+                  <p>API documentation will be generated when Java source files are added.</p>
+                  <p><a href="../../">← Back to Business Services Documentation</a></p>
+              </div>
+          </body>
+          </html>
+          EOF
+          fi
+
+      - name: 📦 Upload Javadoc artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: javadoc-${{ matrix.service }}
+          path: apps/backend/java-services/business-services/${{ matrix.service }}/target/site/apidocs/
+          retention-days: 30
+
+  build-documentation-site:
+    needs: [analyze-changes, generate-javadoc]
+    if: always() && (needs.analyze-changes.outputs.services-changed == 'true' || needs.analyze-changes.outputs.docs-changed == 'true' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🔍 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📥 Download all Javadoc artifacts
+        if: needs.generate-javadoc.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          path: ./javadoc-artifacts
+
+      - name: 🏗️ Prepare documentation structure
+        run: |
+          echo "🏗️ Setting up documentation structure..."
+          
+          # Create API docs directory structure
+          mkdir -p docs/api/business-services/javadoc
+          
+          # Copy Javadoc artifacts if they exist
+          if [ -d "./javadoc-artifacts" ]; then
+            for service in analytics-engine availability-calculator payment-processor rate-management reservation-engine; do
+              if [ -d "./javadoc-artifacts/javadoc-$service" ]; then
+                echo "📚 Copying Javadoc for $service..."
+                cp -r "./javadoc-artifacts/javadoc-$service" "docs/api/business-services/javadoc/$service"
+              fi
+            done
+          fi
+
+      - name: 📝 Generate API index page
+        run: |
+          cat > docs/api/index.md << 'EOF'
+          # Modern Reservation System API Documentation
+          
+          Welcome to the comprehensive API documentation for the Modern Reservation System.
+          
+          ## 🏗️ Architecture
+          
+          Our system follows a **microservices architecture** with:
+          - **Hybrid Technology Stack**: Node.js + Java services
+          - **Event-Driven Communication**: Apache Kafka
+          - **Service Discovery**: Eureka Server
+          - **API Gateway**: GraphQL Federation + REST
+          
+          ## 📋 Service Categories
+          
+          ### 🏢 Business Services (Java Spring Boot)
+          Core business logic and domain services:
+          - [**Business Services Overview**](./business-services/) - Complete business services documentation
+          - [**Analytics Engine**](./business-services/analytics-engine/) - Real-time analytics and reporting  
+          - [**Availability Calculator**](./business-services/availability-calculator/) - Room availability computation
+          - [**Payment Processor**](./business-services/payment-processor/) - Secure payment handling
+          - [**Rate Management**](./business-services/rate-management/) - Dynamic pricing engine
+          - [**Reservation Engine**](./business-services/reservation-engine/) - Core booking logic
+          
+          ### 🌐 API Services (Node.js)
+          High-performance I/O services:
+          - **GraphQL Gateway** - Unified data graph and federation
+          - **WebSocket Service** - Real-time communication
+          - **Notification Service** - Multi-channel messaging
+          
+          ### 🏗️ Infrastructure Services
+          Platform and infrastructure:
+          - **Eureka Server** - Service discovery and registration
+          - **Config Server** - Centralized configuration management
+          
+          ## 🚀 Getting Started
+          
+          ### Quick Start
+          ```bash
+          # Start all infrastructure
+          ./dev.sh docker-start
+          
+          # Start business services  
+          ./dev.sh start-business-services
+          
+          # Check service health
+          ./dev.sh status
+          ```
+          
+          ### Service URLs
+          | Service | URL | Health Check |
+          |---------|-----|--------------|
+          | Eureka Dashboard | http://localhost:8761 | ✅ Active |
+          | GraphQL Playground | http://localhost:4000/graphql | ✅ Active |
+          | API Gateway | http://localhost:3001 | ✅ Active |
+          
+          ## 📊 Observability
+          
+          ### Monitoring Stack
+          - **Jaeger Tracing**: http://localhost:16686
+          - **Prometheus Metrics**: http://localhost:9090  
+          - **Grafana Dashboards**: http://localhost:3000 (admin/admin123)
+          
+          ### OpenTelemetry
+          All services include distributed tracing with automatic instrumentation.
+          
+          ## 🔐 Authentication
+          
+          ### JWT Authentication
+          ```bash
+          # Get JWT token
+          curl -X POST http://localhost:3001/auth/login \
+            -H "Content-Type: application/json" \
+            -d '{"username": "admin", "password": "admin123"}'
+          
+          # Use token in requests
+          curl -H "Authorization: Bearer <jwt-token>" \
+               -H "X-Tenant-ID: <tenant-id>" \
+               http://localhost:8080/api/v1/analytics/overview
+          ```
+          
+          ## 📡 GraphQL Federation
+          
+          ### Unified Schema
+          Access all services through a single GraphQL endpoint:
+          ```graphql
+          query GetReservationWithAnalytics($id: ID!) {
+            reservation(id: $id) {
+              id
+              guestName
+              checkIn
+              checkOut
+              status
+              analytics {
+                revenue
+                nights
+                averageRate
+              }
+            }
+          }
+          ```
+          
+          ## 🔗 Event-Driven Architecture
+          
+          ### Kafka Topics
+          | Topic | Purpose | Schema |
+          |-------|---------|--------|
+          | `reservation.created` | New reservations | [Avro Schema](../references/AVRO_QUICK_REFERENCE.md) |
+          | `payment.processed` | Payment confirmations | [Avro Schema](../references/AVRO_QUICK_REFERENCE.md) |
+          | `availability.updated` | Room availability changes | [Avro Schema](../references/AVRO_QUICK_REFERENCE.md) |
+          
+          ## 📚 Additional Resources
+          
+          - [**Architecture Documentation**](../architecture/)
+          - [**Deployment Guide**](../deployment/)  
+          - [**Multi-Tenancy Implementation**](../MULTI_TENANCY.md)
+          - [**Development Guide**](../guides/DEV_QUICK_REFERENCE.md)
+          
+          ---
+          
+          **Generated**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")  
+          **Version**: $(git rev-parse --short HEAD)
+          EOF
+
+      - name: 🌐 Generate navigation and Jekyll config
+        run: |
+          # Update Jekyll config for API docs
+          cat >> docs/_config.yml << 'EOF'
+          
+          # API Documentation Configuration
+          api_docs:
+            base_path: "/api"
+            services:
+              - name: "Business Services"
+                path: "/api/business-services"
+                description: "Java Spring Boot microservices"
+              - name: "GraphQL API"
+                path: "/api/graphql"
+                description: "Unified GraphQL endpoint"
+            
+          # Navigation
+          navigation:
+            - title: "Home"
+              url: "/"
+            - title: "API Documentation"
+              url: "/api/"
+              children:
+                - title: "Business Services"
+                  url: "/api/business-services/"
+                - title: "Javadoc References"
+                  url: "/api/business-services/javadoc/"
+            - title: "Architecture"
+              url: "/architecture/"
+            - title: "Deployment"
+              url: "/deployment/"
+          
+          # Plugins for enhanced functionality
+          plugins:
+            - jekyll-toc
+            - jekyll-sitemap
+            - jekyll-feed
+          EOF
+
+      - name: 📦 Create documentation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation-site
+          path: docs/
+          retention-days: 30
+
+  deploy-to-pages:
+    needs: [analyze-changes, build-documentation-site]
+    if: needs.analyze-changes.outputs.should-deploy == 'true' && (needs.build-documentation-site.result == 'success' || needs.build-documentation-site.result == 'skipped')
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - name: 🔍 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 📥 Download documentation artifact
+        if: needs.build-documentation-site.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: documentation-site
+          path: docs/
+
+      - name: 🏗️ Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: 🎯 Build with Jekyll
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./docs
+          destination: ./_site
+
+      - name: 📤 Upload to GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+
+      - name: 🚀 Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  notify-completion:
+    needs: [analyze-changes, generate-javadoc, build-documentation-site, deploy-to-pages]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📊 Documentation Build Summary
+        run: |
+          echo "## 📚 Business Services Documentation Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status | Details |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Changes Analysis** | ${{ needs.analyze-changes.result }} | Services: ${{ needs.analyze-changes.outputs.services-changed }}, Docs: ${{ needs.analyze-changes.outputs.docs-changed }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Javadoc Generation** | ${{ needs.generate-javadoc.result }} | Java API documentation |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Site Build** | ${{ needs.build-documentation-site.result }} | Documentation site compilation |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Pages Deployment** | ${{ needs.deploy-to-pages.result }} | GitHub Pages deployment |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ needs.deploy-to-pages.result }}" == "success" ]]; then
+            echo "🎉 **Documentation successfully deployed!**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "📖 **Access your documentation at**: https://red2n.github.io/modern-reservation/api/business-services/" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY

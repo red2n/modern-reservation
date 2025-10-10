@@ -15,6 +15,22 @@ Welcome to the comprehensive documentation for the Modern Reservation System - a
 
 ## 📚 Documentation Sections
 
+| Section | Description | Link |
+|---------|-------------|------|
+| **🔌 API Documentation** | Complete API reference for all services | [View API Docs](./api/) |
+| **🏢 Business Services** | Java Spring Boot microservices documentation | [View Business Services](./api/business-services/) |
+| **🏗️ Architecture & Design** | System design and architectural decisions | [View Architecture](./architecture/) |
+| **🚀 Deployment** | Infrastructure and deployment guides | [View Deployment](./deployment/) |
+| **📖 Developer Guides** | Development workflows and best practices | [View Guides](./guides/) |
+
+### 🔌 **API Documentation**
+- **[Business Services API](api/business-services/)** - Java Spring Boot microservices
+- **[Analytics Engine](api/business-services/analytics-engine/)** - Real-time analytics and reporting
+- **[Availability Calculator](api/business-services/availability-calculator/)** - Room availability computation
+- **[Payment Processor](api/business-services/payment-processor/)** - Secure payment handling
+- **[Rate Management](api/business-services/rate-management/)** - Dynamic pricing engine
+- **[Reservation Engine](api/business-services/reservation-engine/)** - Core booking logic
+
 ### 🏗️ Architecture & Design
 - **[Event-Driven Architecture](architecture/event-driven-architecture-diagram.md)** - System architecture overview
 - **[Kafka Implementation Guide](architecture/KAFKA_IMPLEMENTATION_GUIDE.md)** - Event streaming implementation
