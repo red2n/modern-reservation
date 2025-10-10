@@ -99,13 +99,13 @@ jobs:
       - name: 📖 Generate Javadoc for ${{ matrix.service }}
         run: |
           cd apps/backend/java-services/business-services/${{ matrix.service }}
-          
+
           echo "🔍 Checking Java source files for ${{ matrix.service }}..."
-          
+
           # Check if service has Java source files
           if [ -d "src/main/java" ] && [ "$(find src/main/java -name '*.java' 2>/dev/null | wc -l)" -gt 0 ]; then
             echo "📚 Found Java source files. Generating Javadoc for ${{ matrix.service }}..."
-            
+
             # Ensure we can compile first
             mvn clean compile -q -DskipTests=true || {
               echo "⚠️ Compilation failed for ${{ matrix.service }}, creating placeholder..."
@@ -212,7 +212,7 @@ jobs:
           </html>
           EOF
           fi
-          
+
           echo "✅ Javadoc processing completed for ${{ matrix.service }}"
 
       - name: 📦 Upload Javadoc artifacts

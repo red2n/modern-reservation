@@ -1,6 +1,6 @@
 # Batch Processor API
 
-The Batch Processor handles scheduled tasks, background processing, and automated maintenance operations for the Modern Reservation System.
+The Batch Processor handles scheduled jobs, data maintenance, reporting, and automated business processes for the Modern Reservation System.
 
 ## 🎯 Overview
 
@@ -9,358 +9,779 @@ The Batch Processor handles scheduled tasks, background processing, and automate
 | **Service Name** | batch-processor |
 | **Port** | 8085 |
 | **Health Check** | `/actuator/health` |
-| **API Base URL** | `http://localhost:8085/api/v1/batch` |  
+| **API Base URL** | `http://localhost:8085/api/v1/batch` |
 | **OpenAPI Spec** | `/v3/api-docs` |
 | **Swagger UI** | `/swagger-ui.html` |
 
-## 🚧 Development Status
+## 🚀 Quick Start
 
-This service is currently in development. API documentation will be available when Java source code is completed.
-
-### Core Features
-- **Scheduled Jobs** - Automated recurring tasks
-- **Data Processing** - Bulk data operations and transformations
-- **Report Generation** - Automated reporting and analytics
-- **System Maintenance** - Database cleanup and optimization
-- **Event Processing** - Asynchronous event handling
-
-### Expected API Endpoints
-- `GET /api/v1/batch/jobs` - List all batch jobs
-- `POST /api/v1/batch/jobs/{jobId}/trigger` - Trigger job execution
-- `GET /api/v1/batch/jobs/{jobId}/status` - Get job execution status
-- `GET /api/v1/batch/jobs/{jobId}/history` - Get job execution history
-- `PUT /api/v1/batch/jobs/{jobId}/schedule` - Update job schedule
-- `POST /api/v1/batch/jobs/{jobId}/pause` - Pause job execution
-- `POST /api/v1/batch/jobs/{jobId}/resume` - Resume job execution
-
-## ⏰ Scheduled Jobs
-
-### Daily Operations
-- **00:00** - Daily financial reconciliation
-- **01:00** - Rate refresh and competitor analysis
-- **02:00** - Database maintenance and cleanup
-- **03:00** - Backup operations
-- **04:00** - Availability cache refresh
-- **05:00** - Analytics data aggregation
-- **06:00** - Report generation
-
-### Hourly Operations
-- **Every Hour** - Reservation confirmations check
-- **Every Hour** - Payment status verification
-- **Every Hour** - Inventory synchronization
-
-### Real-time Processing
-- **Event Queue Processing** - Continuous event consumption
-- **Failed Job Retry** - Automatic retry mechanism
-- **Alert Processing** - System monitoring alerts
-
-## 🔄 Job Processing
-
-### Job Types
-```yaml
-# Batch Job Categories (Planned)
-jobs:
-  financial:
-    - daily-reconciliation
-    - payment-settlements
-    - revenue-reporting
-    
-  operational:
-    - availability-refresh
-    - rate-updates
-    - reservation-cleanup
-    
-  maintenance:
-    - database-optimization
-    - log-cleanup
-    - cache-eviction
-    
-  analytics:
-    - daily-metrics-calculation
-    - trend-analysis
-    - forecasting-updates
-```
-
-### Job Scheduling
-```yaml
-# Job Scheduling Configuration (Planned)
-scheduling:
-  engine: quartz  # Spring Scheduler, Quartz, or custom
-  timezone: UTC
-  retry-policy:
-    max-attempts: 3
-    backoff: exponential
-    base-delay: 30s
-```
-
-## 🔌 Integration Points
-
-### Event Consumption
-- `reservation.status.changed` - Process reservation updates
-- `payment.completed` - Handle payment confirmations  
-- `availability.critical` - Process low inventory alerts
-- `system.maintenance.required` - Trigger maintenance jobs
-
-### Event Publishing
-- `batch.job.started` - Job execution started
-- `batch.job.completed` - Job execution completed
-- `batch.job.failed` - Job execution failed
-- `daily.reports.generated` - Daily reports available
-- `maintenance.completed` - System maintenance finished
-
-## 🔧 Configuration
-
-```yaml
-# Batch Processor Configuration (Planned)
-batch:
-  jobs:
-    thread-pool-size: 10
-    max-concurrent-jobs: 5
-    job-timeout: 30m
-    
-  scheduling:
-    enabled: true
-    timezone: UTC
-    misfire-policy: fire-once
-    
-  retry:
-    max-attempts: 3
-    backoff-multiplier: 2
-    max-delay: 5m
-    
-  monitoring:
-    metrics-enabled: true
-    alert-on-failure: true
-    slack-notifications: true
-```
-
-## 📊 Job Categories
-
-### Financial Processing
-- **Daily Reconciliation** - Match payments with reservations
-- **Revenue Reporting** - Generate daily/monthly revenue reports
-- **Tax Calculations** - Process tax obligations by jurisdiction
-- **Commission Processing** - Calculate OTA commissions
-- **Refund Processing** - Handle automated refunds
-
-### Operational Tasks
-- **Availability Sync** - Synchronize room availability across channels
-- **Rate Distribution** - Push rate changes to connected systems
-- **Reservation Cleanup** - Remove expired holds and pending bookings
-- **Guest Communication** - Send automated emails and confirmations
-- **Inventory Audits** - Verify booking vs availability consistency
-
-### System Maintenance
-- **Database Optimization** - Rebuild indexes, update statistics
-- **Log Rotation** - Archive and clean application logs
-- **Cache Management** - Refresh and evict cached data
-- **Backup Verification** - Validate backup integrity
-- **Performance Monitoring** - Collect and analyze system metrics
-
-## 📈 Performance Targets
-
-| Metric | Target | Description |
-|--------|--------|-------------|
-| **Job Success Rate** | 99.5% | Successful job completion rate |
-| **Processing Time** | <15min | Maximum job execution time |
-| **Recovery Time** | <5min | Failed job recovery time |
-| **Data Accuracy** | 100% | Financial reconciliation accuracy |
-
-## 🔍 Monitoring & Observability
-
-### Key Metrics (Planned)
-```
-# Batch processing metrics
-batch_jobs_total
-batch_jobs_successful_total
-batch_jobs_failed_total  
-batch_job_duration_seconds
-batch_job_queue_size
-
-# Business metrics
-daily_reconciliation_accuracy
-report_generation_time_seconds
-maintenance_completion_rate
-data_processing_volume_total
-```
-
-### Health Checks
+### Start the Service
 ```bash
-# Service health
+# Via dev script
+./dev.sh start batch-processor
+
+# Via Maven
+cd apps/backend/java-services/business-services/batch-processor
+mvn spring-boot:run
+```
+
+### Health Check
+```bash
 curl http://localhost:8085/actuator/health
-
-# Job scheduler status
-curl http://localhost:8085/actuator/health/scheduler
-
-# Database connectivity
-curl http://localhost:8085/actuator/health/db
-
-# Queue health
-curl http://localhost:8085/actuator/health/queues
 ```
 
-## 🛠️ Job Management
+## ⚙️ Core Features
 
-### Job Control Operations
-```bash
-# List all jobs (Planned)
-curl http://localhost:8085/api/v1/batch/jobs
+### Scheduled Jobs
+- **Daily Reports** - Revenue, occupancy, and performance analytics
+- **Maintenance Tasks** - Data cleanup, archival, and optimization
+- **Business Rules** - Rate updates, inventory adjustments, loyalty processing
+- **External Integrations** - Third-party system synchronization
 
-# Trigger specific job
-curl -X POST http://localhost:8085/api/v1/batch/jobs/daily-reconciliation/trigger
+### Data Processing
+- **ETL Operations** - Extract, transform, and load data workflows
+- **Data Validation** - Consistency checks and quality assurance
+- **Archival Management** - Historical data retention and cleanup
+- **Performance Optimization** - Index maintenance and query optimization
 
-# Check job status
-curl http://localhost:8085/api/v1/batch/jobs/daily-reconciliation/status
+### Automated Operations
+- **Reservation Workflows** - Auto-confirmations, reminders, and cancellations
+- **Financial Processing** - Payment settlements, refunds, and reconciliation
+- **Inventory Management** - Room status updates and availability adjustments
+- **Communication** - Email campaigns, notifications, and alerts
 
-# View job history
-curl http://localhost:8085/api/v1/batch/jobs/daily-reconciliation/history
+## 🔌 API Endpoints
+
+### List All Jobs
+```http
+GET /api/v1/batch/jobs
+Authorization: Bearer <jwt-token>
+X-Tenant-ID: <tenant-id>
 ```
 
-### Job Configuration
+**Response:**
 ```json
 {
-  "jobDefinition": {
-    "name": "daily-reconciliation",
-    "description": "Daily financial reconciliation",
-    "schedule": "0 0 0 * * ?",
-    "timeout": "30m",
-    "retryPolicy": {
-      "maxAttempts": 3,
-      "backoffMultiplier": 2
+  "jobs": [
+    {
+      "jobId": "daily-revenue-report",
+      "name": "Daily Revenue Report",
+      "description": "Generate daily revenue and occupancy reports",
+      "schedule": "0 6 * * *",
+      "status": "ACTIVE",
+      "lastRun": "2025-10-10T06:00:00Z",
+      "nextRun": "2025-10-11T06:00:00Z",
+      "executionTime": "45s",
+      "successRate": 99.2
     },
-    "alerting": {
-      "onFailure": true,
-      "onSuccess": false,
-      "channels": ["slack", "email"]
+    {
+      "jobId": "data-cleanup",
+      "name": "Data Cleanup",
+      "description": "Archive old records and optimize database",
+      "schedule": "0 2 * * 0",
+      "status": "ACTIVE",
+      "lastRun": "2025-10-06T02:00:00Z",
+      "nextRun": "2025-10-13T02:00:00Z",
+      "executionTime": "2m 15s",
+      "successRate": 100.0
+    },
+    {
+      "jobId": "rate-sync",
+      "name": "Rate Synchronization",
+      "description": "Sync rates with external channel managers",
+      "schedule": "0 */4 * * *",
+      "status": "ACTIVE",
+      "lastRun": "2025-10-10T12:00:00Z",
+      "nextRun": "2025-10-10T16:00:00Z",
+      "executionTime": "1m 30s",
+      "successRate": 98.5
     }
+  ],
+  "summary": {
+    "totalJobs": 15,
+    "activeJobs": 12,
+    "pausedJobs": 2,
+    "failedJobs": 1,
+    "avgExecutionTime": "1m 25s"
   }
 }
 ```
 
-## 🔄 Event-Driven Processing
-
-### Kafka Integration
-```yaml
-# Kafka Topics (Planned)
-topics:
-  consume:
-    - reservation-events
-    - payment-events
-    - availability-events
-    - system-events
-    
-  produce:
-    - batch-job-events
-    - report-events
-    - maintenance-events
+### Get Job Details
+```http
+GET /api/v1/batch/jobs/{jobId}
+Authorization: Bearer <jwt-token>
+X-Tenant-ID: <tenant-id>
 ```
 
-### Asynchronous Processing
-- **Event Queue Consumers** - Process events from other services
-- **Delayed Job Execution** - Schedule jobs based on business events
-- **Priority Queue Processing** - Handle urgent vs routine tasks
-- **Dead Letter Queue** - Manage failed event processing
-
-## 🧪 Development & Testing
-
-### Local Development Setup
-```bash
-# Start the service (when implemented)
-./dev.sh start batch-processor
-
-# Run with development profile
-cd apps/backend/java-services/business-services/batch-processor
-mvn spring-boot:run -Dspring-boot.run.profiles=dev
+**Response:**
+```json
+{
+  "jobId": "daily-revenue-report",
+  "name": "Daily Revenue Report",
+  "description": "Generate comprehensive daily revenue and occupancy reports for all properties",
+  "category": "REPORTING",
+  "schedule": {
+    "cron": "0 6 * * *",
+    "timezone": "America/New_York",
+    "description": "Daily at 6:00 AM EST"
+  },
+  "configuration": {
+    "properties": ["ALL"],
+    "reportTypes": ["REVENUE", "OCCUPANCY", "ADR", "REVPAR"],
+    "outputFormat": "PDF",
+    "emailRecipients": [
+      "revenue@hotel.com",
+      "management@hotel.com"
+    ],
+    "archiveLocation": "s3://reports/daily/"
+  },
+  "status": "ACTIVE",
+  "execution": {
+    "lastRun": "2025-10-10T06:00:00Z",
+    "nextRun": "2025-10-11T06:00:00Z",
+    "avgExecutionTime": "45s",
+    "successRate": 99.2,
+    "totalRuns": 365,
+    "successfulRuns": 362,
+    "failedRuns": 3
+  },
+  "dependencies": [
+    "reservation-engine",
+    "payment-processor",
+    "analytics-engine"
+  ],
+  "monitoring": {
+    "alertsEnabled": true,
+    "alertThreshold": "2m",
+    "notificationChannels": ["email", "slack"]
+  }
+}
 ```
 
-### Testing Strategies
-```bash
-# Unit tests
-mvn test
-
-# Integration tests with scheduler
-mvn verify -P integration-tests
-
-# Job execution simulation tests
-mvn verify -P simulation-tests
+### Trigger Job Manually
+```http
+POST /api/v1/batch/jobs/{jobId}/execute
+Authorization: Bearer <jwt-token>
+X-Tenant-ID: <tenant-id>
+Content-Type: application/json
 ```
 
-## 🔧 Job Development
+**Request Body:**
+```json
+{
+  "parameters": {
+    "date": "2025-10-10",
+    "properties": ["prop-123", "prop-456"],
+    "reportType": "DETAILED"
+  },
+  "priority": "HIGH",
+  "triggeredBy": "admin-user",
+  "reason": "Manual execution for specific date range"
+}
+```
 
-### Custom Job Creation
-```java
-// Expected Job Interface (Planned)
-@Component
-public class DailyReconciliationJob implements BatchJob {
-    
-    @Override
-    public JobResult execute(JobContext context) {
-        // Job implementation
-        return JobResult.success();
+**Response:**
+```json
+{
+  "executionId": "exec-789012",
+  "jobId": "daily-revenue-report",
+  "status": "RUNNING",
+  "startTime": "2025-10-10T14:30:00Z",
+  "estimatedCompletion": "2025-10-10T14:31:00Z",
+  "parameters": {
+    "date": "2025-10-10",
+    "properties": ["prop-123", "prop-456"],
+    "reportType": "DETAILED"
+  },
+  "progress": {
+    "percentage": 0,
+    "currentStep": "Initializing",
+    "totalSteps": 5
+  }
+}
+```
+
+### Get Job Execution Status
+```http
+GET /api/v1/batch/executions/{executionId}
+Authorization: Bearer <jwt-token>
+X-Tenant-ID: <tenant-id>
+```
+
+**Response:**
+```json
+{
+  "executionId": "exec-789012",
+  "jobId": "daily-revenue-report",
+  "status": "COMPLETED",
+  "startTime": "2025-10-10T14:30:00Z",
+  "endTime": "2025-10-10T14:30:47Z",
+  "duration": "47s",
+  "progress": {
+    "percentage": 100,
+    "currentStep": "Completed",
+    "totalSteps": 5,
+    "stepsCompleted": [
+      {
+        "step": "Data Collection",
+        "duration": "15s",
+        "status": "SUCCESS",
+        "recordsProcessed": 1250
+      },
+      {
+        "step": "Revenue Calculation",
+        "duration": "20s",
+        "status": "SUCCESS",
+        "calculations": 850
+      },
+      {
+        "step": "Report Generation",
+        "duration": "10s",
+        "status": "SUCCESS",
+        "pages": 12
+      },
+      {
+        "step": "Email Distribution",
+        "duration": "2s",
+        "status": "SUCCESS",
+        "emailsSent": 5
+      }
+    ]
+  },
+  "output": {
+    "reportUrl": "https://reports.example.com/daily-revenue-2025-10-10.pdf",
+    "recordsProcessed": 1250,
+    "outputSize": "2.3 MB",
+    "checksum": "sha256:abc123..."
+  },
+  "logs": {
+    "logLevel": "INFO",
+    "logUrl": "https://logs.example.com/exec-789012.log",
+    "errorCount": 0,
+    "warningCount": 2
+  }
+}
+```
+
+### Schedule New Job
+```http
+POST /api/v1/batch/jobs
+Authorization: Bearer <jwt-token>
+X-Tenant-ID: <tenant-id>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "name": "Weekly Guest Satisfaction Survey",
+  "description": "Send satisfaction surveys to guests who checked out in the past week",
+  "category": "COMMUNICATION",
+  "schedule": {
+    "cron": "0 10 * * 1",
+    "timezone": "America/New_York"
+  },
+  "configuration": {
+    "surveyTemplate": "post-stay-satisfaction",
+    "targetAudience": "CHECKED_OUT_LAST_7_DAYS",
+    "emailTemplate": "survey-invitation",
+    "excludeRecent": true,
+    "maxRecipients": 1000
+  },
+  "dependencies": [
+    "guest-service"
+  ],
+  "monitoring": {
+    "alertsEnabled": true,
+    "alertThreshold": "5m",
+    "notificationChannels": ["email"]
+  },
+  "retryPolicy": {
+    "maxRetries": 3,
+    "retryDelay": "5m",
+    "backoffMultiplier": 2
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "jobId": "weekly-guest-survey",
+  "name": "Weekly Guest Satisfaction Survey",
+  "status": "ACTIVE",
+  "schedule": {
+    "cron": "0 10 * * 1",
+    "nextRun": "2025-10-14T10:00:00Z"
+  },
+  "createdAt": "2025-10-10T15:00:00Z",
+  "createdBy": "admin-user"
+}
+```
+
+### Pause/Resume Job
+```http
+PUT /api/v1/batch/jobs/{jobId}/status
+Authorization: Bearer <jwt-token>
+X-Tenant-ID: <tenant-id>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "status": "PAUSED",
+  "reason": "Maintenance window",
+  "pausedBy": "admin-user"
+}
+```
+
+**Response:**
+```json
+{
+  "jobId": "daily-revenue-report",
+  "previousStatus": "ACTIVE",
+  "currentStatus": "PAUSED",
+  "changedAt": "2025-10-10T15:30:00Z",
+  "changedBy": "admin-user",
+  "reason": "Maintenance window",
+  "nextScheduledRun": null
+}
+```
+
+### Get Job Execution History
+```http
+GET /api/v1/batch/jobs/{jobId}/executions?limit=50&offset=0
+Authorization: Bearer <jwt-token>
+X-Tenant-ID: <tenant-id>
+```
+
+**Response:**
+```json
+{
+  "executions": [
+    {
+      "executionId": "exec-789012",
+      "startTime": "2025-10-10T06:00:00Z",
+      "endTime": "2025-10-10T06:00:45Z",
+      "duration": "45s",
+      "status": "COMPLETED",
+      "recordsProcessed": 1250,
+      "triggeredBy": "SCHEDULER"
+    },
+    {
+      "executionId": "exec-789011",
+      "startTime": "2025-10-09T06:00:00Z",
+      "endTime": "2025-10-09T06:00:42Z",
+      "duration": "42s",
+      "status": "COMPLETED",
+      "recordsProcessed": 1180,
+      "triggeredBy": "SCHEDULER"
+    },
+    {
+      "executionId": "exec-789010",
+      "startTime": "2025-10-08T06:00:00Z",
+      "endTime": null,
+      "duration": null,
+      "status": "FAILED",
+      "error": "Database connection timeout",
+      "triggeredBy": "SCHEDULER"
     }
-    
+  ],
+  "pagination": {
+    "limit": 50,
+    "offset": 0,
+    "total": 365,
+    "hasMore": true
+  },
+  "summary": {
+    "successRate": 99.2,
+    "avgDuration": "43s",
+    "totalExecutions": 365,
+    "recentFailures": 1
+  }
+}
+```
+
+## 📊 Predefined Job Categories
+
+### Reporting Jobs
+```yaml
+daily-revenue-report:
+  schedule: "0 6 * * *"
+  description: "Daily revenue and occupancy analysis"
+
+weekly-performance-summary:
+  schedule: "0 7 * * 1"
+  description: "Weekly KPI and performance metrics"
+
+monthly-financial-report:
+  schedule: "0 8 1 * *"
+  description: "Monthly P&L and financial analysis"
+
+guest-satisfaction-analytics:
+  schedule: "0 9 * * 1"
+  description: "Weekly guest feedback and satisfaction trends"
+```
+
+### Maintenance Jobs
+```yaml
+data-cleanup:
+  schedule: "0 2 * * 0"
+  description: "Archive old data and optimize database"
+
+log-rotation:
+  schedule: "0 3 * * *"
+  description: "Rotate and compress application logs"
+
+cache-refresh:
+  schedule: "0 4 * * *"
+  description: "Refresh cached data and clear expired entries"
+
+health-check-aggregation:
+  schedule: "*/15 * * * *"
+  description: "Aggregate system health metrics"
+```
+
+### Business Process Jobs
+```yaml
+rate-sync:
+  schedule: "0 */4 * * *"
+  description: "Synchronize rates with channel managers"
+
+inventory-update:
+  schedule: "0 */2 * * *"
+  description: "Update room inventory across all channels"
+
+loyalty-points-processing:
+  schedule: "0 23 * * *"
+  description: "Process loyalty points and tier updates"
+
+automated-confirmations:
+  schedule: "*/30 * * * *"
+  description: "Send automated booking confirmations"
+```
+
+### Communication Jobs
+```yaml
+reminder-emails:
+  schedule: "0 8 * * *"
+  description: "Send check-in reminders to arriving guests"
+
+feedback-requests:
+  schedule: "0 10 * * *"
+  description: "Send feedback requests to departed guests"
+
+promotional-campaigns:
+  schedule: "0 12 * * *"
+  description: "Send targeted promotional emails"
+
+birthday-greetings:
+  schedule: "0 9 * * *"
+  description: "Send birthday greetings to loyalty members"
+```
+
+## 🔧 Configuration
+
+### Application Properties
+```yaml
+# Batch Processor Configuration
+batch-processor:
+  scheduler:
+    pool-size: 10
+    max-pool-size: 20
+    queue-capacity: 100
+
+  job-execution:
+    timeout: 1800s  # 30 minutes
+    retry:
+      max-attempts: 3
+      delay: 300s   # 5 minutes
+      backoff-multiplier: 2
+
+  monitoring:
+    metrics-enabled: true
+    health-check-interval: 60s
+    alert-threshold: 300s  # 5 minutes
+
+  storage:
+    output-location: "s3://batch-outputs/"
+    log-location: "s3://batch-logs/"
+    retention-days: 90
+
+  notifications:
+    email-enabled: true
+    slack-enabled: true
+    webhook-enabled: false
+
+# Database Configuration
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/batch_jobs
+    username: batch_user
+    password: ${BATCH_DB_PASSWORD}
+
+  quartz:
+    job-store-type: jdbc
+    jdbc:
+      initialize-schema: embedded
+    properties:
+      org:
+        quartz:
+          jobStore:
+            driverDelegateClass: org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
+            useProperties: false
+            misfireThreshold: 60000
+```
+
+### Environment Variables
+```bash
+# Database
+BATCH_DB_PASSWORD=secure_batch_password
+
+# External Services
+RESERVATION_ENGINE_URL=http://localhost:8084
+PAYMENT_PROCESSOR_URL=http://localhost:8082
+ANALYTICS_ENGINE_URL=http://localhost:8086
+
+# Storage
+AWS_ACCESS_KEY_ID=your_access_key
+AWS_SECRET_ACCESS_KEY=your_secret_key
+AWS_REGION=us-east-1
+S3_BUCKET_OUTPUTS=batch-outputs
+S3_BUCKET_LOGS=batch-logs
+
+# Notifications
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USERNAME=batch@hotel.com
+SMTP_PASSWORD=email_password
+
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
+
+# Monitoring
+OTEL_SERVICE_NAME=batch-processor
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
+```
+
+## 📈 Performance & Monitoring
+
+### Performance Metrics
+- **Job Execution Time**: <5 minutes (95th percentile)
+- **Scheduler Accuracy**: <30 seconds variance
+- **Success Rate**: >99% for critical jobs
+- **Resource Usage**: <2GB memory, <50% CPU
+- **Concurrent Jobs**: Up to 10 simultaneous executions
+
+### Business Metrics
+```
+# Job execution metrics
+batch_jobs_executed_total{job="daily-revenue-report",status="success"}
+batch_jobs_duration_seconds{job="data-cleanup"}
+batch_jobs_records_processed_total{job="rate-sync"}
+
+# System metrics
+batch_scheduler_active_jobs
+batch_executor_queue_size
+batch_executor_thread_pool_active
+
+# Business impact metrics
+batch_reports_generated_total
+batch_data_processed_bytes
+batch_notifications_sent_total
+```
+
+## 🧪 Testing
+
+### Unit Tests
+```bash
+cd apps/backend/java-services/business-services/batch-processor
+mvn test
+```
+
+### Integration Tests
+```bash
+mvn verify -P integration-tests
+```
+
+### Job Testing
+```bash
+# Test job execution
+curl -X POST http://localhost:8085/api/v1/batch/jobs/test-job/execute \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Tenant-ID: test-tenant" \
+  -H "Content-Type: application/json" \
+  -d '{"parameters": {"dryRun": true}}'
+
+# Test scheduler
+curl -X GET http://localhost:8085/api/v1/batch/scheduler/status \
+  -H "Authorization: Bearer $TOKEN"
+
+# Test job configuration
+curl -X POST http://localhost:8085/api/v1/batch/jobs/validate \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Test Job",
+    "schedule": {"cron": "0 12 * * *"},
+    "configuration": {"testParam": "value"}
+  }'
+```
+
+## 🛠️ Development
+
+### Local Development
+```bash
+# Run with development profile
+mvn spring-boot:run -Dspring-boot.run.profiles=dev
+
+# Run with debug
+mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5010"
+```
+
+### Custom Job Development
+```java
+@Component
+public class CustomReportJob implements Job {
+
     @Override
-    public String getJobName() {
-        return "daily-reconciliation";
+    public void execute(JobExecutionContext context) throws JobExecutionException {
+        JobDataMap dataMap = context.getJobDetail().getJobDataMap();
+        String tenantId = dataMap.getString("tenantId");
+
+        try {
+            // Job implementation
+            generateCustomReport(tenantId);
+
+        } catch (Exception e) {
+            throw new JobExecutionException("Job execution failed", e);
+        }
+    }
+
+    private void generateCustomReport(String tenantId) {
+        // Custom logic here
+    }
+}
+
+@Configuration
+public class JobConfiguration {
+
+    @Bean
+    public JobDetail customReportJobDetail() {
+        return JobBuilder.newJob(CustomReportJob.class)
+                .withIdentity("customReportJob")
+                .withDescription("Generate custom reports")
+                .storeDurably()
+                .build();
+    }
+
+    @Bean
+    public Trigger customReportTrigger() {
+        return TriggerBuilder.newTrigger()
+                .forJob(customReportJobDetail())
+                .withIdentity("customReportTrigger")
+                .withSchedule(CronScheduleBuilder.cronSchedule("0 8 * * *"))
+                .build();
     }
 }
 ```
 
-### Job Registration
-```yaml
-# Job Registration (Planned)
-jobs:
-  daily-reconciliation:
-    class: com.modernreservation.batch.jobs.DailyReconciliationJob
-    schedule: "0 0 0 * * ?"
-    enabled: true
-    timeout: 30m
+### Database Schema
+```sql
+-- Job executions table
+CREATE TABLE job_executions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    job_id VARCHAR(100) NOT NULL,
+    execution_id VARCHAR(100) UNIQUE NOT NULL,
+    tenant_id VARCHAR(50) NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    start_time TIMESTAMP NOT NULL,
+    end_time TIMESTAMP,
+    duration_seconds INTEGER,
+    records_processed INTEGER,
+    output_location VARCHAR(500),
+    error_message TEXT,
+    triggered_by VARCHAR(50),
+    parameters JSONB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Job configuration table
+CREATE TABLE job_configurations (
+    job_id VARCHAR(100) PRIMARY KEY,
+    tenant_id VARCHAR(50) NOT NULL,
+    name VARCHAR(200) NOT NULL,
+    description TEXT,
+    category VARCHAR(50),
+    cron_expression VARCHAR(100),
+    timezone VARCHAR(50),
+    status VARCHAR(20) DEFAULT 'ACTIVE',
+    configuration JSONB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Job dependencies table
+CREATE TABLE job_dependencies (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    job_id VARCHAR(100) REFERENCES job_configurations(job_id),
+    depends_on_service VARCHAR(100) NOT NULL,
+    dependency_type VARCHAR(50) DEFAULT 'SERVICE',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 ```
 
-## 📊 Reporting Integration
+## 🚨 Troubleshooting
 
-### Generated Reports
-- **Daily Revenue Report** - Revenue by property and room type
-- **Occupancy Analytics** - Daily occupancy trends and forecasts
-- **Financial Reconciliation** - Payment matching and discrepancies
-- **System Performance** - Application and infrastructure metrics
-- **Guest Analytics** - Booking patterns and guest behavior
+### Common Issues
 
-### Report Distribution
-- **Email Delivery** - Automated report delivery to stakeholders
-- **Dashboard Integration** - Real-time dashboard updates
-- **API Access** - Reports available via REST API
-- **File Export** - CSV, PDF, and Excel format support
+**Job Execution Failures**
+```bash
+# Check job status
+curl -H "Authorization: Bearer $TOKEN" \
+     http://localhost:8085/api/v1/batch/jobs/failed-job
 
-## 🏗️ Architecture Integration
+# View execution logs
+curl -H "Authorization: Bearer $TOKEN" \
+     http://localhost:8085/api/v1/batch/executions/exec-123/logs
 
-### Service Dependencies
-- **Analytics Engine** - Data source for reporting and analysis
-- **Payment Processor** - Financial reconciliation data
-- **Reservation Engine** - Booking and guest data
-- **Availability Calculator** - Inventory optimization data
+# Retry failed execution
+curl -X POST -H "Authorization: Bearer $TOKEN" \
+     http://localhost:8085/api/v1/batch/executions/exec-123/retry
+```
 
-### Data Sources
-- PostgreSQL database for transactional data
-- Kafka events for real-time processing
-- External APIs for rate and availability data
-- System logs for operational metrics
+**Scheduler Issues**
+```bash
+# Check scheduler health
+curl http://localhost:8085/actuator/health/scheduler
 
-## 📚 Related Documentation
+# View active jobs
+curl -H "Authorization: Bearer $TOKEN" \
+     http://localhost:8085/api/v1/batch/scheduler/active-jobs
 
-- [Business Services Overview](../index.md)
-- [Analytics Engine](../analytics-engine/) - Data analytics integration
-- [Reservation Engine](../reservation-engine/) - Booking data processing
-- [Payment Processor](../payment-processor/) - Financial data reconciliation
+# Restart scheduler
+curl -X POST -H "Authorization: Bearer $ADMIN_TOKEN" \
+     http://localhost:8085/api/v1/admin/scheduler/restart
+```
+
+**Performance Problems**
+```bash
+# Check thread pool status
+curl http://localhost:8085/actuator/metrics/executor.pool.size
+
+# Monitor job queue
+curl http://localhost:8085/actuator/metrics/executor.queue.remaining
+
+# View slow executions
+curl -H "Authorization: Bearer $TOKEN" \
+     "http://localhost:8085/api/v1/batch/executions?status=RUNNING&duration=>300"
+```
 
 ---
 
-## 📞 Support & Development
-
-This service is actively being developed. For questions or contributions:
-
-1. Check the [Business Services Overview](../index.md)
-2. Review the [Development Guide](../../../guides/DEV_QUICK_REFERENCE.md)
-3. Follow the [Architecture Documentation](../../../architecture/)
-
-**Status**: 🚧 **In Development** - API documentation will be generated automatically when Java source code is added.
+## 📚 Related Documentation
+- [Business Services Overview](../index.md)
+- [Analytics Engine](../analytics-engine/)
+- [Job Scheduling Best Practices](../../../guides/job-scheduling.md)
+- [Data Processing Guidelines](../../../guides/data-processing.md)
