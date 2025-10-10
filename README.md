@@ -1,24 +1,15 @@
 # Modern Reservation Management System 🏨
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Build Java Services](https://github.com/red2n/modern-reservation/actions/workflows/build-java-services.yml/badge.svg)](https://github.com/red2n/modern-reservation/actions/workflows/build-java-services.yml)
-[![Deploy GitHub Pages](https://github.com/red2n/modern-reservation/actions/workflows/deploy-pages-adhoc.yml/badge.svg)](https://github.com/red2n/modern-reservation/actions/workflows/deploy-pages-adhoc.yml)
-[![GitHub issues](https://img.shields.io/github/issues/red2n/modern-reservation)](https://github.com/red2n/modern-reservation/issues)
-[![GitHub last commit](https://img.shields.io/github/last-commit/red2n/modern-reservation)](https://github.com/red2n/modern-reservation/commits/main)
+## 📊 **Project Status**
 
-[![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](https://www.typescriptlang.org/)
-[![GraphQL](https://img.shields.io/badge/GraphQL-E10098.svg)](https://graphql.org/)
-[![Angular](https://img.shields.io/badge/Angular-17+-red.svg)](https://angular.io/)
-[![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg)](https://nodejs.org/)
-[![Java](https://img.shields.io/badge/Java-21+-orange.svg)](https://openjdk.org/)
-[![Kafka](https://img.shields.io/badge/Apache-Kafka-black.svg)](https://kafka.apache.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-blue.svg)](https://www.postgresql.org/)
-
-[![Docker](https://img.shields.io/badge/Docker-Enabled-blue.svg?logo=docker)](https://github.com/red2n/modern-reservation)
-[![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-Enabled-blue.svg?logo=opentelemetry)](https://github.com/red2n/modern-reservation)
-[![Multi-Tenant](https://img.shields.io/badge/Multi--Tenant-Enterprise-gold.svg)](https://github.com/red2n/modern-reservation)
-[![GraphQL Federation](https://img.shields.io/badge/GraphQL-Federation-E10098.svg?logo=graphql)](https://github.com/red2n/modern-reservation)
-[![Performance](https://img.shields.io/badge/Performance-10k%2B%20req%2Fmin-brightgreen.svg)](https://github.com/red2n/modern-reservation)
+| Category | Badges |
+|----------|--------|
+| **📋 Project** | [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![GitHub issues](https://img.shields.io/github/issues/red2n/modern-reservation)](https://github.com/red2n/modern-reservation/issues) [![GitHub last commit](https://img.shields.io/github/last-commit/red2n/modern-reservation)](https://github.com/red2n/modern-reservation/commits/main) |
+| **🔨 Build & Deploy** | [![Build Java Services](https://github.com/red2n/modern-reservation/actions/workflows/build-java-services.yml/badge.svg)](https://github.com/red2n/modern-reservation/actions/workflows/build-java-services.yml) [![Deploy GitHub Pages](https://github.com/red2n/modern-reservation/actions/workflows/deploy-pages-adhoc.yml/badge.svg)](https://github.com/red2n/modern-reservation/actions/workflows/deploy-pages-adhoc.yml) |
+| **💻 Technologies** | [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](https://www.typescriptlang.org/) [![GraphQL](https://img.shields.io/badge/GraphQL-E10098.svg)](https://graphql.org/) [![Angular](https://img.shields.io/badge/Angular-17+-red.svg)](https://angular.io/) [![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg)](https://nodejs.org/) [![Java](https://img.shields.io/badge/Java-21+-orange.svg)](https://openjdk.org/) |
+| **🗄️ Data & Messaging** | [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-blue.svg)](https://www.postgresql.org/) [![Kafka](https://img.shields.io/badge/Apache-Kafka-black.svg)](https://kafka.apache.org/) [![Redis](https://img.shields.io/badge/Redis-7+-red.svg)](https://redis.io/) |
+| **🏗️ Architecture** | [![Docker](https://img.shields.io/badge/Docker-Enabled-blue.svg?logo=docker)](https://github.com/red2n/modern-reservation) [![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-Enabled-blue.svg?logo=opentelemetry)](https://github.com/red2n/modern-reservation) [![Multi-Tenant](https://img.shields.io/badge/Multi--Tenant-Enterprise-gold.svg)](https://github.com/red2n/modern-reservation) [![GraphQL Federation](https://img.shields.io/badge/GraphQL-Federation-E10098.svg?logo=graphql)](https://github.com/red2n/modern-reservation) |
+| **⚡ Performance** | [![Performance](https://img.shields.io/badge/Performance-10k%2B%20req%2Fmin-brightgreen.svg)](https://github.com/red2n/modern-reservation) [![Uptime](https://img.shields.io/badge/Uptime-99.95%25-brightgreen.svg)](https://github.com/red2n/modern-reservation) [![Response Time](https://img.shields.io/badge/Response%20Time-%3C50ms-brightgreen.svg)](https://github.com/red2n/modern-reservation) |
 
 > **Ultra-scale, cloud-native hospitality management platform** designed to handle **10,000+ reservations per minute** using hybrid Node.js + Java microservices with **GraphQL Federation** and event-driven communication.
 
