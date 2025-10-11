@@ -11,6 +11,12 @@
 
 -- User-Tenant Association Constraints
 ALTER TABLE user_tenant_associations
+    ADD CONSTRAINT fk_user_tenant_user
+    FOREIGN KEY (user_id)
+    REFERENCES users(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE user_tenant_associations
     ADD CONSTRAINT fk_user_tenant_tenant
     FOREIGN KEY (tenant_id)
     REFERENCES tenants(id)
@@ -20,6 +26,26 @@ ALTER TABLE user_tenant_associations
 CREATE UNIQUE INDEX idx_user_tenant_one_primary
     ON user_tenant_associations (user_id)
     WHERE is_primary = true;
+
+-- =====================================================
+-- PROPERTY CONSTRAINTS
+-- =====================================================
+
+ALTER TABLE properties
+    ADD CONSTRAINT fk_properties_tenant
+    FOREIGN KEY (tenant_id)
+    REFERENCES tenants(id)
+    ON DELETE RESTRICT;
+
+-- =====================================================
+-- GUEST CONSTRAINTS
+-- =====================================================
+
+ALTER TABLE guests
+    ADD CONSTRAINT fk_guests_tenant
+    FOREIGN KEY (tenant_id)
+    REFERENCES tenants(id)
+    ON DELETE RESTRICT;
 
 -- Tenant Foreign Key Constraints for all tables
 ALTER TABLE rates

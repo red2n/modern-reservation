@@ -173,8 +173,8 @@ services:
       - ./otel-collector.yml:/etc/otelcol-contrib/otel-collector.yml
     ports:
       - "1888:1888"   # pprof extension
-      - "8888:8888"   # Prometheus metrics
-      - "8889:8889"   # Prometheus exporter metrics
+      - "18888:8888"  # Prometheus metrics (changed from 8888 to avoid conflict with config-server)
+      - "18889:8889"  # Prometheus exporter metrics (changed from 8889)
       - "13133:13133" # health_check extension
       - "4317:4317"   # OTLP gRPC receiver
       - "4318:4318"   # OTLP HTTP receiver

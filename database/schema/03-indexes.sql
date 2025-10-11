@@ -70,6 +70,87 @@ CREATE INDEX idx_user_tenant_last_accessed
     ON user_tenant_associations (tenant_id, last_accessed_at DESC);
 
 -- =====================================================
+-- PROPERTIES TABLE INDEXES
+-- =====================================================
+
+CREATE INDEX idx_properties_tenant_id
+    ON properties (tenant_id);
+
+CREATE INDEX idx_properties_property_code
+    ON properties (property_code);
+
+CREATE INDEX idx_properties_property_name
+    ON properties (property_name);
+
+CREATE INDEX idx_properties_city_country
+    ON properties (city, country);
+
+CREATE INDEX idx_properties_active
+    ON properties (is_active) WHERE is_active = true;
+
+CREATE INDEX idx_properties_not_deleted
+    ON properties (id) WHERE deleted_at IS NULL;
+
+-- GIN index for JSONB amenities field
+CREATE INDEX idx_properties_amenities
+    ON properties USING GIN (amenities);
+
+-- =====================================================
+-- GUESTS TABLE INDEXES
+-- =====================================================
+
+CREATE INDEX idx_guests_tenant_id
+    ON guests (tenant_id);
+
+CREATE INDEX idx_guests_email
+    ON guests (email);
+
+CREATE INDEX idx_guests_name
+    ON guests (last_name, first_name);
+
+CREATE INDEX idx_guests_phone
+    ON guests (phone) WHERE phone IS NOT NULL;
+
+CREATE INDEX idx_guests_vip
+    ON guests (vip_status) WHERE vip_status = true;
+
+CREATE INDEX idx_guests_guest_type
+    ON guests (guest_type);
+
+CREATE INDEX idx_guests_not_deleted
+    ON guests (id) WHERE deleted_at IS NULL;
+
+-- GIN index for JSONB preferences field
+CREATE INDEX idx_guests_preferences
+    ON guests USING GIN (preferences);
+
+-- =====================================================
+-- USERS TABLE INDEXES
+-- =====================================================
+
+CREATE INDEX idx_users_username
+    ON users (username);
+
+CREATE INDEX idx_users_email
+    ON users (email);
+
+CREATE INDEX idx_users_active
+    ON users (is_active) WHERE is_active = true;
+
+CREATE INDEX idx_users_verified
+    ON users (is_verified) WHERE is_verified = true;
+
+CREATE INDEX idx_users_last_login
+    ON users (last_login_at DESC);
+
+CREATE INDEX idx_users_not_deleted
+    ON users (id) WHERE deleted_at IS NULL;
+
+-- GIN index for JSONB preferences field
+CREATE INDEX idx_users_preferences
+    ON users USING GIN (preferences);
+
+-- =====================================================
 -- RATES TABLE INDEXES
 -- =====================================================
 

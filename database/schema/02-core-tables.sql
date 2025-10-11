@@ -128,6 +128,230 @@ COMMENT ON COLUMN user_tenant_associations.is_primary IS 'Primary tenant for the
 COMMENT ON COLUMN user_tenant_associations.last_accessed_at IS 'Last time user accessed this tenant';
 
 -- =====================================================
+-- PROPERTY MANAGEMENT TABLES
+-- =====================================================
+
+-- Properties Table
+CREATE TABLE properties (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id UUID NOT NULL,
+
+    -- Basic Information
+    property_code VARCHAR(50) UNIQUE NOT NULL,
+    property_name VARCHAR(200) NOT NULL,
+    property_type VARCHAR(50) NOT NULL,
+    description TEXT,
+
+    -- Contact Information
+    email VARCHAR(255) NOT NULL,
+    phone VARCHAR(20),
+    website VARCHAR(500),
+
+    -- Address
+    address_line1 VARCHAR(255) NOT NULL,
+    address_line2 VARCHAR(255),
+    city VARCHAR(100) NOT NULL,
+    state VARCHAR(100),
+    postal_code VARCHAR(20),
+    country CHAR(2) NOT NULL, -- ISO 3166-1 alpha-2
+
+    -- Property Details
+    total_rooms INTEGER NOT NULL CHECK (total_rooms > 0),
+    total_floors INTEGER,
+    check_in_time VARCHAR(5) DEFAULT '15:00',
+    check_out_time VARCHAR(5) DEFAULT '11:00',
+    currency CHAR(3) NOT NULL DEFAULT 'USD',
+    timezone VARCHAR(50) DEFAULT 'UTC',
+
+    -- Amenities (stored as JSONB array)
+    amenities JSONB DEFAULT '[]'::jsonb,
+
+    -- Configuration
+    config JSONB DEFAULT '{}'::jsonb,
+
+    -- Status
+    is_active BOOLEAN NOT NULL DEFAULT true,
+
+    -- Metadata
+    metadata JSONB DEFAULT '{}'::jsonb,
+
+    -- Audit Fields
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP,
+    created_by VARCHAR(100),
+    updated_by VARCHAR(100),
+
+    -- Soft Delete
+    deleted_at TIMESTAMP,
+    deleted_by VARCHAR(100),
+
+    -- Optimistic Locking
+    version BIGINT DEFAULT 0
+);
+
+COMMENT ON TABLE properties IS 'Property/hotel information table';
+COMMENT ON COLUMN properties.tenant_id IS 'Multi-tenancy: Tenant owner of this property';
+COMMENT ON COLUMN properties.property_code IS 'Unique property identifier code';
+COMMENT ON COLUMN properties.property_type IS 'Type of property (HOTEL, RESORT, MOTEL, etc.)';
+COMMENT ON COLUMN properties.total_rooms IS 'Total number of rooms in property';
+COMMENT ON COLUMN properties.amenities IS 'Property amenities (JSONB array)';
+COMMENT ON COLUMN properties.config IS 'Property-specific configuration (JSONB)';
+
+-- =====================================================
+-- GUEST MANAGEMENT TABLES
+-- =====================================================
+
+-- Guests Table
+CREATE TABLE guests (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id UUID NOT NULL,
+
+    -- Personal Information
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    phone VARCHAR(20),
+
+    -- Additional Contact
+    alternate_email VARCHAR(255),
+    alternate_phone VARCHAR(20),
+
+    -- Address
+    address_line1 VARCHAR(255),
+    address_line2 VARCHAR(255),
+    city VARCHAR(100),
+    state VARCHAR(100),
+    postal_code VARCHAR(20),
+    country CHAR(2), -- ISO 3166-1 alpha-2
+
+    -- Profile Details
+    date_of_birth DATE,
+    nationality VARCHAR(3), -- ISO 3166-1 alpha-3
+    passport_number VARCHAR(50),
+    id_type VARCHAR(50),
+    id_number VARCHAR(100),
+
+    -- Preferences (stored as JSONB)
+    preferences JSONB DEFAULT '{
+        "roomType": null,
+        "bedType": null,
+        "smokingPreference": "NON_SMOKING",
+        "floorPreference": null,
+        "specialRequests": []
+    }'::jsonb,
+
+    -- Guest Type & Status
+    guest_type VARCHAR(50) DEFAULT 'INDIVIDUAL',
+    vip_status BOOLEAN DEFAULT false,
+    blacklisted BOOLEAN DEFAULT false,
+
+    -- Loyalty Program
+    loyalty_tier VARCHAR(50),
+    loyalty_points INTEGER DEFAULT 0,
+
+    -- Notes
+    notes TEXT,
+
+    -- Metadata
+    metadata JSONB DEFAULT '{}'::jsonb,
+
+    -- Audit Fields
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP,
+    created_by VARCHAR(100),
+    updated_by VARCHAR(100),
+
+    -- Soft Delete
+    deleted_at TIMESTAMP,
+    deleted_by VARCHAR(100),
+
+    -- Optimistic Locking
+    version BIGINT DEFAULT 0
+);
+
+COMMENT ON TABLE guests IS 'Guest profiles and information';
+COMMENT ON COLUMN guests.tenant_id IS 'Multi-tenancy: Tenant owner of this guest record';
+COMMENT ON COLUMN guests.email IS 'Primary email address (unique)';
+COMMENT ON COLUMN guests.preferences IS 'Guest preferences (JSONB)';
+COMMENT ON COLUMN guests.guest_type IS 'Type of guest (INDIVIDUAL, CORPORATE, GROUP, etc.)';
+COMMENT ON COLUMN guests.vip_status IS 'VIP guest flag';
+COMMENT ON COLUMN guests.loyalty_points IS 'Accumulated loyalty points';
+
+-- =====================================================
+-- USER MANAGEMENT TABLES
+-- =====================================================
+
+-- Users Table
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+
+    -- Basic Information
+    username VARCHAR(100) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+
+    -- Personal Information
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    phone VARCHAR(20),
+
+    -- Profile
+    avatar_url VARCHAR(500),
+    title VARCHAR(100),
+    department VARCHAR(100),
+
+    -- Status
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    is_verified BOOLEAN NOT NULL DEFAULT false,
+    email_verified BOOLEAN NOT NULL DEFAULT false,
+
+    -- Security
+    two_factor_enabled BOOLEAN NOT NULL DEFAULT false,
+    last_login_at TIMESTAMP,
+    last_login_ip VARCHAR(45),
+    failed_login_attempts INTEGER DEFAULT 0,
+    locked_until TIMESTAMP,
+    password_changed_at TIMESTAMP,
+
+    -- Preferences
+    preferences JSONB DEFAULT '{
+        "language": "en",
+        "timezone": "UTC",
+        "theme": "light",
+        "notifications": {
+            "email": true,
+            "sms": false,
+            "push": true
+        }
+    }'::jsonb,
+
+    -- Metadata
+    metadata JSONB DEFAULT '{}'::jsonb,
+
+    -- Audit Fields
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP,
+    created_by VARCHAR(100),
+    updated_by VARCHAR(100),
+
+    -- Soft Delete
+    deleted_at TIMESTAMP,
+    deleted_by VARCHAR(100),
+
+    -- Optimistic Locking
+    version BIGINT DEFAULT 0
+);
+
+COMMENT ON TABLE users IS 'System users and authentication';
+COMMENT ON COLUMN users.username IS 'Unique username for login';
+COMMENT ON COLUMN users.email IS 'Unique email address';
+COMMENT ON COLUMN users.password_hash IS 'Bcrypt hashed password';
+COMMENT ON COLUMN users.two_factor_enabled IS '2FA enabled flag';
+COMMENT ON COLUMN users.failed_login_attempts IS 'Failed login attempt counter';
+COMMENT ON COLUMN users.locked_until IS 'Account lock expiration time';
+COMMENT ON COLUMN users.preferences IS 'User preferences (JSONB)';
+
+-- =====================================================
 -- RATE MANAGEMENT TABLES
 -- =====================================================
 

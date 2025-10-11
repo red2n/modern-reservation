@@ -6,20 +6,23 @@
 set -e
 
 # Colors for output
-R    # Format: "service-name:port:context-path"
-    declare -a BUSINESS_SERVICES=(
-        "reservation-engine:8081:/reservation-engine"
-        "availability-calculator:8083:/availability-calculator"
-        "payment-processor:8084:/payment-processor"
-        "rate-management:8087:/rate-management"
-        "analytics-engine:8086:/analytics-engine"
-    )[0;31m'
+RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 MAGENTA='\033[0;35m'
 NC='\033[0m' # No Color
+
+# Business services configuration
+# Format: "service-name:port:context-path"
+declare -a BUSINESS_SERVICES=(
+    "reservation-engine:8081:/reservation-engine"
+    "availability-calculator:8083:/availability-calculator"
+    "payment-processor:8084:/payment-processor"
+    "rate-management:8087:/rate-management"
+    "analytics-engine:8086:/analytics-engine"
+)
 
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
