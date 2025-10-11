@@ -100,6 +100,10 @@
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
 
         <!-- Shared Libraries -->
         <dependency>
@@ -126,14 +130,16 @@
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
 
-        <!-- SpringDoc OpenAPI (Swagger) -->
+        <!-- SpringDoc OpenAPI (Swagger) - Temporarily disabled due to compatibility issues -->
+        <!--
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.2.0</version>
         </dependency>
+        -->
 
-        <!-- GraphQL (Optional - for future GraphQL API) -->
+        <!-- GraphQL (Optional - for future GraphQL API) - Temporarily disabled -->
+        <!--
         <dependency>
             <groupId>com.graphql-java-kickstart</groupId>
             <artifactId>graphql-spring-boot-starter</artifactId>
@@ -145,6 +151,7 @@
             <artifactId>graphql-java-tools</artifactId>
             <version>13.1.0</version>
         </dependency>
+        -->
 
         <!-- Testing -->
         <dependency>
