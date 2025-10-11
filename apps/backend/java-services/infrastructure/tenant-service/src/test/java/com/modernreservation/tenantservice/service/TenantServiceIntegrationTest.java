@@ -58,7 +58,7 @@ class TenantServiceIntegrationTest {
     void testCreateTenant_Success() {
         // Given
         CreateTenantRequest request = buildCreateTenantRequest(
-                "Grand Hotel", "grand-hotel", TenantType.HOTEL
+                "Grand Hotel", "grand-hotel", TenantType.INDEPENDENT
         );
 
         // When
@@ -69,7 +69,7 @@ class TenantServiceIntegrationTest {
         assertThat(response.getId()).isNotNull();
         assertThat(response.getName()).isEqualTo("Grand Hotel");
         assertThat(response.getSlug()).isEqualTo("grand-hotel");
-        assertThat(response.getType()).isEqualTo(TenantType.HOTEL);
+        assertThat(response.getType()).isEqualTo(TenantType.INDEPENDENT);
         assertThat(response.getStatus()).isEqualTo(TenantStatus.TRIAL);
         assertThat(response.getEmail()).isEqualTo("admin@grand-hotel.com");
         assertThat(response.isActive()).isFalse(); // TRIAL is not active
@@ -80,12 +80,12 @@ class TenantServiceIntegrationTest {
     void testCreateTenant_DuplicateSlug_ThrowsException() {
         // Given
         CreateTenantRequest request1 = buildCreateTenantRequest(
-                "Grand Hotel", "grand-hotel", TenantType.HOTEL
+                "Grand Hotel", "grand-hotel", TenantType.INDEPENDENT
         );
         tenantService.createTenant(request1);
 
         CreateTenantRequest request2 = buildCreateTenantRequest(
-                "Another Hotel", "grand-hotel", TenantType.HOTEL
+                "Another Hotel", "grand-hotel", TenantType.INDEPENDENT
         );
 
         // When & Then
@@ -98,12 +98,12 @@ class TenantServiceIntegrationTest {
     void testCreateTenant_DuplicateEmail_ThrowsException() {
         // Given
         CreateTenantRequest request1 = buildCreateTenantRequest(
-                "Grand Hotel", "grand-hotel", TenantType.HOTEL
+                "Grand Hotel", "grand-hotel", TenantType.INDEPENDENT
         );
         tenantService.createTenant(request1);
 
         CreateTenantRequest request2 = buildCreateTenantRequest(
-                "Another Hotel", "another-hotel", TenantType.HOTEL
+                "Another Hotel", "another-hotel", TenantType.INDEPENDENT
         );
         request2.setEmail("admin@grand-hotel.com"); // Same email
 
@@ -121,7 +121,7 @@ class TenantServiceIntegrationTest {
     void testGetTenantById_Success() {
         // Given
         TenantResponse created = tenantService.createTenant(
-                buildCreateTenantRequest("Grand Hotel", "grand-hotel", TenantType.HOTEL)
+                buildCreateTenantRequest("Grand Hotel", "grand-hotel", TenantType.INDEPENDENT)
         );
 
         // When
@@ -148,7 +148,7 @@ class TenantServiceIntegrationTest {
     void testGetTenantBySlug_Success() {
         // Given
         tenantService.createTenant(
-                buildCreateTenantRequest("Grand Hotel", "grand-hotel", TenantType.HOTEL)
+                buildCreateTenantRequest("Grand Hotel", "grand-hotel", TenantType.INDEPENDENT)
         );
 
         // When
@@ -162,9 +162,9 @@ class TenantServiceIntegrationTest {
     @Test
     void testGetAllTenants_WithPagination() {
         // Given
-        tenantService.createTenant(buildCreateTenantRequest("Hotel 1", "hotel-1", TenantType.HOTEL));
-        tenantService.createTenant(buildCreateTenantRequest("Hotel 2", "hotel-2", TenantType.HOTEL));
-        tenantService.createTenant(buildCreateTenantRequest("Hotel 3", "hotel-3", TenantType.HOTEL));
+        tenantService.createTenant(buildCreateTenantRequest("Hotel 1", "hotel-1", TenantType.INDEPENDENT));
+        tenantService.createTenant(buildCreateTenantRequest("Hotel 2", "hotel-2", TenantType.INDEPENDENT));
+        tenantService.createTenant(buildCreateTenantRequest("Hotel 3", "hotel-3", TenantType.INDEPENDENT));
 
         // When
         Page<TenantResponse> page = tenantService.getAllTenants(PageRequest.of(0, 2));
@@ -178,28 +178,28 @@ class TenantServiceIntegrationTest {
     @Test
     void testSearchTenants_ByType() {
         // Given
-        tenantService.createTenant(buildCreateTenantRequest("Hotel 1", "hotel-1", TenantType.HOTEL));
-        tenantService.createTenant(buildCreateTenantRequest("Hostel 1", "hostel-1", TenantType.HOSTEL));
+        tenantService.createTenant(buildCreateTenantRequest("Hotel 1", "hotel-1", TenantType.INDEPENDENT));
+        tenantService.createTenant(buildCreateTenantRequest("Hostel 1", "hostel-1", TenantType.FRANCHISE));
 
         // When
         Page<TenantResponse> hotels = tenantService.searchTenants(
-                TenantType.HOTEL, null, null, PageRequest.of(0, 10)
+                TenantType.INDEPENDENT, null, null, PageRequest.of(0, 10)
         );
 
         // Then
         assertThat(hotels.getContent()).hasSize(1);
-        assertThat(hotels.getContent().get(0).getType()).isEqualTo(TenantType.HOTEL);
+        assertThat(hotels.getContent().get(0).getType()).isEqualTo(TenantType.INDEPENDENT);
     }
 
     @Test
     void testSearchTenants_ByStatus() {
         // Given
         TenantResponse tenant1 = tenantService.createTenant(
-                buildCreateTenantRequest("Hotel 1", "hotel-1", TenantType.HOTEL)
+                buildCreateTenantRequest("Hotel 1", "hotel-1", TenantType.INDEPENDENT)
         );
         tenantService.activateTenant(tenant1.getId());
 
-        tenantService.createTenant(buildCreateTenantRequest("Hotel 2", "hotel-2", TenantType.HOTEL));
+        tenantService.createTenant(buildCreateTenantRequest("Hotel 2", "hotel-2", TenantType.INDEPENDENT));
 
         // When
         Page<TenantResponse> activeTenantsPage = tenantService.searchTenants(
@@ -214,8 +214,8 @@ class TenantServiceIntegrationTest {
     @Test
     void testSearchTenants_BySearchTerm() {
         // Given
-        tenantService.createTenant(buildCreateTenantRequest("Grand Hotel", "grand-hotel", TenantType.HOTEL));
-        tenantService.createTenant(buildCreateTenantRequest("Small Hostel", "small-hostel", TenantType.HOSTEL));
+        tenantService.createTenant(buildCreateTenantRequest("Grand Hotel", "grand-hotel", TenantType.INDEPENDENT));
+        tenantService.createTenant(buildCreateTenantRequest("Small Hostel", "small-hostel", TenantType.FRANCHISE));
 
         // When
         Page<TenantResponse> results = tenantService.searchTenants(
@@ -235,7 +235,7 @@ class TenantServiceIntegrationTest {
     void testUpdateTenant_Success() {
         // Given
         TenantResponse created = tenantService.createTenant(
-                buildCreateTenantRequest("Grand Hotel", "grand-hotel", TenantType.HOTEL)
+                buildCreateTenantRequest("Grand Hotel", "grand-hotel", TenantType.INDEPENDENT)
         );
 
         UpdateTenantRequest updateRequest = UpdateTenantRequest.builder()
@@ -256,7 +256,7 @@ class TenantServiceIntegrationTest {
     void testUpdateTenant_ChangeSlug_Success() {
         // Given
         TenantResponse created = tenantService.createTenant(
-                buildCreateTenantRequest("Grand Hotel", "grand-hotel", TenantType.HOTEL)
+                buildCreateTenantRequest("Grand Hotel", "grand-hotel", TenantType.INDEPENDENT)
         );
 
         UpdateTenantRequest updateRequest = UpdateTenantRequest.builder()
@@ -273,9 +273,9 @@ class TenantServiceIntegrationTest {
     @Test
     void testUpdateTenant_DuplicateSlug_ThrowsException() {
         // Given
-        tenantService.createTenant(buildCreateTenantRequest("Hotel 1", "hotel-1", TenantType.HOTEL));
+        tenantService.createTenant(buildCreateTenantRequest("Hotel 1", "hotel-1", TenantType.INDEPENDENT));
         TenantResponse tenant2 = tenantService.createTenant(
-                buildCreateTenantRequest("Hotel 2", "hotel-2", TenantType.HOTEL)
+                buildCreateTenantRequest("Hotel 2", "hotel-2", TenantType.INDEPENDENT)
         );
 
         UpdateTenantRequest updateRequest = UpdateTenantRequest.builder()
@@ -296,7 +296,7 @@ class TenantServiceIntegrationTest {
     void testActivateTenant_Success() {
         // Given
         TenantResponse created = tenantService.createTenant(
-                buildCreateTenantRequest("Grand Hotel", "grand-hotel", TenantType.HOTEL)
+                buildCreateTenantRequest("Grand Hotel", "grand-hotel", TenantType.INDEPENDENT)
         );
         assertThat(created.getStatus()).isEqualTo(TenantStatus.TRIAL);
 
@@ -312,7 +312,7 @@ class TenantServiceIntegrationTest {
     void testSuspendTenant_Success() {
         // Given
         TenantResponse created = tenantService.createTenant(
-                buildCreateTenantRequest("Grand Hotel", "grand-hotel", TenantType.HOTEL)
+                buildCreateTenantRequest("Grand Hotel", "grand-hotel", TenantType.INDEPENDENT)
         );
         tenantService.activateTenant(created.getId());
 
@@ -328,7 +328,7 @@ class TenantServiceIntegrationTest {
     void testExpireTenant_Success() {
         // Given
         TenantResponse created = tenantService.createTenant(
-                buildCreateTenantRequest("Grand Hotel", "grand-hotel", TenantType.HOTEL)
+                buildCreateTenantRequest("Grand Hotel", "grand-hotel", TenantType.INDEPENDENT)
         );
 
         // When
@@ -343,7 +343,7 @@ class TenantServiceIntegrationTest {
     void testUpdateTenantStatus_Success() {
         // Given
         TenantResponse created = tenantService.createTenant(
-                buildCreateTenantRequest("Grand Hotel", "grand-hotel", TenantType.HOTEL)
+                buildCreateTenantRequest("Grand Hotel", "grand-hotel", TenantType.INDEPENDENT)
         );
 
         // When
@@ -361,7 +361,7 @@ class TenantServiceIntegrationTest {
     void testDeleteTenant_SoftDelete() {
         // Given
         TenantResponse created = tenantService.createTenant(
-                buildCreateTenantRequest("Grand Hotel", "grand-hotel", TenantType.HOTEL)
+                buildCreateTenantRequest("Grand Hotel", "grand-hotel", TenantType.INDEPENDENT)
         );
 
         // When
@@ -380,7 +380,7 @@ class TenantServiceIntegrationTest {
     void testRestoreTenant_Success() {
         // Given
         TenantResponse created = tenantService.createTenant(
-                buildCreateTenantRequest("Grand Hotel", "grand-hotel", TenantType.HOTEL)
+                buildCreateTenantRequest("Grand Hotel", "grand-hotel", TenantType.INDEPENDENT)
         );
         tenantService.deleteTenant(created.getId());
 
@@ -397,7 +397,7 @@ class TenantServiceIntegrationTest {
     void testRestoreTenant_NotDeleted_ThrowsException() {
         // Given
         TenantResponse created = tenantService.createTenant(
-                buildCreateTenantRequest("Grand Hotel", "grand-hotel", TenantType.HOTEL)
+                buildCreateTenantRequest("Grand Hotel", "grand-hotel", TenantType.INDEPENDENT)
         );
 
         // When & Then
@@ -414,14 +414,14 @@ class TenantServiceIntegrationTest {
     void testGetTenantStatistics_Success() {
         // Given
         TenantResponse tenant1 = tenantService.createTenant(
-                buildCreateTenantRequest("Hotel 1", "hotel-1", TenantType.HOTEL)
+                buildCreateTenantRequest("Hotel 1", "hotel-1", TenantType.INDEPENDENT)
         );
         tenantService.activateTenant(tenant1.getId());
 
-        tenantService.createTenant(buildCreateTenantRequest("Hotel 2", "hotel-2", TenantType.HOTEL));
+        tenantService.createTenant(buildCreateTenantRequest("Hotel 2", "hotel-2", TenantType.INDEPENDENT));
 
         TenantResponse tenant3 = tenantService.createTenant(
-                buildCreateTenantRequest("Hotel 3", "hotel-3", TenantType.HOTEL)
+                buildCreateTenantRequest("Hotel 3", "hotel-3", TenantType.INDEPENDENT)
         );
         tenantService.suspendTenant(tenant3.getId());
 
@@ -448,7 +448,7 @@ class TenantServiceIntegrationTest {
         address.put("country", "USA");
 
         CreateTenantRequest.SubscriptionRequest subscription = CreateTenantRequest.SubscriptionRequest.builder()
-                .plan(SubscriptionPlan.BASIC)
+                .plan(SubscriptionPlan.STARTER)
                 .billingEmail("billing@" + slug + ".com")
                 .autoRenew(true)
                 .build();
