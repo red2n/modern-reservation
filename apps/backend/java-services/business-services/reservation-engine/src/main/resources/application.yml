@@ -1,14 +1,9 @@
-server:
-  port: 8081
-  address: 127.0.0.1  # Bind only to localhost - not accessible externally
-  servlet:
-    context-path: /reservation-engine
-
 spring:
   application:
     name: reservation-engine
   config:
     import:
+      - "optional:classpath:application-ports.yml"  # ✅ Import generated port config from classpath
       - "configserver:${CONFIG_SERVER_URL:http://localhost:8888}"
       - "optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}/business-services-common.yml"
   cloud:
@@ -16,8 +11,13 @@ spring:
       username: ${CONFIG_SERVER_USERNAME:config-admin}
       password: ${CONFIG_SERVER_PASSWORD:#{null}}
       fail-fast: false
+
+# ✅ Port configuration now from application-ports.yml (imported file)
+# Server config is defined in application-ports.yml - no need to redefine here
+
   profiles:
     active: dev
+
   # Database Configuration (using Docker PostgreSQL)
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/modern_reservation_dev}

@@ -1,3 +1,4 @@
+// @ts-ignore - No types available for eureka-js-client
 import { Eureka } from 'eureka-js-client';
 
 export async function registerWithEureka(port: number): Promise<void> {
@@ -28,7 +29,7 @@ export async function registerWithEureka(port: number): Promise<void> {
   });
 
   return new Promise((resolve, reject) => {
-    client.start((error) => {
+    client.start((error: any) => {
       if (error) {
         console.error('Failed to register with Eureka:', error);
         reject(error);

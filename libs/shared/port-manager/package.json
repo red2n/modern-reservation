@@ -1,0 +1,27 @@
+{
+  "name": "@modern-reservation/port-manager",
+  "version": "1.0.0-alpha",
+  "description": "Centralized port management for Modern Reservation microservices",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "port-manager": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "check": "biome check .",
+    "fix": "biome check --write ."
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.20",
+    "typescript": "^5.3.3"
+  }
+}

@@ -1,0 +1,254 @@
+version: '3.8'
+
+# SECURE DOCKER COMPOSE CONFIGURATION
+# This configuration ensures all backend services are isolated and only Gateway is externally accessible
+
+networks:
+  # External network - only Gateway and frontend apps can access
+  gateway-net:
+    driver: bridge
+
+  # Internal backend network - NO external access
+  backend-internal:
+    driver: bridge
+    internal: true  # This prevents external access completely
+
+  # Database network - isolated
+  db-net:
+    driver: bridge
+    internal: true
+
+services:
+  # ============================================
+  # INFRASTRUCTURE - All Internal
+  # ============================================
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: modern-reservation-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-modern_reservation}
+      POSTGRES_USER: ${POSTGRES_USER:-mruser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mrpass}
+    ports:
+      - "5432:5432"  # Only for local development
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./database/schema:/docker-entrypoint-initdb.d:ro
+    networks:
+      - backend-internal
+      - db-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mruser}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: modern-reservation-redis
+    ports:
+      - "6379:6379"  # Only for local development
+    networks:
+      - backend-internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: modern-reservation-kafka
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"  # Only for local development
+    networks:
+      - backend-internal
+    depends_on:
+      - zookeeper
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: modern-reservation-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - backend-internal
+
+  # ============================================
+  # SPRING CLOUD - All Internal Except Gateway
+  # ============================================
+
+  config-server:
+    build:
+      context: ./apps/backend/java-services/infrastructure/config-server
+      dockerfile: Dockerfile
+    container_name: config-server
+    environment:
+      SPRING_PROFILES_ACTIVE: native
+    ports:
+      - "8888:8888"  # Only for development debugging
+    networks:
+      - backend-internal
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  eureka-server:
+    build:
+      context: ./apps/backend/java-services/infrastructure/eureka-server
+      dockerfile: Dockerfile
+    container_name: eureka-server
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      CONFIG_SERVER_URL: http://config-server:8888
+    ports:
+      - "8761:8761"  # Only for development dashboard
+    networks:
+      - backend-internal
+    depends_on:
+      - config-server
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  gateway-service:
+    build:
+      context: ./apps/backend/java-services/infrastructure/gateway-service
+      dockerfile: Dockerfile
+    container_name: gateway-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      CONFIG_SERVER_URL: http://config-server:8888
+    ports:
+      - "8080:8080"  # ⚠️ ONLY EXTERNALLY EXPOSED SERVICE
+    networks:
+      - gateway-net        # Can access external
+      - backend-internal   # Can access internal services
+    depends_on:
+      - config-server
+      - eureka-server
+
+  # ============================================
+  # NODE.JS SERVICES - All Internal
+  # ============================================
+
+  auth-service:
+    build:
+      context: ./apps/backend/node-services/auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    environment:
+      NODE_ENV: production
+      PORT: 3100
+      EUREKA_HOST: eureka-server
+      EUREKA_PORT: 8761
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1h}
+    ports:
+      - "3100:3100"  # Only for local development
+    networks:
+      - backend-internal
+    depends_on:
+      - eureka-server
+
+  # ============================================
+  # JAVA BUSINESS SERVICES - All Internal
+  # ============================================
+
+  property-service:
+    build:
+      context: ./apps/backend/java-services/business-services/property-service
+      dockerfile: Dockerfile
+    container_name: property-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/modern_reservation
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-mruser}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-mrpass}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - backend-internal
+      - db-net
+    depends_on:
+      - postgres
+      - eureka-server
+
+  reservation-engine:
+    build:
+      context: ./apps/backend/java-services/business-services/reservation-engine
+      dockerfile: Dockerfile
+    container_name: reservation-engine
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/modern_reservation
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-mruser}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-mrpass}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    networks:
+      - backend-internal
+      - db-net
+    depends_on:
+      - postgres
+      - kafka
+      - eureka-server
+
+  payment-service:
+    build:
+      context: ./apps/backend/java-services/business-services/payment-service
+      dockerfile: Dockerfile
+    container_name: payment-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/modern_reservation
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-mruser}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-mrpass}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - backend-internal
+      - db-net
+    depends_on:
+      - postgres
+      - eureka-server
+
+  # ============================================
+  # FRONTEND - External Access via Gateway
+  # ============================================
+
+  guest-portal:
+    build:
+      context: ./apps/frontend/guest-portal
+      dockerfile: Dockerfile
+    container_name: guest-portal
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8080/api  # Points to Gateway
+      NEXT_PUBLIC_WS_URL: ws://localhost:8080/ws
+    ports:
+      - "3000:3000"  # Frontend accessible
+    networks:
+      - gateway-net  # Can only access Gateway, not internal services
+    depends_on:
+      - gateway-service
+
+volumes:
+  postgres-data:
+  redis-data:
+
+# SECURITY NOTES:
+# 1. Only gateway-service (8080) and guest-portal (3000) are externally accessible
+# 2. All backend services are on 'backend-internal' network with 'internal: true'
+# 3. This prevents direct access to any backend service from outside Docker
+# 4. Even if ports are exposed, 'internal: true' blocks external network access
+# 5. Gateway acts as the single entry point for all API requests

@@ -39,12 +39,11 @@ show_help() {
     echo -e "${GREEN}🚀 Service Management Commands:${NC}"
     echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
     echo ""
-    echo -e "  ${GREEN}start${NC}                    Start all services (infrastructure + business)"
+    echo -e "  ${GREEN}start${NC}                    Start all services (orchestrated: Docker → DB → Infra → Auth → Business)"
     echo -e "  ${GREEN}start-infra${NC}              Start infrastructure services only"
     echo -e "  ${GREEN}start-business${NC}           Start business services only"
-    echo -e "  ${GREEN}start --restart${NC}          Force restart all services"
     echo ""
-    echo -e "  ${RED}stop${NC}                     Stop all services"
+    echo -e "  ${RED}stop${NC}                     Stop all services (orchestrated: reverse order)"
     echo -e "  ${RED}stop-infra${NC}               Stop infrastructure services"
     echo -e "  ${RED}stop-business${NC}            Stop business services"
     echo ""
@@ -99,6 +98,12 @@ show_help() {
     echo -e "  ${CYAN}docker-logs [service]${NC}    View Docker service logs"
     echo -e "  ${CYAN}docker-clean${NC}             🧹 COMPLETE Docker cleanup (containers, images, volumes, networks)"
     echo ""
+    echo -e "  ${CYAN}🔐 Secure Docker (Network Isolation)${NC}"
+    echo -e "  ${CYAN}docker-secure-start${NC}      Start with network isolation (only Gateway exposed)"
+    echo -e "  ${CYAN}docker-secure-stop${NC}       Stop secure deployment"
+    echo -e "  ${CYAN}docker-secure-test${NC}       Test network security"
+    echo -e "  ${CYAN}docker-secure-validate${NC}   Validate security configuration"
+    echo ""
     echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
     echo -e "${GREEN}📊 Monitoring & Logs:${NC}"
     echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
@@ -110,6 +115,23 @@ show_help() {
     echo -e "  ${GREEN}ui-prometheus${NC}            Open Prometheus Metrics"
     echo -e "  ${GREEN}ui-grafana${NC}               Open Grafana Dashboards"
     echo -e "  ${GREEN}ui-pgadmin${NC}               Open PgAdmin"
+    echo ""
+    echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}🔌 Port Management:${NC}"
+    echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${YELLOW}port-list${NC}                List all registered services and ports"
+    echo -e "  ${YELLOW}port-check${NC}               Check for port conflicts and usage"
+    echo -e "  ${YELLOW}port-report${NC}              Generate detailed port report"
+    echo -e "  ${YELLOW}port-security${NC}            Generate security report (internal vs external)"
+    echo -e "  ${YELLOW}port-export${NC}              Export ports as Docker .env file"
+    echo -e "  ${YELLOW}port-validate${NC}            Validate port configuration"
+    echo ""
+    echo -e "  ${YELLOW}🔧 Configuration Generation${NC}"
+    echo -e "  ${YELLOW}config-generate${NC}          Generate all config files from port registry"
+    echo -e "  ${YELLOW}config-spring${NC}            Generate Spring Boot configs"
+    echo -e "  ${YELLOW}config-node${NC}              Generate Node.js .env files"
+    echo -e "  ${YELLOW}config-typescript${NC}        Generate TypeScript constants"
     echo ""
     echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
     echo -e "${YELLOW}🎨 Code Quality & Formatting:${NC}"
@@ -159,21 +181,21 @@ case "${1:-help}" in
     # SERVICE MANAGEMENT
     # ========================================================================
     "start"|"start-all")
-        echo -e "${GREEN}🚀 Starting all services...${NC}"
-        exec "$SCRIPTS_DIR/infra.sh" start-all "${@:2}"
+        echo -e "${GREEN}🚀 Starting all services (orchestrated)...${NC}"
+        exec "$SCRIPTS_DIR/orchestrated-startup.sh" "${@:2}"
         ;;
     "start-infra"|"start-infrastructure")
         echo -e "${GREEN}🚀 Starting infrastructure services...${NC}"
-        exec "$SCRIPTS_DIR/infra.sh" start "${@:2}"
+        exec "$SCRIPTS_DIR/start-infrastructure.sh" "${@:2}"
         ;;
     "start-business")
         echo -e "${GREEN}🚀 Starting business services...${NC}"
-        exec "$SCRIPTS_DIR/infra.sh" start-business "${@:2}"
+        exec "$SCRIPTS_DIR/start-business-services.sh" "${@:2}"
         ;;
 
     "stop"|"stop-all")
-        echo -e "${RED}🛑 Stopping all services...${NC}"
-        exec "$SCRIPTS_DIR/infra.sh" stop-all
+        echo -e "${RED}🛑 Stopping all services (orchestrated)...${NC}"
+        exec "$SCRIPTS_DIR/orchestrated-shutdown.sh"
         ;;
     "stop-infra"|"stop-infrastructure")
         echo -e "${RED}🛑 Stopping infrastructure services...${NC}"
@@ -461,6 +483,97 @@ case "${1:-help}" in
         echo -e "${GREEN}📊 Opening PgAdmin...${NC}"
         echo "http://localhost:5050"
         xdg-open http://localhost:5050 2>/dev/null || open http://localhost:5050 2>/dev/null || echo "Please open http://localhost:5050 in your browser"
+        ;;
+
+    # ========================================================================
+    # PORT MANAGEMENT
+    # ========================================================================
+    "port-list")
+        echo -e "${BLUE}📋 Listing all registered services and ports...${NC}"
+        bash "$SCRIPTS_DIR/port-manager.sh" list
+        ;;
+
+    "port-check")
+        echo -e "${BLUE}🔍 Checking for port conflicts...${NC}"
+        bash "$SCRIPTS_DIR/port-manager.sh" check
+        ;;
+
+    "port-report")
+        echo -e "${BLUE}📊 Generating port report...${NC}"
+        bash "$SCRIPTS_DIR/port-manager.sh" report
+        ;;
+
+    "port-security")
+        echo -e "${BLUE}🔐 Generating security report...${NC}"
+        bash "$SCRIPTS_DIR/port-manager.sh" security
+        ;;
+
+    "port-export")
+        echo -e "${BLUE}💾 Exporting ports as Docker .env file...${NC}"
+        bash "$SCRIPTS_DIR/port-manager.sh" export-docker > "$SCRIPT_DIR/infrastructure/docker/.env.ports"
+        echo -e "${GREEN}✓${NC} Exported to infrastructure/docker/.env.ports"
+        ;;
+
+    "port-validate")
+        echo -e "${BLUE}✅ Validating port configuration...${NC}"
+        bash "$SCRIPTS_DIR/port-manager.sh" validate
+        ;;
+
+    # ========================================================================
+    # PORT MANAGEMENT
+    # ========================================================================
+    "port-list")
+        echo -e "${BLUE}📋 Listing all registered services and ports...${NC}"
+        bash "$SCRIPTS_DIR/port-manager.sh" list
+        ;;
+
+    "port-check")
+        echo -e "${BLUE}🔍 Checking for port conflicts...${NC}"
+        bash "$SCRIPTS_DIR/port-manager.sh" check
+        ;;
+
+    "port-report")
+        echo -e "${BLUE}📊 Generating port report...${NC}"
+        bash "$SCRIPTS_DIR/port-manager.sh" report
+        ;;
+
+    "port-security")
+        echo -e "${BLUE}🔐 Generating security report...${NC}"
+        bash "$SCRIPTS_DIR/port-manager.sh" security
+        ;;
+
+    "port-export")
+        echo -e "${BLUE}💾 Exporting ports as Docker .env file...${NC}"
+        bash "$SCRIPTS_DIR/port-manager.sh" export-docker > "$SCRIPT_DIR/infrastructure/docker/.env.ports"
+        echo -e "${GREEN}✓${NC} Exported to infrastructure/docker/.env.ports"
+        ;;
+
+    "port-validate")
+        echo -e "${BLUE}✅ Validating port configuration...${NC}"
+        bash "$SCRIPTS_DIR/port-manager.sh" validate
+        ;;
+
+    # ========================================================================
+    # CONFIGURATION GENERATION
+    # ========================================================================
+    "config-generate")
+        echo -e "${GREEN}🔧 Generating all configuration files...${NC}"
+        bash "$SCRIPTS_DIR/config-generator.sh" all
+        ;;
+
+    "config-spring")
+        echo -e "${GREEN}🔧 Generating Spring Boot configurations...${NC}"
+        bash "$SCRIPTS_DIR/config-generator.sh" spring
+        ;;
+
+    "config-node")
+        echo -e "${GREEN}🔧 Generating Node.js configurations...${NC}"
+        bash "$SCRIPTS_DIR/config-generator.sh" node
+        ;;
+
+    "config-typescript"|"config-ts")
+        echo -e "${GREEN}🔧 Generating TypeScript constants...${NC}"
+        bash "$SCRIPTS_DIR/config-generator.sh" typescript
         ;;
 
     # ========================================================================

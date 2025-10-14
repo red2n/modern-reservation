@@ -1,0 +1,201 @@
+spring:
+  config:
+    import:
+      - "optional:classpath:application-ports.yml"
+  application:
+    name: rate-management
+  config:
+    import: "optional:configserver:http://localhost:8888"
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/modern_reservation_dev}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:20}
+      minimum-idle: ${DB_POOL_MIN_IDLE:5}
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      connection-timeout: 30000
+      leak-detection-threshold: 60000
+      pool-name: RateManagementHikariPool
+      connection-test-query: SELECT 1
+      validation-timeout: 5000
+      register-mbeans: true
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 8
+          min-idle: 2
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000 # 10 minutes
+      cache-null-values: false
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      batch-size: 16384
+      linger-ms: 1
+      buffer-memory: 33554432
+    consumer:
+      group-id: rate-management-tenant-consumer
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.modernreservation.tenant.commons.events
+      max-poll-records: 10
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: false
+    hostname: localhost
+    ip-address: 127.0.0.1
+    instance-id: ${spring.application.name}:${server.port}
+    home-page-url: http://localhost:${server.port}/
+    status-page-url: http://localhost:${server.port}/actuator/info
+    health-check-url: http://localhost:${server.port}/actuator/health
+
+# OpenTelemetry Configuration
+otel:
+  service:
+    name: ${spring.application.name}
+    version: 2.0.0
+  resource:
+    attributes:
+      service.namespace: modernreservation
+      service.instance.id: ${eureka.instance.instance-id}
+  exporter:
+    otlp:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4317}
+      headers: ${OTEL_EXPORTER_OTLP_HEADERS:}
+  traces:
+    exporter: otlp
+  metrics:
+    exporter: otlp
+  logs:
+    exporter: otlp
+  instrumentation:
+    spring-webmvc:
+      enabled: true
+    jdbc:
+      enabled: true
+    redis:
+      enabled: true
+    kafka:
+      enabled: true
+    jpa:
+      enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,env
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+
+# Resilience4j Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      externalService:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 10s
+        failureRateThreshold: 50
+  retry:
+    instances:
+      externalService:
+        maxAttempts: 3
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+
+# Custom application properties
+rate-management:
+  pricing:
+    default-currency: USD
+    max-rate-adjustment: 5.0 # Maximum rate adjustment percentage
+    dynamic-pricing-enabled: true
+    seasonal-adjustment-enabled: true
+    competitive-pricing-enabled: true
+
+  cache:
+    rate-search-ttl: 300 # 5 minutes
+    best-rates-ttl: 180 # 3 minutes
+    rate-statistics-ttl: 600 # 10 minutes
+
+  scheduling:
+    rate-expiry-check: "0 0 2 * * ?" # Daily at 2 AM
+    price-optimization: "0 0 */4 * * ?" # Every 4 hours
+
+logging:
+  level:
+    com.modernreservation.ratemanagement: INFO
+    org.springframework.data.jpa: WARN
+    org.hibernate.SQL: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: ../../logs/business-services/rate-management.log
+    max-size: 10MB
+    max-history: 30
+
+# OpenAPI Documentation
+springdoc:
+  api-docs:
+    path: /api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    config-url: /rate-management/api-docs/swagger-config
+    url: /rate-management/api-docs
+    enabled: true
+    operations-sorter: alpha
+    tags-sorter: alpha

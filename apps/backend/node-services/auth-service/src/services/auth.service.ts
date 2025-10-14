@@ -1,7 +1,41 @@
 import { FastifyInstance } from 'fastify';
 import bcrypt from 'bcrypt';
-import { API, getPermissionsForRole } from '@modern-reservation/schemas';
+import { UserSchema, type User } from '@modern-reservation/schemas';
 import { UserRepository } from '../repositories/user.repository';
+
+// Type definitions
+interface UserInfo {
+  id: string;
+  email: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  role: string;
+  tenantId: string;
+  permissions: string[];
+  properties?: string[];
+  isActive?: boolean;
+  lastLogin?: string;
+}
+
+interface AuthResponse {
+  token: string;
+  user: UserInfo;
+}
+
+// Helper function for permissions
+const getPermissionsForRole = (role: string): string[] => {
+  const rolePermissions: Record<string, string[]> = {
+    GUEST: ['view_reservations', 'create_reservations'],
+    FRONT_DESK: ['view_reservations', 'create_reservations', 'modify_reservations', 'check_in', 'check_out'],
+    RESERVATION_MANAGER: ['view_reservations', 'create_reservations', 'modify_reservations', 'cancel_reservations'],
+    HOTEL_ADMIN: ['view_reservations', 'create_reservations', 'modify_reservations', 'cancel_reservations', 'manage_rates'],
+    FINANCE: ['view_payments', 'process_payments', 'view_reports'],
+    HOUSEKEEPING: ['view_rooms', 'update_room_status'],
+    MANAGER: ['full_access'],
+  };
+  return rolePermissions[role] || [];
+};
 
 export class AuthService {
   private userRepository: UserRepository;
@@ -12,7 +46,7 @@ export class AuthService {
     this.userRepository = new UserRepository();
   }
 
-  async login(email: string, password: string): Promise<API.AuthResponse> {
+  async login(email: string, password: string): Promise<AuthResponse> {
     // For demo purposes, handle demo accounts first
     const demoUsers = this.getDemoUsers();
     const demoUser = demoUsers[email];
@@ -96,7 +130,7 @@ export class AuthService {
     }
   }
 
-  private getDemoUsers(): Record<string, API.UserInfo> {
+  private getDemoUsers(): Record<string, UserInfo> {
     return {
       'frontdesk@hotel.com': {
         id: 'fd001',

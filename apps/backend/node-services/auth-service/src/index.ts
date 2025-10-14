@@ -2,10 +2,14 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import { config } from 'dotenv';
+import path from 'path';
 import { authRoutes } from './routes/auth.routes';
 import { userRoutes } from './routes/user.routes';
 import { healthRoutes } from './routes/health.routes';
 
+// ✅ Load generated port configuration first
+config({ path: path.join(__dirname, '../.env.ports') });
+// Then load custom configuration (can override)
 config();
 
 const server = Fastify({
@@ -58,9 +62,14 @@ server.setErrorHandler((error, request, reply) => {
 // Start server
 const start = async () => {
   try {
+    // ✅ Port configuration from .env.ports (generated from port registry)
     const port = Number(process.env.PORT) || 3100;
-    await server.listen({ port, host: '0.0.0.0' });
-    server.log.info(`🔐 Auth service running on port ${port}`);
+    const host = process.env.HOST || '127.0.0.1'; // Default to internal-only
+
+    await server.listen({ port, host });
+    server.log.info(`🔐 Auth service running on ${host}:${port}`);
+    server.log.info(`Service: ${process.env.SERVICE_NAME}`);
+    server.log.info(`Environment: ${process.env.NODE_ENV}`);
 
     // Register with Eureka if configured
     if (process.env.EUREKA_URL) {
