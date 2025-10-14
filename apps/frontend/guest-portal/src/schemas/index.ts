@@ -5,7 +5,8 @@
 
 import type { z } from 'zod';
 
-// Import all entity schemas from shared package
+// TODO: Import all entity schemas from shared package when available
+/*
 export {
   // Common
   AddressSchema,
@@ -39,6 +40,7 @@ export {
   TimestampSchema,
   UUIDSchema,
 } from '@modern-reservation/schemas';
+*/
 
 // Re-export Zod for convenience
 export { z } from 'zod';

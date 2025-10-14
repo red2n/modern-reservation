@@ -3,13 +3,14 @@
  */
 
 import { z } from 'zod';
-import { EmailSchema, PhoneSchema } from '../index';
+// TODO: Import schemas when shared package is available
+// import { EmailSchema, PhoneSchema } from '../index';
 
 export const bookingFormSchema = z.object({
   firstName: z.string().min(1, 'First name is required').max(100),
   lastName: z.string().min(1, 'Last name is required').max(100),
-  email: EmailSchema,
-  phone: PhoneSchema,
+  email: z.string().email('Please enter a valid email address'),
+  phone: z.string().min(10, 'Phone number must be at least 10 digits'),
   country: z.string().length(2, 'Invalid country code'),
   specialRequests: z.string().max(500, 'Maximum 500 characters').optional(),
   arrivalTime: z

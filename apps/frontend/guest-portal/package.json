@@ -12,6 +12,7 @@
   "dependencies": {
     "@apollo/client": "^4.0.7",
     "@apollo/experimental-nextjs-app-support": "^0.13.2",
+    "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.2.2",
     "@modern-reservation/graphql-client": "file:../../../libs/shared/graphql-client",
     "@modern-reservation/schemas": "file:../../../libs/shared/schemas",

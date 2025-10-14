@@ -7,6 +7,9 @@ import {
   RoomSchema,
 } from '../entities';
 
+// Re-export authentication schemas
+export * from './auth';
+
 // Extract the main schema from PaymentSchemas
 const { PaymentTransaction: PaymentSchema } = PaymentSchemas;
 

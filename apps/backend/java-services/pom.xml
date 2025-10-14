@@ -7,7 +7,7 @@
 
     <groupId>com.modernreservation</groupId>
     <artifactId>java-services-parent</artifactId>
-    <version>2.0.0</version>
+    <version>1.0.0-alpha</version>
     <packaging>pom</packaging>
 
     <name>Modern Reservation - Java Services Parent</name>
@@ -79,6 +79,7 @@
         <module>infrastructure/gateway-service</module>
 
         <!-- Business Services -->
+        <!-- auth-service moved to Node.js services -->
         <module>business-services/reservation-engine</module>
         <module>business-services/availability-calculator</module>
         <module>business-services/rate-management</module>

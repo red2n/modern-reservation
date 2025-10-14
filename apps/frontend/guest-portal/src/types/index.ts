@@ -4,6 +4,8 @@
  */
 
 import type { z } from 'zod';
+// TODO: Import schema types when shared package is available
+/*
 import type {
   AddressSchema,
   GuestSchema,
@@ -17,11 +19,13 @@ import type {
   RoomStatusSchema,
   RoomTypeSchema,
 } from '../schemas';
+*/
 
 // =============================================================================
 // CORE ENTITY TYPES (from shared schemas)
 // =============================================================================
-
+// TODO: Uncomment when shared schemas are available
+/*
 // Common types
 export type Address = z.infer<typeof AddressSchema>;
 
@@ -33,8 +37,11 @@ export type PropertyType = z.infer<typeof PropertyTypeSchema>;
 export type Room = z.infer<typeof RoomSchema>;
 export type RoomType = z.infer<typeof RoomTypeSchema>;
 export type RoomStatus = z.infer<typeof RoomStatusSchema>;
+*/
 
 // Guest types
+// TODO: Uncomment when schemas are available
+/*
 export type Guest = z.infer<typeof GuestSchema>;
 export type LoyaltyTier = z.infer<typeof LoyaltyTierSchema>;
 
@@ -46,6 +53,7 @@ export type ReservationStatus = z.infer<typeof ReservationStatusSchema>;
 export type PaymentMethod = z.infer<typeof PaymentSchemas.PaymentMethod>;
 export type PaymentTransaction = z.infer<typeof PaymentSchemas.PaymentTransaction>;
 export type PaymentStatus = z.infer<typeof PaymentSchemas.PaymentStatus>;
+*/
 
 // =============================================================================
 // FRONTEND-SPECIFIC TYPES

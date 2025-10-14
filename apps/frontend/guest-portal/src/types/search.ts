@@ -3,7 +3,23 @@
  * Single Responsibility: Define search-related types only
  */
 
-import type { GuestCount, Property, PropertyType } from './index';
+import type { GuestCount } from './index';
+
+// TODO: Import Property, PropertyType when available
+// Temporary type definitions
+type Property = {
+  id: string;
+  name: string;
+  type: string;
+  city: string;
+  country: string;
+};
+
+type PropertyType = {
+  id: string;
+  name: string;
+  category: string;
+};
 
 // Amenity types (frontend-specific until backend schema is updated)
 export type AmenityCategory =

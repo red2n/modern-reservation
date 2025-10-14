@@ -101,6 +101,17 @@ spring:
                 name: tenant-circuit-breaker
                 fallbackUri: forward:/fallback/tenant
 
+        # Authentication Service Routes (Node.js Service)
+        - id: auth-service
+          uri: http://localhost:3100
+          predicates:
+            - Path=/auth/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: auth-circuit-breaker
+                fallbackUri: forward:/fallback/auth
+
         # Batch Processor Routes
         - id: batch-processor
           uri: lb://batch-processor

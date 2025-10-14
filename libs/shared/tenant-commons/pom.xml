@@ -8,15 +8,15 @@
     <parent>
         <groupId>com.modernreservation</groupId>
         <artifactId>java-services-parent</artifactId>
-        <version>2.0.0</version>
+        <version>1.0.0-alpha</version>
         <relativePath>../../../apps/backend/java-services/pom.xml</relativePath>
     </parent>
 
     <artifactId>tenant-commons</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.0-alpha</version>
     <packaging>jar</packaging>
 
-    <name>Tenant Commons</name>
+    <name>Modern Reservation - Tenant Commons</name>
     <description>Shared library for multi-tenancy support across all microservices</description>
 
     <dependencies>
