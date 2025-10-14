@@ -2,9 +2,9 @@
 
 ###############################################################################
 # Modern Reservation - Orchestrated Startup Script
-# 
+#
 # This script starts all services in the correct order with proper health checks
-# 
+#
 # Order:
 # 1. Docker Infrastructure (PostgreSQL, Redis, Kafka, etc.)
 # 2. Database Schema Setup
@@ -64,20 +64,20 @@ wait_for_service() {
     local url=$2
     local max_attempts=${3:-30}
     local attempt=1
-    
+
     log_info "Waiting for $name to be ready..."
-    
+
     while [ $attempt -le $max_attempts ]; do
         if curl -s -f "$url" >/dev/null 2>&1; then
             log "✅ $name is ready!"
             return 0
         fi
-        
+
         echo -n "."
         sleep 2
         attempt=$((attempt + 1))
     done
-    
+
     log_error "$name failed to start within timeout"
     return 1
 }
@@ -88,20 +88,20 @@ wait_for_port() {
     local port=$2
     local max_attempts=${3:-30}
     local attempt=1
-    
+
     log_info "Waiting for $name on port $port..."
-    
+
     while [ $attempt -le $max_attempts ]; do
         if check_port $port; then
             log "✅ $name is listening on port $port"
             return 0
         fi
-        
+
         echo -n "."
         sleep 2
         attempt=$((attempt + 1))
     done
-    
+
     log_error "$name failed to start on port $port within timeout"
     return 1
 }
@@ -113,9 +113,9 @@ start_java_service() {
     local port=$3
     local pid_file="/tmp/${service_name}.pid"
     local log_file="/tmp/${service_name}.log"
-    
+
     log_info "Starting $service_name..."
-    
+
     # Check if already running
     if [ -f "$pid_file" ]; then
         local pid=$(cat "$pid_file")
@@ -124,22 +124,22 @@ start_java_service() {
             return 0
         fi
     fi
-    
+
     # Start the service
     cd "$service_path"
     nohup mvn spring-boot:run > "$log_file" 2>&1 &
     local pid=$!
     echo $pid > "$pid_file"
-    
+
     log "Started $service_name with PID $pid (log: $log_file)"
-    
+
     # Wait for port to be ready
     if ! wait_for_port "$service_name" "$port" 60; then
         log_error "$service_name failed to start. Check log: $log_file"
         tail -50 "$log_file"
         return 1
     fi
-    
+
     cd "$PROJECT_ROOT"
     return 0
 }
@@ -151,9 +151,9 @@ start_node_service() {
     local port=$3
     local pid_file="/tmp/${service_name}.pid"
     local log_file="/tmp/${service_name}.log"
-    
+
     log_info "Starting $service_name..."
-    
+
     # Check if already running
     if [ -f "$pid_file" ]; then
         local pid=$(cat "$pid_file")
@@ -162,23 +162,23 @@ start_node_service() {
             return 0
         fi
     fi
-    
+
     # Build and start
     cd "$service_path"
     npm run build >> "$log_file" 2>&1
     nohup npm start > "$log_file" 2>&1 &
     local pid=$!
     echo $pid > "$pid_file"
-    
+
     log "Started $service_name with PID $pid (log: $log_file)"
-    
+
     # Wait for port to be ready
     if ! wait_for_port "$service_name" "$port" 30; then
         log_error "$service_name failed to start. Check log: $log_file"
         tail -50 "$log_file"
         return 1
     fi
-    
+
     cd "$PROJECT_ROOT"
     return 0
 }
@@ -200,14 +200,14 @@ log "=========================================="
 
 if docker ps >/dev/null 2>&1; then
     log_info "Docker is available"
-    
+
     # Check if containers are already running
     if docker ps --format '{{.Names}}' | grep -q "postgres"; then
         log_warn "Docker containers already running"
     else
         log_info "Starting docker-compose..."
         docker-compose -f "$PROJECT_ROOT/infrastructure/docker/docker-compose.yml" up -d
-        
+
         # Wait for PostgreSQL
         log_info "Waiting for PostgreSQL..."
         sleep 5
@@ -220,13 +220,13 @@ if docker ps >/dev/null 2>&1; then
                 exit 1
             fi
         fi
-        
+
         # Wait for Redis
         log_info "Checking Redis..."
         if check_port 6379; then
             log "✅ Redis is ready on port 6379"
         fi
-        
+
         # Wait for Kafka
         log_info "Checking Kafka..."
         sleep 5

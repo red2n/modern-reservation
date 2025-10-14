@@ -2,7 +2,7 @@
 
 ###############################################################################
 # Modern Reservation - Orchestrated Shutdown Script
-# 
+#
 # This script stops all services in reverse order
 ###############################################################################
 
@@ -33,26 +33,26 @@ log_warn() {
 stop_service() {
     local service_name=$1
     local pid_file="/tmp/${service_name}.pid"
-    
+
     if [ -f "$pid_file" ]; then
         local pid=$(cat "$pid_file")
         if ps -p $pid > /dev/null 2>&1; then
             log "Stopping $service_name (PID: $pid)..."
             kill $pid 2>/dev/null || true
-            
+
             # Wait for process to stop
             local count=0
             while ps -p $pid > /dev/null 2>&1 && [ $count -lt 10 ]; do
                 sleep 1
                 count=$((count + 1))
             done
-            
+
             # Force kill if still running
             if ps -p $pid > /dev/null 2>&1; then
                 log_warn "Force killing $service_name..."
                 kill -9 $pid 2>/dev/null || true
             fi
-            
+
             log "✅ Stopped $service_name"
         else
             log_warn "$service_name PID file exists but process not running"
